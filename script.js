@@ -1,14 +1,18 @@
 let telegramUser = null;
 let currentGameMode = 'menu'; // 'menu', 'intention', 'vision'
+let gameStartTime = null; // Для отслеживания времени в игре
+let shuffleStartTime = null; // Для времени между "Перемешать" и "Угадать"
+const sessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9); // Уникальный ID сессии
+const sessionStartTime = Date.now(); // Время начала сессии
 
 // Intention Game State
 let intentionRandomizerInterval = null;
-let intentionCurrentResult = null; // Stores the random value picked by the interval
+let intentionCurrentResult = null;
 let intentionMode = 'color'; // 'color' or 'shape'
 
 // Vision Game State
 let visionRandomizerTimeout = null;
-let visionCurrentResult = null; // Stores the random value picked after shuffle
+let visionCurrentResult = null;
 let visionMode = 'color'; // 'color' or 'shape'
 let visionStats = {
     attempts: 0,
@@ -23,9 +27,9 @@ const userNameSpan = document.getElementById('telegram-user-name');
 const menuScreen = document.getElementById('menu-screen');
 const btnStartIntention = document.getElementById('btn-start-intention');
 const btnStartVision = document.getElementById('btn-start-vision');
-const btnReadMore = document.getElementById('btn-read-more'); // Новая кнопка "Прочти"
-const readMoreArea = document.getElementById('read-more-area'); // Область с текстом "Отличие"
-const btnCloseReadMore = document.getElementById('btn-close-read-more'); // Кнопка "Закрыть"
+const btnReadMore = document.getElementById('btn-read-more');
+const readMoreArea = document.getElementById('read-more-area');
+const btnCloseReadMore = document.getElementById('btn-close-read-more');
 
 // Intention Game Elements
 const gameIntention = document.getElementById('game-intention');
@@ -50,7 +54,6 @@ const visionModeRadios = document.querySelectorAll('input[name="vision-mode"]');
 // Common Elements
 const backButtons = document.querySelectorAll('.back-btn');
 
-
 // --- Utility Functions ---
 
 // Show a specific game screen
@@ -58,36 +61,32 @@ function showScreen(screenId) {
     const screens = document.querySelectorAll('.game-screen');
     screens.forEach(screen => screen.classList.add('hidden'));
 
-    // Stop any running game timers/intervals before switching
     stopIntentionGame();
-    stopVisionGame(); // Stop any active shuffle timeout
+    stopVisionGame();
 
-    // Hide read more area and show read more button when returning to menu
-     if (screenId === 'menu-screen') {
+    if (screenId === 'menu-screen') {
         menuScreen.classList.remove('hidden');
         currentGameMode = 'menu';
-         Telegram.WebApp.MainButton.hide(); // Hide Telegram main button if visible
-        readMoreArea.classList.add('hidden'); // Hide text area
-        btnReadMore.classList.remove('hidden'); // Show "Прочти" button
+        Telegram.WebApp.MainButton.hide();
+        readMoreArea.classList.add('hidden');
+        btnReadMore.classList.remove('hidden');
     } else if (screenId === 'game-intention') {
         gameIntention.classList.remove('hidden');
         currentGameMode = 'intention';
-        startIntentionGame(); // Start the intention randomizer
-         Telegram.WebApp.MainButton.hide(); // Hide Telegram main button if visible
+        startIntentionGame();
+        Telegram.WebApp.MainButton.hide();
     } else if (screenId === 'game-vision') {
         gameVision.classList.remove('hidden');
         currentGameMode = 'vision';
-        // Vision game starts waiting for 'Shuffle' click
-        updateVisionChoicesDisplay(); // Ensure correct choice buttons are visible
-        updateVisionStatsDisplay(); // Show current stats
-         visionShuffleBtn.disabled = false; // Ensure shuffle button is enabled
-         setVisionChoiceButtonsEnabled(false); // Ensure choice buttons are disabled initially
-         visionResultDisplay.classList.add('hidden'); // Hide result display
-         visionDisplay.style.backgroundColor = 'black'; // Set vision display black
-         visionResultDisplay.style.backgroundColor = 'transparent'; // Reset result display background
-         visionCurrentResult = null; // Clear any pending result
-
-         Telegram.WebApp.MainButton.hide(); // Hide Telegram main button if visible
+        updateVisionChoicesDisplay();
+        updateVisionStatsDisplay();
+        visionShuffleBtn.disabled = false;
+        setVisionChoiceButtonsEnabled(false);
+        visionResultDisplay.classList.add('hidden');
+        visionDisplay.style.backgroundColor = 'black';
+        visionResultDisplay.style.backgroundColor = 'transparent';
+        visionCurrentResult = null;
+        Telegram.WebApp.MainButton.hide();
     }
 }
 
@@ -100,14 +99,12 @@ function getRandomResult(mode) {
     }
 }
 
-// Create SVG for a shape (used for display)
+// Create SVG for a shape
 function createSvgShape(type) {
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("width", "100"); // Base size, will be scaled by CSS
+    svg.setAttribute("width", "100");
     svg.setAttribute("height", "100");
     svg.setAttribute("viewBox", "0 0 100 100");
-    // Fill color handled by CSS for display contexts
-    // svg.setAttribute("fill", "black"); // Don't set fill here, let CSS handle it
 
     if (type === 'circle') {
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -118,335 +115,436 @@ function createSvgShape(type) {
     } else if (type === 'triangle') {
         const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
         polygon.setAttribute("points", "50,10 90,90 10,90");
-         svg.appendChild(polygon);
+        svg.appendChild(polygon);
     }
     return svg;
 }
 
-
 // --- Intention Game Logic ---
 
 function startIntentionGame() {
-    // Start the continuous randomizer hidden in the background
-    intentionCurrentResult = getRandomResult(intentionMode); // Initial result
+    intentionCurrentResult = getRandomResult(intentionMode);
     intentionRandomizerInterval = setInterval(() => {
         intentionCurrentResult = getRandomResult(intentionMode);
-        // console.log('Intention randomizing...', intentionCurrentResult); // Optional: for debugging
-    }, 50); // Update result more frequently for smoother "feel"
-
+    }, 50);
     intentionShowBtn.classList.remove('hidden');
     intentionResultDisplay.classList.add('hidden');
-    intentionDisplay.style.backgroundColor = 'black'; // Ensure display is black initially
-    intentionResultDisplay.style.backgroundColor = 'white'; // Ensure result background is white for Intention
+    intentionDisplay.style.backgroundColor = 'black';
+    intentionResultDisplay.style.backgroundColor = 'white';
+    gtag('event', 'randomizer_start', {
+        'event_category': 'Game',
+        'event_label': 'Intention Randomizer',
+        'mode': intentionMode,
+        'session_id': sessionId
+    });
 }
 
 function stopIntentionGame() {
     if (intentionRandomizerInterval !== null) {
         clearInterval(intentionRandomizerInterval);
         intentionRandomizerInterval = null;
-         // console.log('Intention randomizer stopped.');
     }
-    intentionShowBtn.classList.remove('hidden'); // Ensure button is visible if game stops unexpectedly
+    intentionShowBtn.classList.remove('hidden');
     intentionResultDisplay.classList.add('hidden');
-    intentionDisplay.style.backgroundColor = 'black'; // Reset display color
-     intentionResultDisplay.style.backgroundColor = 'white'; // Reset result background
+    intentionDisplay.style.backgroundColor = 'black';
+    intentionResultDisplay.style.backgroundColor = 'white';
 }
 
 function showIntentionResult() {
-    if (intentionRandomizerInterval === null) return; // Don't show if not running
+    if (intentionRandomizerInterval === null) return;
 
-    // Stop randomizer
+    gtag('event', 'show_result', {
+        'event_category': 'Game',
+        'event_label': 'Intention Show',
+        'mode': intentionMode,
+        'session_id': sessionId
+    });
+
     clearInterval(intentionRandomizerInterval);
     intentionRandomizerInterval = null;
-
-    // Display the result inside intentionResultDisplay (which is on white background)
-    intentionResultDisplay.innerHTML = ''; // Clear previous content
-    intentionResultDisplay.style.backgroundColor = 'white'; // Ensure white background for intention result
+    intentionResultDisplay.innerHTML = '';
+    intentionResultDisplay.style.backgroundColor = 'white';
 
     if (intentionMode === 'color') {
-        // For color, show the color block itself
-         const colorBlock = document.createElement('div');
-         colorBlock.style.width = '100%'; // Fill the result display area
-         colorBlock.style.height = '100%';
-         colorBlock.style.backgroundColor = intentionCurrentResult;
-         intentionResultDisplay.appendChild(colorBlock);
-         // Ensure Intention result display is centered for color block (CSS handles flex)
-         intentionResultDisplay.style.flexDirection = 'row'; // Use row or column, doesn't matter for one block
-         intentionResultDisplay.style.gap = '0';
-
-    } else { // shape
-        // For shape, show the shape on the white background
+        const colorBlock = document.createElement('div');
+        colorBlock.style.width = '100%';
+        colorBlock.style.height = '100%';
+        colorBlock.style.backgroundColor = intentionCurrentResult;
+        intentionResultDisplay.appendChild(colorBlock);
+        intentionResultDisplay.style.flexDirection = 'row';
+        intentionResultDisplay.style.gap = '0';
+    } else {
         intentionResultDisplay.appendChild(createSvgShape(intentionCurrentResult));
-        // Ensure Intention result display is centered for shape (CSS handles flex)
-         intentionResultDisplay.style.flexDirection = 'column'; // Flex properties from CSS are enough here
-         intentionResultDisplay.style.gap = '0';
+        intentionResultDisplay.style.flexDirection = 'column';
+        intentionResultDisplay.style.gap = '0';
     }
 
     intentionResultDisplay.classList.remove('hidden');
-    intentionDisplay.style.backgroundColor = 'transparent'; // Show result area by making display transparent
-
-    // Hide the show button
+    intentionDisplay.style.backgroundColor = 'transparent';
     intentionShowBtn.classList.add('hidden');
 
-    // After 3 seconds, hide the result and restart
+    // Кнопки "Угадал"/"Не угадал"
+    const feedbackButtons = document.createElement('div');
+    feedbackButtons.style.position = 'absolute';
+    feedbackButtons.style.bottom = '10px';
+    feedbackButtons.style.display = 'flex';
+    feedbackButtons.style.gap = '10px';
+    const successBtn = document.createElement('button');
+    successBtn.textContent = 'Угадал';
+    successBtn.className = 'small-btn';
+    successBtn.addEventListener('click', () => {
+        gtag('event', 'intention_guess', {
+            'event_category': 'Game',
+            'event_label': 'Intention Guess',
+            'value': 'success',
+            'mode': intentionMode,
+            'result': intentionCurrentResult,
+            'session_id': sessionId
+        });
+        feedbackButtons.remove();
+    });
+    const failureBtn = document.createElement('button');
+    failureBtn.textContent = 'Не угадал';
+    failureBtn.className = 'small-btn';
+    failureBtn.addEventListener('click', () => {
+        gtag('event', 'intention_guess', {
+            'event_category': 'Game',
+            'event_label': 'Intention Guess',
+            'value': 'failure',
+            'mode': intentionMode,
+            'result': intentionCurrentResult,
+            'session_id': sessionId
+        });
+        feedbackButtons.remove();
+    });
+    feedbackButtons.appendChild(successBtn);
+    feedbackButtons.appendChild(failureBtn);
+    intentionResultDisplay.appendChild(feedbackButtons);
+
     setTimeout(() => {
         intentionResultDisplay.classList.add('hidden');
-        intentionDisplay.style.backgroundColor = 'black'; // Reset display color
-        intentionResultDisplay.style.backgroundColor = 'white'; // Reset result background
+        intentionDisplay.style.backgroundColor = 'black';
+        intentionResultDisplay.style.backgroundColor = 'white';
         intentionShowBtn.classList.remove('hidden');
-        startIntentionGame(); // Restart the randomizer
-    }, 3000); // 3 seconds
+        feedbackButtons.remove();
+        startIntentionGame();
+    }, 5000);
 }
 
 // --- Vision Game Logic ---
 
 function startVisionShuffle() {
-    // Ignore click if already shuffling or buttons disabled
-     if (visionShuffleBtn.disabled) return;
+    if (visionShuffleBtn.disabled) return;
+    shuffleStartTime = Date.now();
+    gtag('event', 'shuffle', {
+        'event_category': 'Game',
+        'event_label': 'Vision Shuffle',
+        'mode': visionMode,
+        'session_id': sessionId
+    });
 
-    // Disable shuffle button and choice buttons
     visionShuffleBtn.disabled = true;
     setVisionChoiceButtonsEnabled(false);
-
-    // Hide any previous result/message
     visionResultDisplay.classList.add('hidden');
-    visionDisplay.style.backgroundColor = 'black'; // Ensure display is black
-    visionResultDisplay.style.backgroundColor = 'transparent'; // Reset result background
+    visionDisplay.style.backgroundColor = 'black';
+    visionResultDisplay.style.backgroundColor = 'transparent';
 
-    // The randomizer is active but hidden for 3 seconds
     visionRandomizerTimeout = setTimeout(() => {
-        // Randomization finishes, store the result
         visionCurrentResult = getRandomResult(visionMode);
-        // console.log('Vision result generated:', visionCurrentResult);
-
-        // Enable buttons for player to guess
         visionShuffleBtn.disabled = false;
         setVisionChoiceButtonsEnabled(true);
-
-    }, 3000); // Shuffle duration: 3 seconds
+    }, 3000);
 }
 
 function stopVisionGame() {
     if (visionRandomizerTimeout !== null) {
         clearTimeout(visionRandomizerTimeout);
         visionRandomizerTimeout = null;
-         // console.log('Vision shuffle stopped.');
     }
-    visionShuffleBtn.disabled = false; // Ensure button is enabled if game stops
-    setVisionChoiceButtonsEnabled(false); // Ensure choice buttons are disabled
-     visionResultDisplay.classList.add('hidden');
-     visionDisplay.style.backgroundColor = 'black'; // Reset display color
-     visionResultDisplay.style.backgroundColor = 'transparent'; // Reset result background
-     visionCurrentResult = null; // Clear current result
+    visionShuffleBtn.disabled = false;
+    setVisionChoiceButtonsEnabled(false);
+    visionResultDisplay.classList.add('hidden');
+    visionDisplay.style.backgroundColor = 'black';
+    visionResultDisplay.style.backgroundColor = 'transparent';
+    visionCurrentResult = null;
 }
-
 
 function setVisionChoiceButtonsEnabled(enabled) {
     const buttons = visionChoicesDiv.querySelectorAll('.choice-btn');
     buttons.forEach(button => {
-        // Only enable visible buttons
         if (!button.classList.contains('hidden')) {
-             button.disabled = !enabled;
+            button.disabled = !enabled;
         } else {
-             button.disabled = true; // Keep hidden buttons disabled
+            button.disabled = true;
         }
     });
 }
 
-function handleVisionChoice(event) { // Accept event object
-    // Check if a valid, enabled choice button was clicked
+function handleVisionChoice(event) {
     const targetBtn = event.target.closest('.choice-btn');
-    if (visionCurrentResult === null || !targetBtn || targetBtn.disabled) {
-        // Player clicked before shuffle finished, after guess, or on a disabled button
-        return;
-    }
+    if (visionCurrentResult === null || !targetBtn || targetBtn.disabled) return;
 
-    const choice = targetBtn.dataset.choice; // Get choice from data attribute
-
-    // Disable choice buttons immediately after a guess
+    const choice = targetBtn.dataset.choice;
+    const guessTime = shuffleStartTime ? (Date.now() - shuffleStartTime) / 1000 : 0;
     setVisionChoiceButtonsEnabled(false);
-    visionShuffleBtn.disabled = true; // Also disable shuffle until display clears
-
+    visionShuffleBtn.disabled = true;
     visionStats.attempts++;
-    // console.log("Attempt:", visionStats.attempts); // Debug log
-
-    visionResultDisplay.classList.remove('hidden'); // Show the result area
-    visionDisplay.style.backgroundColor = 'transparent'; // Show result area by making display transparent
-
-    // Clear previous result/message content
-    visionResultDisplay.innerHTML = '';
-    visionResultDisplay.style.backgroundColor = 'transparent'; // Reset background
-
-    // Determine feedback text
     const isCorrect = (choice === visionCurrentResult);
+
+    gtag('event', 'guess', {
+        'event_category': 'Game',
+        'event_label': 'Vision Guess',
+        'value': isCorrect ? 'success' : 'failure',
+        'mode': visionMode,
+        'choice': choice,
+        'correct_answer': visionCurrentResult,
+        'time_to_guess': guessTime,
+        'session_id': sessionId
+    });
 
     if (isCorrect) {
         visionStats.successes++;
-         // console.log("Success:", visionStats.successes); // Debug log
     } else {
         visionStats.failures++;
-        // console.log("Failure:", visionStats.failures); // Debug log
     }
 
+    visionResultDisplay.classList.remove('hidden');
+    visionDisplay.style.backgroundColor = 'transparent';
+    visionResultDisplay.innerHTML = '';
+    visionResultDisplay.style.backgroundColor = 'transparent';
 
     if (visionMode === 'color') {
-        // In color mode, the correct color fills the background of visionResultDisplay
-        visionResultDisplay.style.backgroundColor = visionCurrentResult; // 'red' or 'blue'
-        // Set text color for visibility on the colored background
+        visionResultDisplay.style.backgroundColor = visionCurrentResult;
         let messageText = document.createElement('p');
-        messageText.classList.add('feedback-text'); // Add class for styling
-        messageText.textContent = isCorrect ? 'Успех!' : 'Попробуй ещё!'; // Set text content
+        messageText.classList.add('feedback-text');
+        messageText.textContent = isCorrect ? 'Успех!' : 'Попробуй ещё!';
         messageText.style.color = 'white';
-        messageText.style.textShadow = '1px 1px 3px rgba(0,0,0,0.5)'; // Add shadow for contrast
-
-        // Append just the text to visionResultDisplay (absolute position via CSS)
+        messageText.style.textShadow = '1px 1px 3px rgba(0,0,0,0.5)';
         visionResultDisplay.appendChild(messageText);
-
-        // Ensure visionResultDisplay is set up for centering just the text (flex properties already in CSS)
-         visionResultDisplay.style.flexDirection = 'column'; // Flex properties from CSS are enough here
-         visionResultDisplay.style.gap = '0';
-
-
-    } else { // shape mode
-        // In shape mode, display shape on white background. No text feedback on screen.
+        visionResultDisplay.style.flexDirection = 'column';
+        visionResultDisplay.style.gap = '0';
+    } else {
         const feedbackContent = document.createElement('div');
-        feedbackContent.classList.add('vision-feedback-content'); // Container for shape + white background
-        feedbackContent.style.backgroundColor = 'white'; // White background specifically for this content block
-
-        // Create and append the correct shape SVG
+        feedbackContent.classList.add('vision-feedback-content');
+        feedbackContent.style.backgroundColor = 'white';
         feedbackContent.appendChild(createSvgShape(visionCurrentResult));
-
-        // Append only the background/shape container to visionResultDisplay
         visionResultDisplay.appendChild(feedbackContent);
-
-         // Ensure visionResultDisplay allows for layering (flex properties already in CSS)
-         // No specific flex-direction or gap needed here as text is absolute (but text isn't present)
-         visionResultDisplay.style.flexDirection = 'row'; // Reset or keep default
-         visionResultDisplay.style.gap = '0';
+        visionResultDisplay.style.flexDirection = 'row';
+        visionResultDisplay.style.gap = '0';
     }
 
-    updateVisionStatsDisplay(); // Update the displayed stats
-
-    // Reset state after a delay
-    visionCurrentResult = null; // Reset the result after guess
+    updateVisionStatsDisplay();
+    visionCurrentResult = null;
     setTimeout(() => {
-        visionResultDisplay.classList.add('hidden'); // Hide feedback
-        visionResultDisplay.style.backgroundColor = 'transparent'; // Reset background explicitely
-        visionDisplay.style.backgroundColor = 'black'; // Reset display background
-        visionShuffleBtn.disabled = false; // Enable shuffle button again
-        // Choice buttons remain disabled until next shuffle
-    }, 2500); // Show feedback for 2.5 seconds
+        visionResultDisplay.classList.add('hidden');
+        visionResultDisplay.style.backgroundColor = 'transparent';
+        visionDisplay.style.backgroundColor = 'black';
+        visionShuffleBtn.disabled = false;
+    }, 2500);
 }
 
 function updateVisionStatsDisplay() {
-    // console.log("Updating stats display:", visionStats); // Debug log
     visionStatsSpanAttempts.textContent = visionStats.attempts;
     visionStatsSpanSuccesses.textContent = visionStats.successes;
     visionStatsSpanFailures.textContent = visionStats.failures;
 }
 
 function updateVisionChoicesDisplay() {
-     // Hide all choice buttons first
     visionColorChoiceBtns.forEach(btn => btn.classList.add('hidden'));
     visionShapeChoiceBtns.forEach(btn => btn.classList.add('hidden'));
-    // Reset button state (disabled until shuffle, re-enabled in startVisionShuffle)
-     setVisionChoiceButtonsEnabled(false);
+    setVisionChoiceButtonsEnabled(false);
 
-
-    // Show the relevant buttons
     if (visionMode === 'color') {
         visionColorChoiceBtns.forEach(btn => btn.classList.remove('hidden'));
-    } else { // shape
+    } else {
         visionShapeChoiceBtns.forEach(btn => btn.classList.remove('hidden'));
     }
 }
 
-
 // --- Event Listeners ---
 
 // Menu buttons
-btnStartIntention.addEventListener('click', () => showScreen('game-intention'));
-btnStartVision.addEventListener('click', () => showScreen('game-vision'));
+btnStartIntention.addEventListener('click', () => {
+    gameStartTime = Date.now();
+    showScreen('game-intention');
+    gtag('event', 'game_select', {
+        'event_category': 'Game',
+        'event_label': 'Intention',
+        'game_mode': intentionMode,
+        'session_id': sessionId
+    });
+});
 
-// "Read More" button
+btnStartVision.addEventListener('click', () => {
+    gameStartTime = Date.now();
+    showScreen('game-vision');
+    gtag('event', 'game_select', {
+        'event_category': 'Game',
+        'event_label': 'Vision',
+        'game_mode': visionMode,
+        'session_id': sessionId
+    });
+});
+
 btnReadMore.addEventListener('click', () => {
-    readMoreArea.classList.remove('hidden'); // Show the text area
-    btnReadMore.classList.add('hidden'); // Hide the "Прочти" button
+    readMoreArea.classList.remove('hidden');
+    btnReadMore.classList.add('hidden');
+    gtag('event', 'read_more', {
+        'event_category': 'App',
+        'event_label': 'Read More Clicked',
+        'session_id': sessionId
+    });
 });
 
-// "Close Read More" button
 btnCloseReadMore.addEventListener('click', () => {
-    readMoreArea.classList.add('hidden'); // Hide the text area
-    btnReadMore.classList.remove('hidden'); // Show the "Прочти" button
+    readMoreArea.classList.add('hidden');
+    btnReadMore.classList.remove('hidden');
 });
 
-
-// Back buttons (in games)
+// Back buttons
 backButtons.forEach(button => {
-    button.addEventListener('click', () => showScreen('menu-screen'));
+    button.addEventListener('click', () => {
+        if (gameStartTime) {
+            const duration = (Date.now() - gameStartTime) / 1000;
+            gtag('event', 'game_exit', {
+                'event_category': 'Game',
+                'event_label': currentGameMode === 'intention' ? 'Intention' : 'Vision',
+                'game_mode': currentGameMode === 'intention' ? intentionMode : visionMode,
+                'duration_seconds': duration,
+                'session_id': sessionId
+            });
+            if (currentGameMode === 'vision') {
+                gtag('event', 'game_session_summary', {
+                    'event_category': 'Game',
+                    'event_label': 'Vision',
+                    'attempts': visionStats.attempts,
+                    'successes': visionStats.successes,
+                    'failures': visionStats.failures,
+                    'mode': visionMode,
+                    'duration_seconds': duration,
+                    'session_id': sessionId
+                });
+            }
+            gameStartTime = null;
+        }
+        showScreen('menu-screen');
+    });
 });
 
 // Intention Game Listeners
 intentionShowBtn.addEventListener('click', showIntentionResult);
-// Duplicate button click on display click
 intentionDisplay.addEventListener('click', () => {
     if (!intentionShowBtn.classList.contains('hidden') && !intentionShowBtn.disabled && currentGameMode === 'intention') {
+        gtag('event', 'display_click', {
+            'event_category': 'Game',
+            'event_label': 'Intention Display',
+            'session_id': sessionId
+        });
         intentionShowBtn.click();
     }
 });
-// Intention mode change
+
 intentionModeRadios.forEach(radio => {
     radio.addEventListener('change', (event) => {
         intentionMode = event.target.value;
-         // Restarting ensures the first result after change respects the mode
-         stopIntentionGame(); // Stop current
-         startIntentionGame(); // Start new
+        gtag('event', 'mode_change', {
+            'event_category': 'Game',
+            'event_label': 'Intention Mode',
+            'value': intentionMode,
+            'session_id': sessionId
+        });
+        stopIntentionGame();
+        startIntentionGame();
     });
 });
 
 // Vision Game Listeners
 visionShuffleBtn.addEventListener('click', startVisionShuffle);
-// Duplicate button click on display click (if shuffle button is enabled)
 visionDisplay.addEventListener('click', () => {
     if (!visionShuffleBtn.disabled && currentGameMode === 'vision') {
+        gtag('event', 'display_click', {
+            'event_category': 'Game',
+            'event_label': 'Vision Display',
+            'session_id': sessionId
+        });
         visionShuffleBtn.click();
     }
 });
 
-// Vision choice button listeners (using event delegation on the container)
-visionChoicesDiv.addEventListener('click', handleVisionChoice); // Call handler directly
+visionChoicesDiv.addEventListener('click', handleVisionChoice);
 
-// Vision mode change
 visionModeRadios.forEach(radio => {
     radio.addEventListener('change', (event) => {
         visionMode = event.target.value;
+        gtag('event', 'mode_change', {
+            'event_category': 'Game',
+            'event_label': 'Vision Mode',
+            'value': visionMode,
+            'session_id': sessionId
+        });
         updateVisionChoicesDisplay();
-        // Ensure choice buttons are disabled and shuffle is enabled for the new mode
         setVisionChoiceButtonsEnabled(false);
         visionShuffleBtn.disabled = false;
-        visionResultDisplay.classList.add('hidden'); // Hide previous result if any
-        visionDisplay.style.backgroundColor = 'black'; // Reset display
-         visionResultDisplay.style.backgroundColor = 'transparent'; // Reset result background
-         visionCurrentResult = null; // Clear any pending result from previous mode
-         // Optionally reset stats when mode changes? Let's keep them for now.
-         // visionStats = { attempts: 0, successes: 0, failures: 0 };
-         // updateVisionStatsDisplay();
+        visionResultDisplay.classList.add('hidden');
+        visionDisplay.style.backgroundColor = 'black';
+        visionResultDisplay.style.backgroundColor = 'transparent';
+        visionCurrentResult = null;
     });
 });
 
+// --- Error Handling ---
+window.addEventListener('error', (error) => {
+    gtag('event', 'error', {
+        'event_category': 'App',
+        'event_label': 'Runtime Error',
+        'error_message': error.message,
+        'error_file': error.filename,
+        'session_id': sessionId
+    });
+});
+
+// --- Session End ---
+window.addEventListener('beforeunload', () => {
+    gtag('event', 'session_end', {
+        'event_category': 'App',
+        'event_label': 'App Closed',
+        'session_id': sessionId,
+        'duration_seconds': (Date.now() - sessionStartTime) / 1000
+    });
+});
 
 // --- Telegram Web Apps Initialization ---
+Telegram.WebApp.ready();
 
-Telegram.WebApp.ready(); // Notify Telegram that the app is ready
-
-// Show user name if available
 if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
     telegramUser = Telegram.WebApp.initDataUnsafe.user;
     userNameSpan.textContent = telegramUser.first_name || 'Игрок';
+    gtag('set', 'user_id', telegramUser.id);
+    gtag('event', 'app_launch', {
+        'event_category': 'App',
+        'event_label': 'Mini App Started',
+        'start_param': Telegram.WebApp.initDataUnsafe.start_param || 'none',
+        'session_id': sessionId
+    });
+} else {
+    gtag('event', 'app_launch', {
+        'event_category': 'App',
+        'event_label': 'Mini App Started (No User)',
+        'start_param': Telegram.WebApp.initDataUnsafe.start_param || 'none',
+        'session_id': sessionId
+    });
 }
 
-// Expand the app to full height
 Telegram.WebApp.expand();
-
-// Initial screen display
 showScreen('menu-screen');
+
+// App minimized
+Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
+    if (!isStateStable && !Telegram.WebApp.isExpanded()) {
+        gtag('event', 'app_background', {
+            'event_category': 'App',
+            'event_label': 'App Minimized',
+            'session_id': sessionId
+        });
+    }
+});
