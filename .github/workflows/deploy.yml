@@ -11,3 +11,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Create config.js
+        run: |
+          echo "window.GA_MEASUREMENT_ID = '${{ secrets.GA_MEASUREMENT_ID }}';" > config.js
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          force_orphan: true
