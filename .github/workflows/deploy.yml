@@ -20,13 +20,16 @@ jobs:
       - name: Generate config.js
         run: |
           echo "window.GA_MEASUREMENT_ID = '${{ secrets.GA_MEASUREMENT_ID }}';" > ./config.js
-          ls -la # Показать файлы
-          cat ./config.js # Показать содержимое
+          echo "Generated config.js with GA_MEASUREMENT_ID: ${{ secrets.GA_MEASUREMENT_ID }}"
+          ls -la # Показать файлы в корне
+          cat ./config.js # Показать содержимое config.js
 
       - name: Copy files to publish directory
         run: |
           mkdir -p ./publish
-          cp -r index.html script.js style.css config.js ./publish/
+          cp index.html script.js style.css config.js ./publish/ || { echo "Copy failed"; exit 1; }
+          ls -la ./publish # Показать файлы в ./publish
+          cat ./publish/config.js # Показать содержимое в ./publish
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
