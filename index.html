@@ -46,7 +46,7 @@
                 <h3>Отличие Намеренья и Виденья</h3>
                 <p>Намеренье — это игра, где ты загадываешь цвет или фигуру, а затем проверяешь, совпадает ли твой выбор с случайным результатом.</p>
                 <p>Виденье — это игра, где ты должен угадать, какой цвет или фигура были выбраны после перемешивания.</p>
-                <button id="btn-close-read-more" class="small-btn">Закрыть</button>
+                <-button id="btn-close-read-more" class="small-btn">Закрыть</button>
             </div>
         </div>
 
@@ -56,18 +56,17 @@
             <div class="display" id="intention-display">
                 <div class="result-display" id="intention-result"></div>
             </div>
-            <div id="intention-feedback"></div>
-            <div id="intention-stats">
-                <p>Попытки: <span id="intention-stats-attempts">0</span></p>
-                <p>Успехи: <span id="intention-stats-successes">0</span></p>
-                <p>Неудачи: <span id="intention-stats-failures">0</span></p>
-            </div>
             <div class="controls">
                 <div class="mode-select">
                     <label><input type="radio" name="intention-mode" value="color" checked> Цвет</label>
                     <label><input type="radio" name="intention-mode" value="shape"> Фигура</label>
                 </div>
                 <button id="intention-show-btn" class="small-btn">Показать</button>
+            </div>
+            <div id="intention-stats">
+                <p>Попытки: <span id="intention-stats-attempts">0</span></p>
+                <p>Успехи: <span id="intention-stats-successes">0</span></p>
+                <p>Неудачи: <span id="intention-stats-failures">0</span></p>
             </div>
             <button class="back-btn">Назад</button>
         </div>
@@ -109,4 +108,4 @@
     </div>
     <script src="script.js"></script>
 </body>
-                </html>
+</html>
