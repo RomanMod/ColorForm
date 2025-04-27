@@ -1,39 +1,42 @@
 name: Deploy to GitHub Pages
-
 on:
   push:
     branches:
       - main
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+        with:
+          fetch-depth: 0 # Полный checkout для корректной работы с gh-pages
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-
       - name: Generate config.js
         run: |
           echo "window.GA_MEASUREMENT_ID = '${{ secrets.GA_MEASUREMENT_ID }}';" > ./config.js
           echo "Generated config.js with GA_MEASUREMENT_ID: ${{ secrets.GA_MEASUREMENT_ID }}"
           ls -la # Показать файлы в корне
-          cat ./config.js # Показать содержимое config.js
-
+          cat ./config.js # Показать содержимое
       - name: Copy files to publish directory
         run: |
           mkdir -p ./publish
+          echo "Copying files to ./publish"
           cp index.html script.js style.css config.js ./publish/ || { echo "Copy failed"; exit 1; }
-          ls -la ./publish # Показать файлы в ./publish
-          cat ./publish/config.js # Показать содержимое в ./publish
-
+          echo "Files in ./publish:"
+          ls -la ./publish
+          echo "Content of ./publish/config.js:"
+          cat ./publish/config.js
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./publish
           keep_files: false
+          force_orphan: true # Удалять историю gh-pages для чистого деплоя
+        run: |
+          echo "Deploying to gh-pages"
+          ls -la ./publish # Показать файлы перед деплоем
