@@ -20,9 +20,11 @@ jobs:
       - name: Generate config.js
         run: |
           echo "window.GA_MEASUREMENT_ID = '${{ secrets.GA_MEASUREMENT_ID }}';" > ./config.js
+          cat ./config.js # Для отладки
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .
+          keep_files: false # Очищать старые файлы
