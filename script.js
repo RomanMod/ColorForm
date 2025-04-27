@@ -214,6 +214,8 @@ function showIntentionResult() {
             'session_id': sessionId
         });
         feedbackButtons.remove();
+        clearTimeout(timeoutId); // Остановить таймер при нажатии
+        resetIntentionGame();
     });
 
     const failureBtn = document.createElement('button');
@@ -232,20 +234,46 @@ function showIntentionResult() {
             'session_id': sessionId
         });
         feedbackButtons.remove();
+        clearTimeout(timeoutId); // Остановить таймер при нажатии
+        resetIntentionGame();
     });
 
     feedbackButtons.appendChild(successBtn);
     feedbackButtons.appendChild(failureBtn);
     feedbackContainer.appendChild(feedbackButtons);
 
-    setTimeout(() => {
-        intentionResultDisplay.classList.add('hidden');
-        intentionDisplay.style.backgroundColor = 'black';
-        intentionResultDisplay.style.backgroundColor = 'white';
-        intentionShowBtn.classList.remove('hidden');
+    // Таймер для автоматического скрытия кнопок
+    let timeoutId = setTimeout(() => {
         feedbackButtons.remove();
-        startIntentionGame();
-    }, 5000);
+        resetIntentionGame();
+    }, 10000); // Увеличено до 10 секунд
+
+    // Сброс таймера при взаимодействии с кнопками
+    feedbackButtons.addEventListener('mouseover', () => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            feedbackButtons.remove();
+            resetIntentionGame();
+        }, 10000);
+    });
+
+    feedbackButtons.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Предотвратить прокрутку на сенсорных устройствах
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            feedbackButtons.remove();
+            resetIntentionGame();
+        }, 10000);
+    });
+}
+
+// Вспомогательная функция для сброса игры
+function resetIntentionGame() {
+    intentionResultDisplay.classList.add('hidden');
+    intentionDisplay.style.backgroundColor = 'black';
+    intentionResultDisplay.style.backgroundColor = 'white';
+    intentionShowBtn.classList.remove('hidden');
+    startIntentionGame();
 }
 
 // --- Vision Game Logic ---
@@ -455,7 +483,7 @@ backButtons.forEach(button => {
                     'successes': intentionStats.successes,
                     'failures': intentionStats.failures,
                     'mode': intentionMode,
-                    'duration_seconds': 'duration',
+                    'duration_seconds': duration,
                     'session_id': sessionId
                 });
             }
@@ -513,34 +541,4 @@ visionModeRadios.forEach(radio => {
         gtag('event', 'mode_change', {
             'event_category': 'Game',
             'event_label': 'Vision Mode',
-            'value': visionMode,
-            'session_id': sessionId
-        });
-        updateVisionChoicesDisplay();
-        setVisionChoiceButtonsEnabled(false);
-        visionShuffleBtn.disabled = false;
-        visionResultDisplay.classList.add('hidden');
-        visionDisplay.style.backgroundColor = 'black';
-        visionResultDisplay.style.backgroundColor = 'transparent';
-        visionCurrentResult = null;
-    });
-});
-
-// --- Error Handling ---
-window.addEventListener('error', (error) => {
-    gtag('event', 'error', {
-        'event_category': 'App',
-        'event_label': 'Runtime Error',
-        'error_message': error.message,
-        'error_file': error.filename,
-        'session_id': sessionId
-    });
-});
-
-// --- Session End ---
-window.addEventListener('beforeunload', () => {
-    gtag('event', 'session_end', {
-        'event_category': 'App',
-        'event_label': 'App Closed',
-        'session_id': sessionId,
-        'duration_seconds': (Date.now() - sessionStartTi
+            'value': visionMode
