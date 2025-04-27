@@ -303,8 +303,8 @@ button:disabled {
 .feedback-buttons {
     display: flex;
     gap: 10px;
-    justify-content: flex-end; /* Выравнивание вправо для гармонии с .controls */
-    margin-top: 10px; /* Отступ сверху */
+    justify-content: center;
+    margin-top: 10px; /* Отступ от дисплея */
 }
 
 /* Intention Stats */
