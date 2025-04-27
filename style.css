@@ -1,0 +1,316 @@
+/* Space Gray Theme Variables */
+:root {
+    --bg-color: #2c2c2e;         /* Темно-серый фон */
+    --text-color: #ffffff;       /* Белый текст */
+    --button-bg-color: #5a5a5c;  /* Серый цвет кнопок */
+    --button-hover-bg-color: #6a6a6c; /* Серый цвет при наведении */
+    --button-text-color: #ffffff;/* Белый текст кнопок */
+    --border-color: #48484a;     /* Цвет границ */
+    --display-bg-color: #000000; /* Черный фон дисплея */
+    --result-bg-color: #ffffff;  /* Белый фон результата */
+    --result-text-color: #000000;/* Черный текст результата */
+    --choice-btn-bg-light: #d3d3d3; /* Светло-серый фон для кнопок выбора фигур */
+    --red-color: #ff3b30;        /* Красный */
+    --blue-color: #007aff;       /* Синий */
+    --card-bg-color: #3a3a3c;    /* Чуть светлее для карточек/текста */
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Align to top */
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+#app {
+    width: 100%;
+    max-width: 600px; /* Ограничение ширины для Mini App */
+    text-align: center;
+    padding: 20px;
+    background-color: var(--bg-color); /* Убедимся, что фон внутри контейнера тоже темный */
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Отступы между секциями */
+}
+
+#user-greeting {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+
+h1, h2, h3 {
+    color: var(--text-color);
+    margin-top: 0;
+}
+
+.game-screen {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Отступы между элементами экрана */
+}
+
+.hidden {
+    display: none !important;
+}
+
+button {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    min-height: 44px; /* Рекомендованная высота для тач-интерфейсов */
+}
+
+button:hover:not(:disabled) {
+    background-color: var(--button-hover-bg-color);
+}
+
+button:disabled {
+    background-color: #48484a;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.large-btn {
+    padding: 15px 25px;
+    font-size: 1.2em;
+}
+
+.small-btn {
+    padding: 8px 15px;
+    font-size: 0.9em;
+    min-height: auto; /* Allow smaller height */
+}
+
+.display {
+    width: 100%;
+    aspect-ratio: 16 / 9; /* Соотношение сторон широкого дисплея */
+    background-color: var(--display-bg-color);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative; /* Для позиционирования результата внутри */
+    overflow: hidden; /* Убедимся, что результат не вылазит */
+}
+
+.result-display {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Background color is set dynamically or by #intention-result */
+    background-color: transparent;
+    color: var(--result-text-color); /* Default black for text */
+    display: flex;
+    /* flex-direction will be set dynamically for color mode */
+    justify-content: center;
+    align-items: center;
+    /* font-size and font-weight handled by .feedback-text or child elements */
+    border-radius: 8px; /* Inherit from display */
+}
+
+/* Styles specific to intention result display - always white background */
+#intention-result {
+     background-color: var(--result-bg-color); /* Always white background for intention result */
+     padding: 0;
+     box-sizing: border-box;
+     display: flex; /* Ensure flex for centering svg */
+     justify-content: center;
+     align-items: center;
+}
+
+/* SVG size for the Intention result display */
+#intention-result svg {
+    max-width: 100%; /* SVG займет 100% доступного места */
+    max-height: 100%;
+    width: 100%; /* Убедимся, что svg растягивается */
+    height: 100%; /* Убедимся, что svg растягивается */
+    /* fill color inherited or set by parent/css */
+}
+
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px; /* Отступ между левой и правой частью */
+    flex-wrap: wrap; /* Перенос на новую строку если не хватает места */
+}
+
+.mode-select {
+    display: flex;
+    gap: 15px; /* Отступ между радио-кнопками */
+    align-items: center;
+}
+
+.mode-select label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.mode-select input[type="radio"] {
+    margin-right: 5px;
+    accent-color: var(--button-bg-color); /* Цвет активного радио */
+}
+
+.back-btn {
+    background-color: var(--button-bg-color); /* Можно сделать немного другим цветом */
+    padding: 10px 15px;
+    font-size: 0.9em;
+}
+
+/* Menu Specific Styles */
+.menu-buttons {
+    display: flex;
+    flex-direction: column; /* Stack game buttons vertically */
+    gap: 15px;
+}
+
+.read-more-container {
+     text-align: right; /* Align button to the right */
+}
+
+
+/* "Read More" text area styles */
+#read-more-area {
+    background-color: var(--card-bg-color); /* Slightly lighter gray */
+    padding: 15px;
+    border-radius: 8px;
+    text-align: left; /* Standard text alignment */
+    margin-top: 20px; /* Space above the text area */
+    color: var(--text-color);
+}
+
+#read-more-area h3 {
+    margin-bottom: 10px;
+    color: var(--text-color); /* Ensure heading is also white */
+}
+
+#read-more-area p {
+    margin-bottom: 10px; /* Space between paragraphs */
+    line-height: 1.5; /* Improve readability */
+}
+
+#read-more-area button {
+     margin-top: 15px; /* Space above the close button */
+     display: block; /* Make button take full width or align itself */
+     margin-left: auto; /* Align close button to the right */
+}
+
+
+/* Vision Game Specific Styles */
+#vision-choices {
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* Увеличим отступ между крупными кнопками */
+    margin-top: 15px;
+}
+
+.choice-btn {
+    width: 150px; /* Сделаем кнопки крупнее */
+    height: 150px; /* Сделаем кнопки крупнее */
+    border-radius: 8px;
+    padding: 0; /* Убрать внутренние отступы */
+    display: flex; /* Для центрирования SVG */
+    justify-content: center;
+    align-items: center;
+    border: 2px solid var(--border-color); /* Небольшая граница */
+    box-sizing: border-box; /* Учитываем границу в размере */
+}
+
+.color-btn[data-choice="red"] {
+    background-color: var(--red-color);
+}
+
+.color-btn[data-choice="blue"] {
+    background-color: var(--blue-color);
+}
+
+.shape-btn {
+    background-color: var(--choice-btn-bg-light); /* Светло-серый фон */
+    border-radius: 8px; /* Закруглить углы */
+}
+
+.shape-btn svg {
+     width: 90%; /* Размер SVG внутри кнопки */
+     height: 90%;
+     fill: var(--result-text-color); /* Черный цвет фигуры */
+}
+
+
+#vision-stats {
+    margin-top: 15px;
+    font-size: 1em;
+    text-align: center;
+    color: var(--text-color);
+}
+
+#vision-stats p {
+    margin: 5px 0;
+}
+
+/* Style for the feedback text shown over the result */
+.feedback-text {
+    font-size: 20px; /* Увеличиваем размер текста до 20px */
+    font-weight: bold;
+    /* Position text absolutely in the center */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2; /* Make sure text is above shape/background */
+    /* Color set dynamically in JS based on background */
+    /* text-shadow set dynamically in JS for color mode */
+}
+
+/* Style for the container of shape + white background feedback */
+.vision-feedback-content {
+    /* This container's purpose is the white background and holding the shape SVG */
+    width: 100%;
+    height: 100%;
+    background-color: white; /* White background for shapes feedback */
+    border-radius: 8px;
+     /* Убираем padding */
+    padding: 0;
+    box-sizing: border-box;
+    display: flex; /* Use flex to center the SVG inside */
+    justify-content: center;
+    align-items: center;
+}
+
+/* Style specifically for the shape SVG when displayed as a result in Vision */
+.vision-feedback-content svg {
+     max-width: 100%; /* SVG займет 100% доступного места внутри .vision-feedback-content */
+     max-height: 100%;
+      width: 100%; /* Убедимся, что svg растягивается */
+     height: 100%; /* Убедимся, что svg растягивается */
+     fill: black; /* Убедимся, что фигура черная на белом фоне */
+}
+
+/* Ensure vision result display is flexible for centering its content */
+/* This container holds either the feedback-content div (shape mode) or just the feedback-text p (color mode) */
+#vision-result {
+    display: flex; /* Already flex */
+    justify-content: center;
+    align-items: center;
+    /* Background color is set dynamically in JS for color mode */
+    background-color: transparent;
+    /* Remove default flex-direction/gap if set, handled dynamically or by content */
+  }
