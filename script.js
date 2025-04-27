@@ -82,6 +82,7 @@ function showScreen(screenId) {
         gameIntention.classList.remove('hidden');
         currentGameMode = 'intention';
         startIntentionGame();
+        updateIntentionStatsDisplay();
         Telegram.WebApp.MainButton.hide();
     } else if (screenId === 'game-vision') {
         gameVision.classList.remove('hidden');
@@ -139,7 +140,6 @@ function startIntentionGame() {
     intentionResultDisplay.classList.add('hidden');
     intentionDisplay.style.backgroundColor = 'black';
     intentionResultDisplay.style.backgroundColor = 'white';
-    updateIntentionStatsDisplay();
     gtag('event', 'randomizer_start', {
         'event_category': 'Game',
         'event_label': 'Intention Randomizer',
@@ -161,6 +161,9 @@ function stopIntentionGame() {
 
 function showIntentionResult() {
     if (intentionRandomizerInterval === null) return;
+
+    intentionStats.attempts++; // Увеличиваем попытки
+    updateIntentionStatsDisplay();
 
     gtag('event', 'show_result', {
         'event_category': 'Game',
@@ -192,18 +195,14 @@ function showIntentionResult() {
     intentionDisplay.style.backgroundColor = 'transparent';
     intentionShowBtn.classList.add('hidden');
 
-    // Кнопки "Угадал"/"Не угадал" в новом контейнере
-    const feedbackContainer = document.getElementById('intention-feedback');
-    feedbackContainer.innerHTML = ''; // Очищаем предыдущие кнопки
+    // Кнопки "Угадал"/"Не угадал"
     const feedbackButtons = document.createElement('div');
-    feedbackButtons.className = 'feedback-buttons';
-
+    feedbackButtons.classList.add('feedback-buttons');
     const successBtn = document.createElement('button');
     successBtn.textContent = 'Угадал';
     successBtn.className = 'small-btn';
     successBtn.addEventListener('click', () => {
         intentionStats.successes++;
-        intentionStats.attempts++;
         updateIntentionStatsDisplay();
         gtag('event', 'intention_guess', {
             'event_category': 'Game',
@@ -214,16 +213,13 @@ function showIntentionResult() {
             'session_id': sessionId
         });
         feedbackButtons.remove();
-        clearTimeout(timeoutId); // Остановить таймер при нажатии
-        resetIntentionGame();
+        resetIntentionDisplay();
     });
-
     const failureBtn = document.createElement('button');
     failureBtn.textContent = 'Не угадал';
     failureBtn.className = 'small-btn';
     failureBtn.addEventListener('click', () => {
         intentionStats.failures++;
-        intentionStats.attempts++;
         updateIntentionStatsDisplay();
         gtag('event', 'intention_guess', {
             'event_category': 'Game',
@@ -234,46 +230,32 @@ function showIntentionResult() {
             'session_id': sessionId
         });
         feedbackButtons.remove();
-        clearTimeout(timeoutId); // Остановить таймер при нажатии
-        resetIntentionGame();
+        resetIntentionDisplay();
     });
-
     feedbackButtons.appendChild(successBtn);
     feedbackButtons.appendChild(failureBtn);
-    feedbackContainer.appendChild(feedbackButtons);
+    intentionResultDisplay.appendChild(feedbackButtons);
 
-    // Таймер для автоматического скрытия кнопок
-    let timeoutId = setTimeout(() => {
-        feedbackButtons.remove();
-        resetIntentionGame();
+    setTimeout(() => {
+        if (feedbackButtons.parentNode) {
+            feedbackButtons.remove();
+            resetIntentionDisplay();
+        }
     }, 10000); // Увеличено до 10 секунд
-
-    // Сброс таймера при взаимодействии с кнопками
-    feedbackButtons.addEventListener('mouseover', () => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-            feedbackButtons.remove();
-            resetIntentionGame();
-        }, 10000);
-    });
-
-    feedbackButtons.addEventListener('touchstart', (e) => {
-        e.preventDefault(); // Предотвратить прокрутку на сенсорных устройствах
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-            feedbackButtons.remove();
-            resetIntentionGame();
-        }, 10000);
-    });
 }
 
-// Вспомогательная функция для сброса игры
-function resetIntentionGame() {
+function resetIntentionDisplay() {
     intentionResultDisplay.classList.add('hidden');
     intentionDisplay.style.backgroundColor = 'black';
     intentionResultDisplay.style.backgroundColor = 'white';
     intentionShowBtn.classList.remove('hidden');
     startIntentionGame();
+}
+
+function updateIntentionStatsDisplay() {
+    intentionStatsSpanAttempts.textContent = intentionStats.attempts;
+    intentionStatsSpanSuccesses.textContent = intentionStats.successes;
+    intentionStatsSpanFailures.textContent = intentionStats.failures;
 }
 
 // --- Vision Game Logic ---
@@ -394,12 +376,6 @@ function updateVisionStatsDisplay() {
     visionStatsSpanFailures.textContent = visionStats.failures;
 }
 
-function updateIntentionStatsDisplay() {
-    intentionStatsSpanAttempts.textContent = intentionStats.attempts;
-    intentionStatsSpanSuccesses.textContent = intentionStats.successes;
-    intentionStatsSpanFailures.textContent = intentionStats.failures;
-}
-
 function updateVisionChoicesDisplay() {
     visionColorChoiceBtns.forEach(btn => btn.classList.add('hidden'));
     visionShapeChoiceBtns.forEach(btn => btn.classList.add('hidden'));
@@ -476,7 +452,7 @@ backButtons.forEach(button => {
                     'session_id': sessionId
                 });
             } else if (currentGameMode === 'intention') {
-                gtag('event', 'game_session_summary', {
+                gtag('event', 'intention_game_session_summary', {
                     'event_category': 'Game',
                     'event_label': 'Intention',
                     'attempts': intentionStats.attempts,
@@ -541,4 +517,72 @@ visionModeRadios.forEach(radio => {
         gtag('event', 'mode_change', {
             'event_category': 'Game',
             'event_label': 'Vision Mode',
-            'value': visionMode
+            'value': visionMode,
+            'session_id': sessionId
+        });
+        updateVisionChoicesDisplay();
+        setVisionChoiceButtonsEnabled(false);
+        visionShuffleBtn.disabled = false;
+        visionResultDisplay.classList.add('hidden');
+        visionDisplay.style.backgroundColor = 'black';
+        visionResultDisplay.style.backgroundColor = 'transparent';
+        visionCurrentResult = null;
+    });
+});
+
+// --- Error Handling ---
+window.addEventListener('error', (error) => {
+    gtag('event', 'error', {
+        'event_category': 'App',
+        'event_label': 'Runtime Error',
+        'error_message': error.message,
+        'error_file': error.filename,
+        'session_id': sessionId
+    });
+});
+
+// --- Session End ---
+window.addEventListener('beforeunload', () => {
+    gtag('event', 'session_end', {
+        'event_category': 'App',
+        'event_label': 'App Closed',
+        'session_id': sessionId,
+        'duration_seconds': (Date.now() - sessionStartTime) / 1000
+    });
+});
+
+// --- Telegram Web Apps Initialization ---
+Telegram.WebApp.ready();
+
+if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
+    telegramUser = Telegram.WebApp.initDataUnsafe.user;
+    userNameSpan.textContent = telegramUser.first_name || 'Игрок';
+    gtag('set', 'user_id', telegramUser.id);
+    gtag('event', 'app_launch', {
+        'event_category': 'App',
+        'event_label': 'Mini App Started',
+        'start_param': Telegram.WebApp.initDataUnsafe.start_param || 'none',
+        'session_id': sessionId
+    });
+} else {
+    gtag('event', 'app_launch', {
+        'event_category': 'App',
+        'event_label': 'Mini App Started (No User)',
+        'start_param': Telegram.WebApp.initDataUnsafe.start_param || 'none',
+        'session_id': sessionId
+    });
+}
+
+Telegram.WebApp.expand();
+showScreen('menu-screen');
+
+// App minimized
+Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
+    if (!isStateStable && !Telegram.WebApp.isExpanded()) {
+        gtag('event', 'app_background', {
+            'event_category': 'App',
+            'event_label': 'App Minimized',
+            'session_id': sessionId
+        });
+    }
+});
