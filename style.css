@@ -130,6 +130,7 @@ button:disabled {
     display: flex; /* Ensure flex for centering svg */
     justify-content: center;
     align-items: center;
+    position: relative; /* Для позиционирования feedbackButtons */
 }
 
 /* SVG size for the Intention result display */
@@ -300,13 +301,18 @@ button:disabled {
 }
 
 /* Styles for feedback buttons in Intention */
-#intention-feedback {
+.feedback-buttons {
+    position: absolute;
+    bottom: -60px; /* Расположить ниже дисплея */
+    left: 0;
+    right: 0;
     display: flex;
     justify-content: center;
     gap: 10px;
-    margin-top: 10px;
+    z-index: 3; /* Убедимся, что кнопки поверх результата */
 }
 
+/* Styles for intention stats */
 #intention-stats {
     margin-top: 15px;
     font-size: 1em;
@@ -316,9 +322,4 @@ button:disabled {
 
 #intention-stats p {
     margin: 5px 0;
-}
-
-.feedback-buttons .small-btn:active {
-    background-color: var(--button-hover-bg-color);
-    transform: scale(0.95); /* Лёгкое уменьшение при нажатии */
 }
