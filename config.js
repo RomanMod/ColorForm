@@ -1,1 +1,0 @@
-window.GA_MEASUREMENT_ID = 'G-LJML99MGNR';
