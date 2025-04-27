@@ -41,7 +41,6 @@ const gameIntention = document.getElementById('game-intention');
 const intentionDisplay = document.getElementById('intention-display');
 const intentionResultDisplay = document.getElementById('intention-result');
 const intentionShowBtn = document.getElementById('intention-show-btn');
-const intentionFeedbackButtons = document.getElementById('intention-feedback-buttons');
 const intentionModeRadios = document.querySelectorAll('input[name="intention-mode"]');
 const intentionStatsSpanAttempts = document.getElementById('intention-stats-attempts');
 const intentionStatsSpanSuccesses = document.getElementById('intention-stats-successes');
@@ -83,6 +82,7 @@ function showScreen(screenId) {
         gameIntention.classList.remove('hidden');
         currentGameMode = 'intention';
         startIntentionGame();
+        updateIntentionStatsDisplay();
         Telegram.WebApp.MainButton.hide();
     } else if (screenId === 'game-vision') {
         gameVision.classList.remove('hidden');
@@ -140,8 +140,6 @@ function startIntentionGame() {
     intentionResultDisplay.classList.add('hidden');
     intentionDisplay.style.backgroundColor = 'black';
     intentionResultDisplay.style.backgroundColor = 'white';
-    intentionFeedbackButtons.classList.add('hidden');
-    updateIntentionStatsDisplay();
     gtag('event', 'randomizer_start', {
         'event_category': 'Game',
         'event_label': 'Intention Randomizer',
@@ -159,13 +157,14 @@ function stopIntentionGame() {
     intentionResultDisplay.classList.add('hidden');
     intentionDisplay.style.backgroundColor = 'black';
     intentionResultDisplay.style.backgroundColor = 'white';
-    intentionFeedbackButtons.classList.add('hidden');
 }
 
 function showIntentionResult() {
     if (intentionRandomizerInterval === null) return;
 
     intentionStats.attempts++;
+    updateIntentionStatsDisplay();
+
     gtag('event', 'show_result', {
         'event_category': 'Game',
         'event_label': 'Intention Show',
@@ -196,9 +195,9 @@ function showIntentionResult() {
     intentionDisplay.style.backgroundColor = 'transparent';
     intentionShowBtn.classList.add('hidden');
 
-    // Кнопки "Угадал"/"Не угадал"
-    intentionFeedbackButtons.innerHTML = '';
-    intentionFeedbackButtons.classList.remove('hidden');
+    // Кнопки "Угадал"/"Не угадал" (размещаются под дисплеем)
+    const feedbackButtons = document.createElement('div');
+    feedbackButtons.className = 'feedback-buttons';
     const successBtn = document.createElement('button');
     successBtn.textContent = 'Угадал';
     successBtn.className = 'small-btn';
@@ -213,7 +212,7 @@ function showIntentionResult() {
             'result': intentionCurrentResult,
             'session_id': sessionId
         });
-        intentionFeedbackButtons.classList.add('hidden');
+        cleanupAndRestart();
     });
     const failureBtn = document.createElement('button');
     failureBtn.textContent = 'Не угадал';
@@ -229,20 +228,26 @@ function showIntentionResult() {
             'result': intentionCurrentResult,
             'session_id': sessionId
         });
-        intentionFeedbackButtons.classList.add('hidden');
+        cleanupAndRestart();
     });
-    intentionFeedbackButtons.appendChild(successBtn);
-    intentionFeedbackButtons.appendChild(failureBtn);
+    feedbackButtons.appendChild(successBtn);
+    feedbackButtons.appendChild(failureBtn);
 
-    setTimeout(() => {
+    // Размещаем кнопки под дисплеем
+    intentionDisplay.insertAdjacentElement('afterend', feedbackButtons);
+
+    // Таймер на 10 секунд
+    const timeout = setTimeout(cleanupAndRestart, 10000);
+
+    function cleanupAndRestart() {
+        clearTimeout(timeout);
+        feedbackButtons.remove();
         intentionResultDisplay.classList.add('hidden');
         intentionDisplay.style.backgroundColor = 'black';
         intentionResultDisplay.style.backgroundColor = 'white';
         intentionShowBtn.classList.remove('hidden');
-        intentionFeedbackButtons.classList.add('hidden');
-        updateIntentionStatsDisplay();
         startIntentionGame();
-    }, 10000); // Увеличено до 10 секунд
+    }
 }
 
 function updateIntentionStatsDisplay() {
@@ -270,7 +275,7 @@ function startVisionShuffle() {
     visionResultDisplay.style.backgroundColor = 'transparent';
 
     visionRandomizerTimeout = setTimeout(() => {
-        visionCurrentResult = getRandomResult(visionMode비급
+        visionCurrentResult = getRandomResult(visionMode);
         visionShuffleBtn.disabled = false;
         setVisionChoiceButtonsEnabled(true);
     }, 3000);
