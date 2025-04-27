@@ -9,6 +9,11 @@ const sessionStartTime = Date.now(); // Время начала сессии
 let intentionRandomizerInterval = null;
 let intentionCurrentResult = null;
 let intentionMode = 'color'; // 'color' or 'shape'
+let intentionStats = {
+    attempts: 0,
+    successes: 0,
+    failures: 0
+};
 
 // Vision Game State
 let visionRandomizerTimeout = null;
@@ -37,6 +42,9 @@ const intentionDisplay = document.getElementById('intention-display');
 const intentionResultDisplay = document.getElementById('intention-result');
 const intentionShowBtn = document.getElementById('intention-show-btn');
 const intentionModeRadios = document.querySelectorAll('input[name="intention-mode"]');
+const intentionStatsSpanAttempts = document.getElementById('intention-stats-attempts');
+const intentionStatsSpanSuccesses = document.getElementById('intention-stats-successes');
+const intentionStatsSpanFailures = document.getElementById('intention-stats-failures');
 
 // Vision Game Elements
 const gameVision = document.getElementById('game-vision');
@@ -131,6 +139,7 @@ function startIntentionGame() {
     intentionResultDisplay.classList.add('hidden');
     intentionDisplay.style.backgroundColor = 'black';
     intentionResultDisplay.style.backgroundColor = 'white';
+    updateIntentionStatsDisplay();
     gtag('event', 'randomizer_start', {
         'event_category': 'Game',
         'event_label': 'Intention Randomizer',
@@ -183,16 +192,19 @@ function showIntentionResult() {
     intentionDisplay.style.backgroundColor = 'transparent';
     intentionShowBtn.classList.add('hidden');
 
-    // Кнопки "Угадал"/"Не угадал"
+    // Кнопки "Угадал"/"Не угадал" в новом контейнере
+    const feedbackContainer = document.getElementById('intention-feedback');
+    feedbackContainer.innerHTML = ''; // Очищаем предыдущие кнопки
     const feedbackButtons = document.createElement('div');
-    feedbackButtons.style.position = 'absolute';
-    feedbackButtons.style.bottom = '10px';
-    feedbackButtons.style.display = 'flex';
-    feedbackButtons.style.gap = '10px';
+    feedbackButtons.className = 'feedback-buttons';
+
     const successBtn = document.createElement('button');
     successBtn.textContent = 'Угадал';
     successBtn.className = 'small-btn';
     successBtn.addEventListener('click', () => {
+        intentionStats.successes++;
+        intentionStats.attempts++;
+        updateIntentionStatsDisplay();
         gtag('event', 'intention_guess', {
             'event_category': 'Game',
             'event_label': 'Intention Guess',
@@ -203,10 +215,14 @@ function showIntentionResult() {
         });
         feedbackButtons.remove();
     });
+
     const failureBtn = document.createElement('button');
     failureBtn.textContent = 'Не угадал';
     failureBtn.className = 'small-btn';
     failureBtn.addEventListener('click', () => {
+        intentionStats.failures++;
+        intentionStats.attempts++;
+        updateIntentionStatsDisplay();
         gtag('event', 'intention_guess', {
             'event_category': 'Game',
             'event_label': 'Intention Guess',
@@ -217,9 +233,10 @@ function showIntentionResult() {
         });
         feedbackButtons.remove();
     });
+
     feedbackButtons.appendChild(successBtn);
     feedbackButtons.appendChild(failureBtn);
-    intentionResultDisplay.appendChild(feedbackButtons);
+    feedbackContainer.appendChild(feedbackButtons);
 
     setTimeout(() => {
         intentionResultDisplay.classList.add('hidden');
@@ -349,6 +366,12 @@ function updateVisionStatsDisplay() {
     visionStatsSpanFailures.textContent = visionStats.failures;
 }
 
+function updateIntentionStatsDisplay() {
+    intentionStatsSpanAttempts.textContent = intentionStats.attempts;
+    intentionStatsSpanSuccesses.textContent = intentionStats.successes;
+    intentionStatsSpanFailures.textContent = intentionStats.failures;
+}
+
 function updateVisionChoicesDisplay() {
     visionColorChoiceBtns.forEach(btn => btn.classList.add('hidden'));
     visionShapeChoiceBtns.forEach(btn => btn.classList.add('hidden'));
@@ -422,6 +445,17 @@ backButtons.forEach(button => {
                     'failures': visionStats.failures,
                     'mode': visionMode,
                     'duration_seconds': duration,
+                    'session_id': sessionId
+                });
+            } else if (currentGameMode === 'intention') {
+                gtag('event', 'game_session_summary', {
+                    'event_category': 'Game',
+                    'event_label': 'Intention',
+                    'attempts': intentionStats.attempts,
+                    'successes': intentionStats.successes,
+                    'failures': intentionStats.failures,
+                    'mode': intentionMode,
+                    'duration_seconds': 'duration',
                     'session_id': sessionId
                 });
             }
@@ -509,42 +543,4 @@ window.addEventListener('beforeunload', () => {
         'event_category': 'App',
         'event_label': 'App Closed',
         'session_id': sessionId,
-        'duration_seconds': (Date.now() - sessionStartTime) / 1000
-    });
-});
-
-// --- Telegram Web Apps Initialization ---
-Telegram.WebApp.ready();
-
-if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
-    telegramUser = Telegram.WebApp.initDataUnsafe.user;
-    userNameSpan.textContent = telegramUser.first_name || 'Игрок';
-    gtag('set', 'user_id', telegramUser.id);
-    gtag('event', 'app_launch', {
-        'event_category': 'App',
-        'event_label': 'Mini App Started',
-        'start_param': Telegram.WebApp.initDataUnsafe.start_param || 'none',
-        'session_id': sessionId
-    });
-} else {
-    gtag('event', 'app_launch', {
-        'event_category': 'App',
-        'event_label': 'Mini App Started (No User)',
-        'start_param': Telegram.WebApp.initDataUnsafe.start_param || 'none',
-        'session_id': sessionId
-    });
-}
-
-Telegram.WebApp.expand();
-showScreen('menu-screen');
-
-// App minimized
-Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
-    if (!isStateStable && !Telegram.WebApp.isExpanded()) {
-        gtag('event', 'app_background', {
-            'event_category': 'App',
-            'event_label': 'App Minimized',
-            'session_id': sessionId
-        });
-    }
-});
+        'duration_seconds': (Date.now() - sessionStartTi
