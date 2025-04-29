@@ -16,7 +16,7 @@
       gtag('js', new Date());
       if (window.GA_MEASUREMENT_ID) {
           console.log('GA4 initialized with ID:', window.GA_MEASUREMENT_ID);
-          gtag('config', window.GA_MEASUREMENT_ID);
+          gtag('config', window.GA_MEASUREMENT_ID, { 'debug_mode': true });
       } else {
           console.error('GA4 Measurement ID not found');
           gtag('event', 'error', {
