@@ -210,7 +210,8 @@ function showIntentionResult() {
             'value': 'success',
             'mode': intentionMode,
             'result': intentionCurrentResult,
-            'session_id': sessionId
+            'session_id': sessionId,
+            'custom_user_id': telegramUser.id // Добавлено
         });
         cleanupAndRestart();
     });
@@ -226,7 +227,8 @@ function showIntentionResult() {
             'value': 'failure',
             'mode': intentionMode,
             'result': intentionCurrentResult,
-            'session_id': sessionId
+            'session_id': sessionId,
+            'custom_user_id': telegramUser.id // Добавлено
         });
         cleanupAndRestart();
     });
@@ -247,9 +249,7 @@ function showIntentionResult() {
         intentionResultDisplay.style.backgroundColor = 'white';
         intentionShowBtn.classList.remove('hidden');
         startIntentionGame();
-    }
-}
-
+ lowest stat display
 function updateIntentionStatsDisplay() {
     intentionStatsSpanAttempts.textContent = intentionStats.attempts;
     intentionStatsSpanSuccesses.textContent = intentionStats.successes;
@@ -458,7 +458,8 @@ backButtons.forEach(button => {
                     'failures': intentionStats.failures,
                     'mode': intentionMode,
                     'duration_seconds': duration,
-                    'session_id': sessionId
+                    'session_id': sessionId,
+                    'custom_user_id': telegramUser.id // Добавлено
                 });
             }
             gameStartTime = null;
