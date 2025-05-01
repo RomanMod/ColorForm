@@ -249,7 +249,9 @@ function showIntentionResult() {
         intentionResultDisplay.style.backgroundColor = 'white';
         intentionShowBtn.classList.remove('hidden');
         startIntentionGame();
- lowest stat display
+    }
+}
+
 function updateIntentionStatsDisplay() {
     intentionStatsSpanAttempts.textContent = intentionStats.attempts;
     intentionStatsSpanSuccesses.textContent = intentionStats.successes;
