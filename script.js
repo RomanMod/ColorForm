@@ -58,57 +58,59 @@ const visionModeRadios = document.querySelectorAll('input[name="vision-mode"]');
 const backButtons = document.querySelectorAll('.back-btn');
 
 function sendSessionSummary() {
-    if (gameStartTime && currentGameMode !== 'menu' && (visionStats.attempts > 0 || intentionStats.attempts > 0)) {
-        const duration = (Date.now() - gameStartTime) / 1000;
-        if (currentGameMode === 'vision') {
-            console.log('Sending game_session_summary:', {
-                sessionId,
-                custom_user_id: telegramUser.id,
-                duration_seconds: duration,
-                session_start_time: Math.floor(sessionStartTime),
-                attempts: visionStats.attempts,
-                successes: visionStats.successes,
-                failures: visionStats.failures,
-                mode: visionMode
-            });
-            gtag('event', 'game_session_summary', {
-                'event_category': 'Game',
-                'event_label': 'Vision',
-                'attempts': visionStats.attempts,
-                'successes': visionStats.successes,
-                'failures': visionStats.failures,
-                'mode': visionMode,
-                'duration_seconds': duration,
-                'session_id': sessionId,
-                'custom_user_id': telegramUser.id,
-                'session_start_time': Math.floor(sessionStartTime)
-            });
-        } else if (currentGameMode === 'intention') {
-            console.log('Sending intention_session_summary:', {
-                sessionId,
-                custom_user_id: telegramUser.id,
-                duration_seconds: duration,
-                session_start_time: Math.floor(sessionStartTime),
-                attempts: intentionStats.attempts,
-                successes: intentionStats.successes,
-                failures: intentionStats.failures,
-                mode: intentionMode
-            });
-            gtag('event', 'intention_session_summary', {
-                'event_category': 'Game',
-                'event_label': 'Intention',
-                'attempts': intentionStats.attempts,
-                'successes': intentionStats.successes,
-                'failures': intentionStats.failures,
-                'mode': intentionMode,
-                'duration_seconds': duration,
-                'session_id': sessionId,
-                'custom_user_id': telegramUser.id,
-                'session_start_time': Math.floor(sessionStartTime)
-            });
-        }
-        sessionSummarySent = true;
+    if (!gameStartTime || currentGameMode === 'menu' || sessionSummarySent) return;
+    if (currentGameMode === 'vision' && visionStats.attempts === 0) return;
+    if (currentGameMode === 'intention' && intentionStats.attempts === 0) return;
+
+    const duration = (Date.now() - gameStartTime) / 1000;
+    if (currentGameMode === 'vision') {
+        console.log('Sending game_session_summary:', {
+            sessionId,
+            custom_user_id: telegramUser.id,
+            duration_seconds: duration,
+            session_start_time: Math.floor(sessionStartTime),
+            attempts: visionStats.attempts,
+            successes: visionStats.successes,
+            failures: visionStats.failures,
+            mode: visionMode
+        });
+        gtag('event', 'game_session_summary', {
+            'event_category': 'Game',
+            'event_label': 'Vision',
+            'attempts': visionStats.attempts,
+            'successes': visionStats.successes,
+            'failures': visionStats.failures,
+            'mode': visionMode,
+            'session_duration_seconds': duration, // Изменено на session_duration_seconds
+            'session_id': sessionId,
+            'custom_user_id': telegramUser.id,
+            'session_start_time': Math.floor(sessionStartTime)
+        });
+    } else if (currentGameMode === 'intention') {
+        console.log('Sending intention_session_summary:', {
+            sessionId,
+            custom_user_id: telegramUser.id,
+            duration_seconds: duration,
+            session_start_time: Math.floor(sessionStartTime),
+            attempts: intentionStats.attempts,
+            successes: intentionStats.successes,
+            failures: intentionStats.failures,
+            mode: intentionMode
+        });
+        gtag('event', 'intention_session_summary', {
+            'event_category': 'Game',
+            'event_label': 'Intention',
+            'attempts': intentionStats.attempts,
+            'successes': intentionStats.successes,
+            'failures': intentionStats.failures,
+            'mode': intentionMode,
+            'session_duration_seconds': duration, // Изменено на session_duration_seconds
+            'session_id': sessionId,
+            'custom_user_id': telegramUser.id,
+            'session_start_time': Math.floor(sessionStartTime)
+        });
     }
+    sessionSummarySent = true;
 }
 
 function showScreen(screenId) {
@@ -480,7 +482,7 @@ backButtons.forEach(button => {
                 'event_category': 'Game',
                 'event_label': currentGameMode === 'intention' ? 'Intention' : 'Vision',
                 'game_mode': currentGameMode === 'intention' ? intentionMode : visionMode,
-                'duration_seconds': duration,
+                'session_duration_seconds': duration,
                 'session_id': sessionId,
                 'custom_user_id': telegramUser.id
             });
@@ -490,7 +492,7 @@ backButtons.forEach(button => {
     });
 });
 
-intentionShowBtn.addEventListener('click', showIntentionResult);
+intentionShowBtn.addEventListener(' alculation.click', showIntentionResult);
 intentionDisplay.addEventListener('click', () => {
     if (!intentionShowBtn.classList.contains('hidden') && !intentionShowBtn.disabled && currentGameMode === 'intention') {
         gtag('event', 'display_click', {
@@ -569,7 +571,7 @@ window.addEventListener('beforeunload', () => {
         'event_category': 'App',
         'event_label': 'App Closed',
         'session_id': sessionId,
-        'duration_seconds': (Date.now() - sessionStartTime) / 1000,
+        'session_duration_seconds': (Date.now() - sessionStartTime) / 1000,
         'custom_user_id': telegramUser.id
     });
     sendSessionSummary();
@@ -605,8 +607,9 @@ if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
 
 // Периодическая отправка статистики каждые 30 секунд
 setInterval(() => {
-    sendSessionSummary();
-    sessionSummarySent = false; // Разрешаем повторную отправку
+    if (!sessionSummarySent) {
+        sendSessionSummary();
+    }
 }, 30000);
 
 Telegram.WebApp.expand();
