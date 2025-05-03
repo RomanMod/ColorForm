@@ -64,6 +64,39 @@ function showScreen(screenId) {
     stopIntentionGame();
     stopVisionGame();
 
+    if (gameStartTime && currentGameMode !== 'menu' && !sessionSummarySent && screenId === 'menu-screen') {
+        const duration = (Date.now() - gameStartTime) / 1000;
+        if (currentGameMode === 'vision') {
+            gtag('event', 'game_session_summary', {
+                'event_category': 'Game',
+                'event_label': 'Vision',
+                'attempts': visionStats.attempts,
+                'successes': visionStats.successes,
+                'failures': visionStats.failures,
+                'mode': visionMode,
+                'duration_seconds': duration,
+                'session_id': sessionId,
+                'custom_user_id': telegramUser.id,
+                'session_start_time': Math.floor(sessionStartTime)
+            });
+        } else if (currentGameMode === 'intention') {
+            gtag('event', 'intention_session_summary', {
+                'event_category': 'Game',
+                'event_label': 'Intention',
+                'attempts': intentionStats.attempts,
+                'successes': intentionStats.successes,
+                'failures': intentionStats.failures,
+                'mode': intentionMode,
+                'duration_seconds': duration,
+                'session_id': sessionId,
+                'custom_user_id': telegramUser.id,
+                'session_start_time': Math.floor(sessionStartTime)
+            });
+        }
+        sessionSummarySent = true;
+        gameStartTime = null;
+    }
+
     if (screenId === 'menu-screen') {
         menuScreen.classList.remove('hidden');
         currentGameMode = 'menu';
@@ -132,7 +165,8 @@ function startIntentionGame() {
         'event_category': 'Game',
         'event_label': 'Intention Randomizer',
         'mode': intentionMode,
-        'session_id': sessionId
+        'session_id': sessionId,
+        'custom_user_id': telegramUser.id
     });
 }
 
@@ -157,7 +191,8 @@ function showIntentionResult() {
         'event_category': 'Game',
         'event_label': 'Intention Show',
         'mode': intentionMode,
-        'session_id': sessionId
+        'session_id': sessionId,
+        'custom_user_id': telegramUser.id
     });
 
     clearInterval(intentionRandomizerInterval);
@@ -250,7 +285,8 @@ function startVisionShuffle() {
         'event_category': 'Game',
         'event_label': 'Vision Shuffle',
         'mode': visionMode,
-        'session_id': sessionId
+        'session_id': sessionId,
+        'custom_user_id': telegramUser.id
     });
 
     visionShuffleBtn.disabled = true;
@@ -380,7 +416,8 @@ btnStartIntention.addEventListener('click', () => {
         'event_category': 'Game',
         'event_label': 'Intention',
         'game_mode': intentionMode,
-        'session_id': sessionId
+        'session_id': sessionId,
+        'custom_user_id': telegramUser.id
     });
 });
 
@@ -392,7 +429,8 @@ btnStartVision.addEventListener('click', () => {
         'event_category': 'Game',
         'event_label': 'Vision',
         'game_mode': visionMode,
-        'session_id': sessionId
+        'session_id': sessionId,
+        'custom_user_id': telegramUser.id
     });
 });
 
@@ -402,7 +440,8 @@ btnReadMore.addEventListener('click', () => {
     gtag('event', 'read_more', {
         'event_category': 'App',
         'event_label': 'Read More Clicked',
-        'session_id': sessionId
+        'session_id': sessionId,
+        'custom_user_id': telegramUser.id
     });
 });
 
@@ -420,7 +459,8 @@ backButtons.forEach(button => {
                 'event_label': currentGameMode === 'intention' ? 'Intention' : 'Vision',
                 'game_mode': currentGameMode === 'intention' ? intentionMode : visionMode,
                 'duration_seconds': duration,
-                'session_id': sessionId
+                'session_id': sessionId,
+                'custom_user_id': telegramUser.id
             });
             if (currentGameMode === 'vision') {
                 gtag('event', 'game_session_summary', {
@@ -462,7 +502,8 @@ intentionDisplay.addEventListener('click', () => {
         gtag('event', 'display_click', {
             'event_category': 'Game',
             'event_label': 'Intention Display',
-            'session_id': sessionId
+            'session_id': sessionId,
+            'custom_user_id': telegramUser.id
         });
         intentionShowBtn.click();
     }
@@ -475,7 +516,8 @@ intentionModeRadios.forEach(radio => {
             'event_category': 'Game',
             'event_label': 'Intention Mode',
             'value': intentionMode,
-            'session_id': sessionId
+            'session_id': sessionId,
+            'custom_user_id': telegramUser.id
         });
         stopIntentionGame();
         startIntentionGame();
@@ -488,7 +530,8 @@ visionDisplay.addEventListener('click', () => {
         gtag('event', 'display_click', {
             'event_category': 'Game',
             'event_label': 'Vision Display',
-            'session_id': sessionId
+            'session_id': sessionId,
+            'custom_user_id': telegramUser.id
         });
         visionShuffleBtn.click();
     }
@@ -503,7 +546,8 @@ visionModeRadios.forEach(radio => {
             'event_category': 'Game',
             'event_label': 'Vision Mode',
             'value': visionMode,
-            'session_id': sessionId
+            'session_id': sessionId,
+            'custom_user_id': telegramUser.id
         });
         updateVisionChoicesDisplay();
         setVisionChoiceButtonsEnabled(false);
@@ -521,7 +565,8 @@ window.addEventListener('error', (error) => {
         'event_label': 'Runtime Error',
         'error_message': error.message,
         'error_file': error.filename,
-        'session_id': sessionId
+        'session_id': sessionId,
+        'custom_user_id': telegramUser.id
     });
 });
 
@@ -530,7 +575,8 @@ window.addEventListener('beforeunload', () => {
         'event_category': 'App',
         'event_label': 'App Closed',
         'session_id': sessionId,
-        'duration_seconds': (Date.now() - sessionStartTime) / 1000
+        'duration_seconds': (Date.now() - sessionStartTime) / 1000,
+        'custom_user_id': telegramUser.id
     });
 
     if (gameStartTime && currentGameMode !== 'menu' && !sessionSummarySent) {
@@ -576,14 +622,19 @@ if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
         'event_category': 'App',
         'event_label': 'Mini App Started',
         'start_param': Telegram.WebApp.initDataUnsafe.start_param || 'none',
-        'session_id': sessionId
+        'session_id': sessionId,
+        'custom_user_id': telegramUser.id
     });
 } else {
+    telegramUser = { id: 'anonymous_' + Math.random().toString(36).substr(2, 9) };
+    userNameSpan.textContent = 'Игрок';
+    gtag('set', 'user_id', telegramUser.id);
     gtag('event', 'app_launch', {
         'event_category': 'App',
         'event_label': 'Mini App Started (No User)',
         'start_param': Telegram.WebApp.initDataUnsafe.start_param || 'none',
-        'session_id': sessionId
+        'session_id': sessionId,
+        'custom_user_id': telegramUser.id
     });
 }
 
@@ -595,7 +646,8 @@ Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
         gtag('event', 'app_background', {
             'event_category': 'App',
             'event_label': 'App Minimized',
-            'session_id': sessionId
+            'session_id': sessionId,
+            'custom_user_id': telegramUser.id
         });
 
         if (gameStartTime && currentGameMode !== 'menu') {
