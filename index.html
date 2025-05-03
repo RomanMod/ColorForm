@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Отключение кэширования для корректной работы аналитики -->
     <meta http-equiv="Cache-Control" content="no-store, must-revalidate">
     <title>Намеренье или Виденье</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js"></script>
     <script src="config.js"></script>
     <script>
@@ -25,14 +23,12 @@
           });
       }
     </script>
-    <!-- Подключение Telegram Web Apps API -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
     <div id="app">
         <div id="user-greeting">Привет, <span id="telegram-user-name">Игрок</span>!</div>
 
-        <!-- Menu Screen -->
         <div id="menu-screen" class="game-screen">
             <h1>Намеренье или Виденье</h1>
             <div class="menu-buttons">
@@ -50,7 +46,6 @@
             </div>
         </div>
 
-        <!-- Intention Game Screen -->
         <div id="game-intention" class="game-screen hidden">
             <h2>Намеренье</h2>
             <div class="display" id="intention-display">
@@ -68,10 +63,9 @@
                 <p>Успехи: <span id="intention-stats-successes">0</span></p>
                 <p>Неудачи: <span id="intention-stats-failures">0</span></p>
             </div>
-            <button class="back-btn">Назад</button>
+            <button class="back-btn">Выход</button>
         </div>
 
-        <!-- Vision Game Screen -->
         <div id="game-vision" class="game-screen hidden">
             <h2>Виденье</h2>
             <div class="display" id="vision-display">
@@ -103,7 +97,7 @@
                 <p>Успехи: <span id="stats-successes">0</span></p>
                 <p>Неудачи: <span id="stats-failures">0</span></p>
             </div>
-            <button class="back-btn">Назад</button>
+            <button class="back-btn">Выход</button>
         </div>
     </div>
     <script src="script.js"></script>
