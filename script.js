@@ -24,7 +24,7 @@ let visionStats = {
     failures: 0
 };
 
-const appDiv Promises = document.getElementById('app');
+const appDiv = document.getElementById('app');
 const userNameSpan = document.getElementById('telegram-user-name');
 
 const menuScreen = document.getElementById('menu-screen');
