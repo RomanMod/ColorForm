@@ -1,18 +1,17 @@
-/* Space Gray Theme Variables */
 :root {
-    --bg-color: #2c2c2e;         /* Темно-серый фон */
-    --text-color: #ffffff;       /* Белый текст */
-    --button-bg-color: #5a5a5c;  /* Серый цвет кнопок */
-    --button-hover-bg-color: #6a6a6c; /* Серый цвет при наведении */
-    --button-text-color: #ffffff;/* Белый текст кнопок */
-    --border-color: #48484a;     /* Цвет границ */
-    --display-bg-color: #000000; /* Черный фон дисплея */
-    --result-bg-color: #ffffff;  /* Белый фон результата */
-    --result-text-color: #000000;/* Черный текст результата */
-    --choice-btn-bg-light: #d3d3d3; /* Светло-серый фон для кнопок выбора фигур */
-    --red-color: #ff3b30;        /* Красный */
-    --blue-color: #007aff;       /* Синий */
-    --card-bg-color: #3a3a3c;    /* Чуть светлее для карточек/текста */
+    --bg-color: #2c2c2e;
+    --text-color: #ffffff;
+    --button-bg-color: #5a5a5c;
+    --button-hover-bg-color: #6a6a6c;
+    --button-text-color: #ffffff;
+    --border-color: #48484a;
+    --display-bg-color: #000000;
+    --result-bg-color: #ffffff;
+    --result-text-color: #000000;
+    --choice-btn-bg-light: #d3d3d3;
+    --red-color: #ff3b30;
+    --blue-color: #007aff;
+    --card-bg-color: #3a3a3c;
 }
 
 body {
@@ -23,22 +22,22 @@ body {
     padding: 20px;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Align to top */
+    align-items: flex-start;
     min-height: 100vh;
     box-sizing: border-box;
 }
 
 #app {
     width: 100%;
-    max-width: 600px; /* Ограничение ширины для Mini App */
+    max-width: 600px;
     text-align: center;
     padding: 20px;
-    background-color: var(--bg-color); /* Убедимся, что фон внутри контейнера тоже темный */
+    background-color: var(--bg-color);
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Отступы между секциями */
+    gap: 20px;
 }
 
 #user-greeting {
@@ -56,7 +55,7 @@ h1, h2, h3 {
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Отступы между элементами экрана */
+    gap: 15px;
 }
 
 .hidden {
@@ -72,7 +71,7 @@ button {
     font-size: 1em;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    min-height: 44px; /* Рекомендованная высота для тач-интерфейсов */
+    min-height: 44px;
 }
 
 button:hover:not(:disabled) {
@@ -93,19 +92,19 @@ button:disabled {
 .small-btn {
     padding: 8px 15px;
     font-size: 0.9em;
-    min-height: auto; /* Allow smaller height */
+    min-height: auto;
 }
 
 .display {
     width: 100%;
-    aspect-ratio: 16 / 9; /* Соотношение сторон широкого дисплея */
+    aspect-ratio: 16 / 9;
     background-color: var(--display-bg-color);
     border-radius: 8px;
     display: flex;
     justify-content: center;
     align-items: center;
-    position: relative; /* Для позиционирования результата внутри */
-    overflow: hidden; /* Убедимся, что результат не вылазит */
+    position: relative;
+    overflow: hidden;
 }
 
 .result-display {
@@ -115,42 +114,40 @@ button:disabled {
     width: 100%;
     height: 100%;
     background-color: transparent;
-    color: var(--result-text-color); /* Default black for text */
+    color: var(--result-text-color);
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 8px; /* Inherit from display */
+    border-radius: 8px;
 }
 
-/* Styles specific to intention result display - always white background */
 #intention-result {
-    background-color: var(--result-bg-color); /* Always white background for intention result */
+    background-color: var(--result-bg-color);
     padding: 0;
     box-sizing: border-box;
-    display: flex; /* Ensure flex for centering svg */
+    display: flex;
     justify-content: center;
     align-items: center;
 }
 
-/* SVG size for the Intention result display */
 #intention-result svg {
-    max-width: 100%; /* SVG займет 100% доступного места */
+    max-width: 100%;
     max-height: 100%;
-    width: 100%; /* Убедимся, что svg растягивается */
-    height: 100%; /* Убедимся, что svg растягивается */
+    width: 100%;
+    height: 100%;
 }
 
 .controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px; /* Отступ между левой и правой частью */
-    flex-wrap: wrap; /* Перенос на новую строку если не хватает места */
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .mode-select {
     display: flex;
-    gap: 15px; /* Отступ между радио-кнопками */
+    gap: 15px;
     align-items: center;
 }
 
@@ -162,70 +159,71 @@ button:disabled {
 
 .mode-select input[type="radio"] {
     margin-right: 5px;
-    accent-color: var(--button-bg-color); /* Цвет активного радио */
+    accent-color: var(--button-bg-color);
 }
 
 .back-btn {
-    background-color: var(--button-bg-color); /* Можно сделать немного другим цветом */
+    background-color: #ff3b30;
     padding: 10px 15px;
     font-size: 0.9em;
 }
 
-/* Menu Specific Styles */
+.back-btn:hover:not(:disabled) {
+    background-color: #e6392e;
+}
+
 .menu-buttons {
     display: flex;
-    flex-direction: column; /* Stack game buttons vertically */
+    flex-direction: column;
     gap: 15px;
 }
 
 .read-more-container {
-    text-align: right; /* Align button to the right */
+    text-align: right;
 }
 
-/* "Read More" text area styles */
 #read-more-area {
-    background-color: var(--card-bg-color); /* Slightly lighter gray */
+    background-color: var(--card-bg-color);
     padding: 15px;
     border-radius: 8px;
-    text-align: left; /* Standard text alignment */
-    margin-top: 20px; /* Space above the text area */
+    text-align: left;
+    margin-top: 20px;
     color: var(--text-color);
 }
 
 #read-more-area h3 {
     margin-bottom: 10px;
-    color: var(--text-color); /* Ensure heading is also white */
+    color: var(--text-color);
 }
 
 #read-more-area p {
-    margin-bottom: 10px; /* Space between paragraphs */
-    line-height: 1.5; /* Improve readability */
+    margin-bottom: 10px;
+    line-height: 1.5;
 }
 
 #read-more-area button {
-    margin-top: 15px; /* Space above the close button */
-    display: block; /* Make button take full width or align itself */
-    margin-left: auto; /* Align close button to the right */
+    margin-top: 15px;
+    display: block;
+    margin-left: auto;
 }
 
-/* Vision Game Specific Styles */
 #vision-choices {
     display: flex;
     justify-content: center;
-    gap: 20px; /* Увеличим отступ между крупными кнопками */
+    gap: 20px;
     margin-top: 15px;
 }
 
 .choice-btn {
-    width: 150px; /* Сделаем кнопки крупнее */
-    height: 150px; /* Сделаем кнопки крупнее */
+    width: 150px;
+    height: 150px;
     border-radius: 8px;
-    padding: 0; /* Убрать внутренние отступы */
-    display: flex; /* Для центрирования SVG */
+    padding: 0;
+    display: flex;
     justify-content: center;
     align-items: center;
-    border: 2px solid var(--border-color); /* Небольшая граница */
-    box-sizing: border-box; /* Учитываем границу в размере */
+    border: 2px solid var(--border-color);
+    box-sizing: border-box;
 }
 
 .color-btn[data-choice="red"] {
@@ -237,14 +235,14 @@ button:disabled {
 }
 
 .shape-btn {
-    background-color: var(--choice-btn-bg-light); /* Светло-серый фон */
-    border-radius: 8px; /* Закруглить углы */
+    background-color: var(--choice-btn-bg-light);
+    border-radius: 8px;
 }
 
 .shape-btn svg {
-    width: 90%; /* Размер SVG внутри кнопки */
+    width: 90%;
     height: 90%;
-    fill: var(--result-text-color); /* Черный цвет фигуры */
+    fill: var(--result-text-color);
 }
 
 #vision-stats {
@@ -258,56 +256,50 @@ button:disabled {
     margin: 5px 0;
 }
 
-/* Style for the feedback text shown over the result */
 .feedback-text {
-    font-size: 20px; /* Увеличиваем размер текста до 20px */
+    font-size: 20px;
     font-weight: bold;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 2; /* Make sure text is above shape/background */
+    z-index: 2;
 }
 
-/* Style for the container of shape + white background feedback */
 .vision-feedback-content {
     width: 100%;
     height: 100%;
-    background-color: white; /* White background for shapes feedback */
+    background-color: white;
     border-radius: 8px;
     padding: 0;
     box-sizing: border-box;
-    display: flex; /* Use flex to center the SVG inside */
+    display: flex;
     justify-content: center;
     align-items: center;
 }
 
-/* Style specifically for the shape SVG when displayed as a result in Vision */
 .vision-feedback-content svg {
-    max-width: 100%; /* SVG займет 100% доступного места внутри .vision-feedback-content */
+    max-width: 100%;
     max-height: 100%;
-    width: 100%; /* Убедимся, что svg растягивается */
-    height: 100%; /* Убедимся, что svg растягивается */
-    fill: black; /* Убедимся, что фигура черная на белом фоне */
+    width: 100%;
+    height: 100%;
+    fill: black;
 }
 
-/* Ensure vision result display is flexible for centering its content */
 #vision-result {
-    display: flex; /* Already flex */
+    display: flex;
     justify-content: center;
     align-items: center;
     background-color: transparent;
 }
 
-/* Styles for feedback buttons in Intention */
 .feedback-buttons {
     display: flex;
     gap: 10px;
     justify-content: center;
-    margin-top: 10px; /* Отступ от дисплея */
+    margin-top: 10px;
 }
 
-/* Intention Stats */
 #intention-stats {
     margin-top: 15px;
     font-size: 1em;
