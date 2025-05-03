@@ -58,10 +58,19 @@ const visionModeRadios = document.querySelectorAll('input[name="vision-mode"]');
 const backButtons = document.querySelectorAll('.back-btn');
 
 function sendSessionSummary() {
-    if (gameStartTime && currentGameMode !== 'menu' && !sessionSummarySent) {
+    if (gameStartTime && currentGameMode !== 'menu' && (visionStats.attempts > 0 || intentionStats.attempts > 0)) {
         const duration = (Date.now() - gameStartTime) / 1000;
         if (currentGameMode === 'vision') {
-            console.log('Sending game_session_summary:', { duration, attempts: visionStats.attempts, session_start_time: Math.floor(sessionStartTime) });
+            console.log('Sending game_session_summary:', {
+                sessionId,
+                custom_user_id: telegramUser.id,
+                duration_seconds: duration,
+                session_start_time: Math.floor(sessionStartTime),
+                attempts: visionStats.attempts,
+                successes: visionStats.successes,
+                failures: visionStats.failures,
+                mode: visionMode
+            });
             gtag('event', 'game_session_summary', {
                 'event_category': 'Game',
                 'event_label': 'Vision',
@@ -75,7 +84,16 @@ function sendSessionSummary() {
                 'session_start_time': Math.floor(sessionStartTime)
             });
         } else if (currentGameMode === 'intention') {
-            console.log('Sending intention_session_summary:', { duration, attempts: intentionStats.attempts, session_start_time: Math.floor(sessionStartTime) });
+            console.log('Sending intention_session_summary:', {
+                sessionId,
+                custom_user_id: telegramUser.id,
+                duration_seconds: duration,
+                session_start_time: Math.floor(sessionStartTime),
+                attempts: intentionStats.attempts,
+                successes: intentionStats.successes,
+                failures: intentionStats.failures,
+                mode: intentionMode
+            });
             gtag('event', 'intention_session_summary', {
                 'event_category': 'Game',
                 'event_label': 'Intention',
@@ -90,7 +108,6 @@ function sendSessionSummary() {
             });
         }
         sessionSummarySent = true;
-        gameStartTime = null;
     }
 }
 
@@ -563,7 +580,8 @@ Telegram.WebApp.ready();
 if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
     telegramUser = Telegram.WebApp.initDataUnsafe.user;
     userNameSpan.textContent = telegramUser.first_name || 'Игрок';
-    gtag('set', 'user_id', telegramUser.id);
+    console.log('Telegram User:', { id: telegramUser.id, first_name: telegramUser.first_name });
+    gtag('set', 'user_properties', { 'custom_user_id': telegramUser.id });
     gtag('event', 'app_launch', {
         'event_category': 'App',
         'event_label': 'Mini App Started',
@@ -574,7 +592,8 @@ if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
 } else {
     telegramUser = { id: 'anonymous_' + Math.random().toString(36).substr(2, 9) };
     userNameSpan.textContent = 'Игрок';
-    gtag('set', 'user_id', telegramUser.id);
+    console.log('Anonymous User:', { id: telegramUser.id });
+    gtag('set', 'user_properties', { 'custom_user_id': telegramUser.id });
     gtag('event', 'app_launch', {
         'event_category': 'App',
         'event_label': 'Mini App Started (No User)',
@@ -584,11 +603,17 @@ if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
     });
 }
 
+// Периодическая отправка статистики каждые 30 секунд
+setInterval(() => {
+    sendSessionSummary();
+    sessionSummarySent = false; // Разрешаем повторную отправку
+}, 30000);
+
 Telegram.WebApp.expand();
 showScreen('menu-screen');
 
 Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
-    if (!isStateStable && !Telegram.WebApp.isExpanded() && !sessionSummarySent) {
+    if (!isStateStable && !Telegram.WebApp.isExpanded()) {
         gtag('event', 'app_background', {
             'event_category': 'App',
             'event_label': 'App Minimized',
