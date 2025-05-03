@@ -67,7 +67,7 @@ function sendSessionSummary() {
         console.log('Sending game_session_summary:', {
             sessionId,
             custom_user_id: telegramUser.id,
-            duration_seconds: duration,
+            session_duration_seconds: duration,
             session_start_time: Math.floor(sessionStartTime),
             attempts: visionStats.attempts,
             successes: visionStats.successes,
@@ -81,7 +81,7 @@ function sendSessionSummary() {
             'successes': visionStats.successes,
             'failures': visionStats.failures,
             'mode': visionMode,
-            'session_duration_seconds': duration, // Изменено на session_duration_seconds
+            'session_duration_seconds': duration,
             'session_id': sessionId,
             'custom_user_id': telegramUser.id,
             'session_start_time': Math.floor(sessionStartTime)
@@ -90,7 +90,7 @@ function sendSessionSummary() {
         console.log('Sending intention_session_summary:', {
             sessionId,
             custom_user_id: telegramUser.id,
-            duration_seconds: duration,
+            session_duration_seconds: duration,
             session_start_time: Math.floor(sessionStartTime),
             attempts: intentionStats.attempts,
             successes: intentionStats.successes,
@@ -104,7 +104,7 @@ function sendSessionSummary() {
             'successes': intentionStats.successes,
             'failures': intentionStats.failures,
             'mode': intentionMode,
-            'session_duration_seconds': duration, // Изменено на session_duration_seconds
+            'session_duration_seconds': duration,
             'session_id': sessionId,
             'custom_user_id': telegramUser.id,
             'session_start_time': Math.floor(sessionStartTime)
@@ -161,6 +161,7 @@ function createSvgShape(type) {
     svg.setAttribute("width", "100");
     svg.setAttribute("height", "100");
     svg.setAttribute("viewBox", "0 0 100 100");
+    svg.style.fill = 'black'; // Устанавливаем цвет заливки для фигур
 
     if (type === 'circle') {
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -178,13 +179,17 @@ function createSvgShape(type) {
 
 function startIntentionGame() {
     intentionCurrentResult = getRandomResult(intentionMode);
+    console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult);
     intentionRandomizerInterval = setInterval(() => {
         intentionCurrentResult = getRandomResult(intentionMode);
+        console.log('Randomizer updated, result:', intentionCurrentResult);
     }, 50);
     intentionShowBtn.classList.remove('hidden');
     intentionResultDisplay.classList.add('hidden');
     intentionDisplay.style.backgroundColor = 'black';
     intentionResultDisplay.style.backgroundColor = 'white';
+    intentionResultDisplay.style.display = 'flex'; // Убедимся, что элемент виден
+    intentionResultDisplay.style.zIndex = '10'; // Устанавливаем z-index выше
     gtag('event', 'randomizer_start', {
         'event_category': 'Game',
         'event_label': 'Intention Randomizer',
@@ -206,8 +211,12 @@ function stopIntentionGame() {
 }
 
 function showIntentionResult() {
-    if (intentionRandomizerInterval === null) return;
+    if (intentionRandomizerInterval === null) {
+        console.warn('Randomizer interval is null, cannot show result');
+        return;
+    }
 
+    console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult);
     intentionStats.attempts++;
     updateIntentionStatsDisplay();
 
@@ -223,17 +232,19 @@ function showIntentionResult() {
     intentionRandomizerInterval = null;
     intentionResultDisplay.innerHTML = '';
     intentionResultDisplay.style.backgroundColor = 'white';
+    intentionResultDisplay.style.display = 'flex'; // Убедимся, что элемент виден
 
     if (intentionMode === 'color') {
         const colorBlock = document.createElement('div');
         colorBlock.style.width = '100%';
         colorBlock.style.height = '100%';
-        colorBlock.style.backgroundColor = intentionCurrentResult;
+        colorBlock.style.backgroundColor = intentionCurrentResult || 'gray'; // Запасной цвет на случай ошибки
         intentionResultDisplay.appendChild(colorBlock);
         intentionResultDisplay.style.flexDirection = 'row';
         intentionResultDisplay.style.gap = '0';
     } else {
-        intentionResultDisplay.appendChild(createSvgShape(intentionCurrentResult));
+        const svg = createSvgShape(intentionCurrentResult || 'circle'); // Запасная фигура на случай ошибки
+        intentionResultDisplay.appendChild(svg);
         intentionResultDisplay.style.flexDirection = 'column';
         intentionResultDisplay.style.gap = '0';
     }
@@ -492,9 +503,10 @@ backButtons.forEach(button => {
     });
 });
 
-intentionShowBtn.addEventListener(' alculation.click', showIntentionResult);
+intentionShowBtn.addEventListener('click', showIntentionResult);
 intentionDisplay.addEventListener('click', () => {
     if (!intentionShowBtn.classList.contains('hidden') && !intentionShowBtn.disabled && currentGameMode === 'intention') {
+        console.log('Intention display clicked, triggering show result');
         gtag('event', 'display_click', {
             'event_category': 'Game',
             'event_label': 'Intention Display',
