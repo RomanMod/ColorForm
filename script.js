@@ -24,7 +24,7 @@ let visionStats = {
     failures: 0
 };
 
-const appDiv = document.getElementById('app');
+const appDiv Promises = document.getElementById('app');
 const userNameSpan = document.getElementById('telegram-user-name');
 
 const menuScreen = document.getElementById('menu-screen');
@@ -61,6 +61,10 @@ function sendSessionSummary() {
     if (!gameStartTime || currentGameMode === 'menu' || sessionSummarySent) return;
     if (currentGameMode === 'vision' && visionStats.attempts === 0) return;
     if (currentGameMode === 'intention' && intentionStats.attempts === 0) return;
+    if (!telegramUser || !telegramUser.id) {
+        console.warn('telegramUser.id is missing, cannot send session summary');
+        return;
+    }
 
     const duration = (Date.now() - gameStartTime) / 1000;
     if (currentGameMode === 'vision') {
@@ -161,7 +165,7 @@ function createSvgShape(type) {
     svg.setAttribute("width", "100");
     svg.setAttribute("height", "100");
     svg.setAttribute("viewBox", "0 0 100 100");
-    svg.style.fill = 'black'; // Устанавливаем цвет заливки для фигур
+    svg.style.fill = 'black';
 
     if (type === 'circle') {
         const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -188,8 +192,8 @@ function startIntentionGame() {
     intentionResultDisplay.classList.add('hidden');
     intentionDisplay.style.backgroundColor = 'black';
     intentionResultDisplay.style.backgroundColor = 'white';
-    intentionResultDisplay.style.display = 'flex'; // Убедимся, что элемент виден
-    intentionResultDisplay.style.zIndex = '10'; // Устанавливаем z-index выше
+    intentionResultDisplay.style.display = 'flex';
+    intentionResultDisplay.style.zIndex = '10';
     gtag('event', 'randomizer_start', {
         'event_category': 'Game',
         'event_label': 'Intention Randomizer',
@@ -232,18 +236,18 @@ function showIntentionResult() {
     intentionRandomizerInterval = null;
     intentionResultDisplay.innerHTML = '';
     intentionResultDisplay.style.backgroundColor = 'white';
-    intentionResultDisplay.style.display = 'flex'; // Убедимся, что элемент виден
+    intentionResultDisplay.style.display = 'flex';
 
     if (intentionMode === 'color') {
         const colorBlock = document.createElement('div');
         colorBlock.style.width = '100%';
         colorBlock.style.height = '100%';
-        colorBlock.style.backgroundColor = intentionCurrentResult || 'gray'; // Запасной цвет на случай ошибки
+        colorBlock.style.backgroundColor = intentionCurrentResult || 'gray';
         intentionResultDisplay.appendChild(colorBlock);
         intentionResultDisplay.style.flexDirection = 'row';
         intentionResultDisplay.style.gap = '0';
     } else {
-        const svg = createSvgShape(intentionCurrentResult || 'circle'); // Запасная фигура на случай ошибки
+        const svg = createSvgShape(intentionCurrentResult || 'circle');
         intentionResultDisplay.appendChild(svg);
         intentionResultDisplay.style.flexDirection = 'column';
         intentionResultDisplay.style.gap = '0';
