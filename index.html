@@ -56,13 +56,19 @@
                     <label><input type="radio" name="intention-mode" value="color" checked> Цвет</label>
                     <label><input type="radio" name="intention-mode" value="shape"> Фигура</label>
                 </div>
+                <div class="attempts-mode">
+                    <label><input type="radio" name="intention-attempts-mode" value="limited" checked> 10 попыток</label>
+                    <label><input type="radio" name="intention-attempts-mode" value="unlimited"> Безлимит</label>
+                </div>
                 <button id="intention-show-btn" class="small-btn">Показать</button>
             </div>
             <div id="intention-stats">
-                <p>Попытки: <span id="intention-stats-attempts">0</span></p>
+                <p>Попытки: <span id="intention-stats-attempts">0</span>/<span id="intention-stats-max-attempts">10</span></p>
                 <p>Успехи: <span id="intention-stats-successes">0</span></p>
                 <p>Неудачи: <span id="intention-stats-failures">0</span></p>
+                <p>Процент успеха: <span id="intention-stats-success-rate">0%</span></p>
             </div>
+            <button id="intention-new-game-btn" class="small-btn hidden">Новая игра</button>
             <button class="back-btn">Выход</button>
         </div>
 
@@ -75,6 +81,10 @@
                 <div class="mode-select">
                     <label><input type="radio" name="vision-mode" value="color" checked> Цвет</label>
                     <label><input type="radio" name="vision-mode" value="shape"> Фигура</label>
+                </div>
+                <div class="attempts-mode">
+                    <label><input type="radio" name="vision-attempts-mode" value="limited" checked> 10 попыток</label>
+                    <label><input type="radio" name="vision-attempts-mode" value="unlimited"> Безлимит</label>
                 </div>
                 <button id="vision-shuffle-btn" class="small-btn">Перемешать</button>
             </div>
@@ -93,10 +103,12 @@
                 </button>
             </div>
             <div id="vision-stats">
-                <p>Попытки: <span id="stats-attempts">0</span></p>
+                <p>Попытки: <span id="stats-attempts">0</span>/<span id="stats-max-attempts">10</span></p>
                 <p>Успехи: <span id="stats-successes">0</span></p>
                 <p>Неудачи: <span id="stats-failures">0</span></p>
+                <p>Процент успеха: <span id="stats-success-rate">0%</span></p>
             </div>
+            <button id="vision-new-game-btn" class="small-btn hidden">Новая игра</button>
             <button class="back-btn">Выход</button>
         </div>
     </div>
