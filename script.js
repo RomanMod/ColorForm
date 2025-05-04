@@ -1,3 +1,9 @@
+// Константы для времени "перемешивания" и генерации результата
+const SHUFFLE_BUTTON_DISABLE_TIME = 3000; // Время недоступности кнопки "Перемешать" (в мс)
+const RANDOM_RESULT_MIN_TIME = 1200; // Минимальное время для генерации результата (в мс)
+const RANDOM_RESULT_MAX_TIME = 2800; // Максимальное время для генерации результата (в мс)
+
+// Инициализация переменных
 let telegramUser = null;
 let currentGameMode = 'menu';
 let gameStartTime = null;
@@ -382,17 +388,27 @@ function startVisionShuffle() {
         'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
     });
 
+    // Отключаем кнопку "Перемешать" и кнопки выбора
     visionShuffleBtn.disabled = true;
     setVisionChoiceButtonsEnabled(false);
     visionResultDisplay.classList.add('hidden');
     visionDisplay.style.backgroundColor = 'black';
     visionResultDisplay.style.backgroundColor = 'transparent';
 
+    // Генерируем случайное время для выбора результата
+    const randomTime = RANDOM_RESULT_MIN_TIME + Math.random() * (RANDOM_RESULT_MAX_TIME - RANDOM_RESULT_MIN_TIME);
+
+    // Устанавливаем таймер для генерации случайного результата в randomTime
     visionRandomizerTimeout = setTimeout(() => {
         visionCurrentResult = getRandomResult(visionMode);
+        console.log(`Random result generated at ${randomTime}ms:`, visionCurrentResult);
+    }, randomTime);
+
+    // Устанавливаем таймер для завершения цикла перемешивания
+    setTimeout(() => {
         visionShuffleBtn.disabled = false;
         setVisionChoiceButtonsEnabled(true);
-    }, 3000);
+    }, SHUFFLE_BUTTON_DISABLE_TIME);
 }
 
 function stopVisionGame() {
