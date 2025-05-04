@@ -31,7 +31,7 @@ body {
     width: 100%;
     max-width: 600px;
     text-align: center;
-    padding: 20px;
+    padding: 20px; /* Настрой padding или padding-top для расстояния от верха экрана до "Привет, Игрок" */
     background-color: var(--bg-color);
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
@@ -42,13 +42,17 @@ body {
 
 #user-greeting {
     font-size: 1.2em;
-    margin-bottom: 10px; /* Уменьшен отступ */
+    margin-bottom: 10px; /* Настрой margin-bottom для расстояния до названия игры */
     color: var(--text-color);
 }
 
 h1, h2, h3 {
     color: var(--text-color);
     margin-top: 0;
+}
+
+h2 {
+    margin-bottom: 10px; /* Настрой margin-bottom для расстояния от названия игры до настроек */
 }
 
 .game-screen {
@@ -144,13 +148,14 @@ button:disabled {
     gap: 10px;
     flex-wrap: wrap;
     margin-bottom: 15px;
+    margin-top: 5px; /* Настрой margin-top для расстояния от названия игры до настроек */
 }
 
 .action-btn {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 10px; /* Отступ сверху для кнопки под дисплеем */
+    margin-top: 10px;
 }
 
 .mode-select, .attempts-mode {
