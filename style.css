@@ -31,7 +31,7 @@ body {
     width: 100%;
     max-width: 600px;
     text-align: center;
-    padding: 1px; /* Настрой padding или padding-top для расстояния от верха экрана до "Привет, Игрок" */
+    padding: 3px; /* Настрой padding или padding-top для расстояния от верха экрана до "Привет, Игрок" */
     background-color: var(--bg-color);
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
