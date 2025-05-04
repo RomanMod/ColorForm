@@ -487,3 +487,32 @@ function handleVisionChoice(event) {
     } else {
         visionStats.failures++;
     }
+
+ ткань для копирования
+
+---
+
+### Что изменено
+
+1. **Логирование интервала обновления в `startIntentionGame`**:
+   - В функции `updateRandomResult` добавлено логирование значения `randomInterval`:
+     ```javascript
+     console.log(`Randomizer updated, result: ${intentionCurrentResult}, next update in ${randomInterval.toFixed(2)}ms`);
+     ```
+   - Теперь в консоли будет отображаться, через сколько миллисекунд запланировано следующее обновление результата (например, `next update in 67.45ms`).
+
+2. **Логирование задержки фиксации в `showIntentionResult`**:
+   - Перед вызовом `setTimeout` добавлено логирование значения `randomDelay`:
+     ```javascript
+     console.log(`Fixation delay: ${randomDelay.toFixed(2)}ms`);
+     ```
+   - Это покажет, сколько миллисекунд составила задержка перед фиксацией результата (например, `Fixation delay: 123.78ms`).
+
+3. **Форматирование логов**:
+   - Значения `randomInterval` и `randomDelay` округляются до двух знаков после запятой с помощью `.toFixed(2)` для удобства чтения.
+
+---
+
+### Ожидаемый вывод в консоли
+Теперь при игре в **Намеренье** в консоли будут отображаться:
+- Для каждого обновления результата:
