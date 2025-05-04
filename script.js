@@ -613,9 +613,16 @@ intentionAttemptsModeRadios.forEach(radio => {
     });
 });
 
-intentionNewGameBtn.addEventListener('click', resetIntentionGame);
+intentionNewGameBtn.addEventListener('click', (event) => {
+    event.stopPropagation(); // Предотвращаем всплытие события
+    resetIntentionGame();
+});
 
-visionShuffleBtn.addEventListener('click', startVisionShuffle);
+visionNewGameBtn.addEventListener('click', (event) => {
+    event.stopPropagation(); // Предотвращаем всплытие события
+    resetVisionGame();
+});
+
 visionDisplay.addEventListener('click', () => {
     if (!visionShuffleBtn.disabled && currentGameMode === 'vision') {
         gtag('event', 'display_click', {
