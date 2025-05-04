@@ -168,8 +168,14 @@ button:disabled {
     font-size: 0.9em;
 }
 
+.back-btn {
+    background-color: #3C3F41; /* Тёмно-серый для Space Gray */
+    padding: 10px 15px;
+    font-size: 0.9em;
+}
+
 .back-btn:hover:not(:disabled) {
-    background-color: #e6392e;
+    background-color: #6A6A6C; /* Светлее серый для эффекта наведения */
 }
 
 .menu-buttons {
