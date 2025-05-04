@@ -49,9 +49,6 @@
         <div id="game-intention" class="game-screen hidden">
             <h2>Намеренье</h2>
             <button id="intention-new-game-btn" class="new-game-btn hidden">Новая игра</button>
-            <div class="display" id="intention-display">
-                <div class="result-display" id="intention-result"></div>
-            </div>
             <div class="controls">
                 <div class="mode-select">
                     <label><input type="radio" name="intention-mode" value="color" checked> Цвет</label>
@@ -62,6 +59,9 @@
                     <label><input type="radio" name="intention-attempts-mode" value="unlimited"> Безлимит</label>
                 </div>
                 <button id="intention-show-btn" class="small-btn">Показать</button>
+            </div>
+            <div class="display" id="intention-display">
+                <div class="result-display" id="intention-result"></div>
             </div>
             <div id="intention-stats">
                 <p>Попытки: <span id="intention-stats-attempts">0</span>/<span id="intention-stats-max-attempts">10</span></p>
@@ -75,9 +75,6 @@
         <div id="game-vision" class="game-screen hidden">
             <h2>Виденье</h2>
             <button id="vision-new-game-btn" class="new-game-btn hidden">Новая игра</button>
-            <div class="display" id="vision-display">
-                <div class="result-display" id="vision-result"></div>
-            </div>
             <div class="controls">
                 <div class="mode-select">
                     <label><input type="radio" name="vision-mode" value="color" checked> Цвет</label>
@@ -88,6 +85,9 @@
                     <label><input type="radio" name="vision-attempts-mode" value="unlimited"> Безлимит</label>
                 </div>
                 <button id="vision-shuffle-btn" class="small-btn">Перемешать</button>
+            </div>
+            <div class="display" id="vision-display">
+                <div class="result-display" id="vision-result"></div>
             </div>
             <div id="vision-choices">
                 <button class="choice-btn color-btn" data-choice="red"></button>
