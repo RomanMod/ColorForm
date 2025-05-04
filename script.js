@@ -1,4 +1,7 @@
-// Константы для времени "перемешивания" и генерации результата в Виденье.
+// Настройки логирования
+const ENABLE_LOGGING = false; // Установите в false, чтобы отключить логирование рандомизации
+
+// Константы для времени "перемешивания" и генерации результата в Виденье
 const SHUFFLE_BUTTON_DISABLE_TIME = 3000; // Время недоступности кнопки "Перемешать" (в мс)
 const RANDOM_RESULT_MIN_TIME = 1200; // Минимальное время для генерации результата (в мс)
 const RANDOM_RESULT_MAX_TIME = 2800; // Максимальное время для генерации результата (в мс)
@@ -237,13 +240,17 @@ function resetVisionGame() {
 function startIntentionGame() {
     console.log('Starting Intention game');
     intentionCurrentResult = getRandomResult(intentionMode);
-    console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult);
+    if (ENABLE_LOGGING) {
+        console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult);
+    }
 
     // Функция для обновления результата с случайным интервалом
     function updateRandomResult() {
         intentionCurrentResult = getRandomResult(intentionMode);
         const randomInterval = INTENTION_RANDOMIZER_MIN_INTERVAL + Math.random() * (INTENTION_RANDOMIZER_MAX_INTERVAL - INTENTION_RANDOMIZER_MIN_INTERVAL);
-        console.log(`Randomizer updated, result: ${intentionCurrentResult}, next update in ${randomInterval.toFixed(2)}ms`);
+        if (ENABLE_LOGGING) {
+            console.log(`Randomizer updated, result: ${intentionCurrentResult}, next update in ${randomInterval.toFixed(2)}ms`);
+        }
         // Планируем следующее обновление с новым случайным интервалом
         intentionRandomizerInterval = setTimeout(updateRandomResult, randomInterval);
     }
@@ -285,10 +292,14 @@ function showIntentionResult() {
 
     // Генерируем случайную задержку перед фиксацией результата
     const randomDelay = INTENTION_FIXATION_DELAY_MIN + Math.random() * (INTENTION_FIXATION_DELAY_MAX - INTENTION_FIXATION_DELAY_MIN);
-    console.log(`Fixation delay: ${randomDelay.toFixed(2)}ms`);
+    if (ENABLE_LOGGING) {
+        console.log(`Fixation delay: ${randomDelay.toFixed(2)}ms`);
+    }
 
     setTimeout(() => {
-        console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult);
+        if (ENABLE_LOGGING) {
+            console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult);
+        }
         intentionStats.attempts++;
         if (intentionStats.attempts === 1) {
             intentionAttemptsModeDiv.classList.add('hidden');
@@ -422,7 +433,9 @@ function startVisionShuffle() {
     // Устанавливаем таймер для генерации случайного результата в randomTime
     visionRandomizerTimeout = setTimeout(() => {
         visionCurrentResult = getRandomResult(visionMode);
-        console.log(`Random result generated at ${randomTime.toFixed(2)}ms:`, visionCurrentResult);
+        if (ENABLE_LOGGING) {
+            console.log(`Random result generated at ${randomTime.toFixed(2)}ms:`, visionCurrentResult);
+        }
     }, randomTime);
 
     // Устанавливаем таймер для завершения цикла перемешивания
