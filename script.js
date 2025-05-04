@@ -132,7 +132,7 @@ function sendSessionSummary() {
 }
 
 function showScreen(screenId) {
-    console.log('Showing screen:', screenId); // Отладочный лог
+    console.log('Showing screen:', screenId);
     const screens = document.querySelectorAll('.game-screen');
     screens.forEach(screen => screen.classList.add('hidden'));
 
@@ -201,6 +201,7 @@ function createSvgShape(type) {
 }
 
 function resetIntentionGame() {
+    console.log('Resetting Intention game');
     intentionStats = { attempts: 0, successes: 0, failures: 0 };
     stopIntentionGame();
     startIntentionGame();
@@ -211,6 +212,7 @@ function resetIntentionGame() {
 }
 
 function resetVisionGame() {
+    console.log('Resetting Vision game');
     visionStats = { attempts: 0, successes: 0, failures: 0 };
     stopVisionGame();
     updateVisionChoicesDisplay();
@@ -221,7 +223,7 @@ function resetVisionGame() {
 }
 
 function startIntentionGame() {
-    console.log('Starting Intention game'); // Отладочный лог
+    console.log('Starting Intention game');
     intentionCurrentResult = getRandomResult(intentionMode);
     console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult);
     intentionRandomizerInterval = setInterval(() => {
@@ -369,7 +371,7 @@ function updateIntentionStatsDisplay() {
 }
 
 function startVisionShuffle() {
-    console.log('Starting Vision shuffle'); // Отладочный лог
+    console.log('Starting Vision shuffle');
     if (visionShuffleBtn.disabled) return;
     shuffleStartTime = Date.now();
     gtag('event', 'shuffle', {
@@ -613,16 +615,9 @@ intentionAttemptsModeRadios.forEach(radio => {
     });
 });
 
-intentionNewGameBtn.addEventListener('click', (event) => {
-    event.stopPropagation(); // Предотвращаем всплытие события
-    resetIntentionGame();
-});
+intentionNewGameBtn.addEventListener('click', resetIntentionGame);
 
-visionNewGameBtn.addEventListener('click', (event) => {
-    event.stopPropagation(); // Предотвращаем всплытие события
-    resetVisionGame();
-});
-
+visionShuffleBtn.addEventListener('click', startVisionShuffle);
 visionDisplay.addEventListener('click', () => {
     if (!visionShuffleBtn.disabled && currentGameMode === 'vision') {
         gtag('event', 'display_click', {
