@@ -132,6 +132,7 @@ function sendSessionSummary() {
 }
 
 function showScreen(screenId) {
+    console.log('Showing screen:', screenId); // Отладочный лог
     const screens = document.querySelectorAll('.game-screen');
     screens.forEach(screen => screen.classList.add('hidden'));
 
@@ -220,6 +221,7 @@ function resetVisionGame() {
 }
 
 function startIntentionGame() {
+    console.log('Starting Intention game'); // Отладочный лог
     intentionCurrentResult = getRandomResult(intentionMode);
     console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult);
     intentionRandomizerInterval = setInterval(() => {
@@ -237,7 +239,7 @@ function startIntentionGame() {
         'event_label': 'Intention Randomizer',
         'mode': intentionMode,
         'session_id': sessionId,
-        'custom_user_id': telegramUser.id
+        'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
     });
 }
 
@@ -270,7 +272,7 @@ function showIntentionResult() {
         'event_label': 'Intention Show',
         'mode': intentionMode,
         'session_id': sessionId,
-        'custom_user_id': telegramUser.id
+        'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
     });
 
     clearInterval(intentionRandomizerInterval);
@@ -313,7 +315,7 @@ function showIntentionResult() {
             'mode': intentionMode,
             'result': intentionCurrentResult,
             'session_id': sessionId,
-            'custom_user_id': telegramUser.id
+            'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
         });
         cleanupAndRestart();
     });
@@ -330,7 +332,7 @@ function showIntentionResult() {
             'mode': intentionMode,
             'result': intentionCurrentResult,
             'session_id': sessionId,
-            'custom_user_id': telegramUser.id
+            'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
         });
         cleanupAndRestart();
     });
@@ -367,6 +369,7 @@ function updateIntentionStatsDisplay() {
 }
 
 function startVisionShuffle() {
+    console.log('Starting Vision shuffle'); // Отладочный лог
     if (visionShuffleBtn.disabled) return;
     shuffleStartTime = Date.now();
     gtag('event', 'shuffle', {
@@ -374,7 +377,7 @@ function startVisionShuffle() {
         'event_label': 'Vision Shuffle',
         'mode': visionMode,
         'session_id': sessionId,
-        'custom_user_id': telegramUser.id
+        'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
     });
 
     visionShuffleBtn.disabled = true;
@@ -437,7 +440,7 @@ function handleVisionChoice(event) {
         'correct_answer': visionCurrentResult,
         'time_to_guess': guessTime,
         'session_id': sessionId,
-        'custom_user_id': telegramUser.id
+        'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
     });
 
     if (isCorrect) {
@@ -518,7 +521,7 @@ btnStartIntention.addEventListener('click', () => {
         'event_label': 'Intention',
         'game_mode': intentionMode,
         'session_id': sessionId,
-        'custom_user_id': telegramUser.id
+        'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
     });
 });
 
@@ -532,7 +535,7 @@ btnStartVision.addEventListener('click', () => {
         'event_label': 'Vision',
         'game_mode': visionMode,
         'session_id': sessionId,
-        'custom_user_id': telegramUser.id
+        'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
     });
 });
 
@@ -543,7 +546,7 @@ btnReadMore.addEventListener('click', () => {
         'event_category': 'App',
         'event_label': 'Read More Clicked',
         'session_id': sessionId,
-        'custom_user_id': telegramUser.id
+        'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
     });
 });
 
@@ -562,7 +565,7 @@ backButtons.forEach(button => {
                 'game_mode': currentGameMode === 'intention' ? intentionMode : visionMode,
                 'session_duration_seconds': duration,
                 'session_id': sessionId,
-                'custom_user_id': telegramUser.id
+                'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
             });
             sendSessionSummary();
         }
@@ -578,7 +581,7 @@ intentionDisplay.addEventListener('click', () => {
             'event_category': 'Game',
             'event_label': 'Intention Display',
             'session_id': sessionId,
-            'custom_user_id': telegramUser.id
+            'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
         });
         intentionShowBtn.click();
     }
@@ -592,7 +595,7 @@ intentionModeRadios.forEach(radio => {
             'event_label': 'Intention Mode',
             'value': intentionMode,
             'session_id': sessionId,
-            'custom_user_id': telegramUser.id
+            'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
         });
         stopIntentionGame();
         startIntentionGame();
@@ -619,7 +622,7 @@ visionDisplay.addEventListener('click', () => {
             'event_category': 'Game',
             'event_label': 'Vision Display',
             'session_id': sessionId,
-            'custom_user_id': telegramUser.id
+            'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
         });
         visionShuffleBtn.click();
     }
@@ -635,7 +638,7 @@ visionModeRadios.forEach(radio => {
             'event_label': 'Vision Mode',
             'value': visionMode,
             'session_id': sessionId,
-            'custom_user_id': telegramUser.id
+            'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
         });
         updateVisionChoicesDisplay();
         setVisionChoiceButtonsEnabled(false);
@@ -668,7 +671,7 @@ window.addEventListener('error', (error) => {
         'error_message': error.message,
         'error_file': error.filename,
         'session_id': sessionId,
-        'custom_user_id':  telegramUser.id
+        'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
     });
 });
 
@@ -678,7 +681,7 @@ window.addEventListener('beforeunload', () => {
         'event_label': 'App Closed',
         'session_id': sessionId,
         'session_duration_seconds': (Date.now() - sessionStartTime) / 1000,
-        'custom_user_id': telegramUser.id
+        'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
     });
     sendSessionSummary();
 });
@@ -698,8 +701,8 @@ if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
         'custom_user_id': telegramUser.id
     });
 } else {
-    telegramUser = { id: 'anonymous_' + Math.random().toString(36).substr(2, 9) };
-    userNameSpan.textContent = 'Игрок';
+    telegramUser = { id: 'anonymous_' + Math.random().toString(36).substr(2, 9), first_name: 'Игрок' };
+    userNameSpan.textContent = telegramUser.first_name;
     console.log('Anonymous User:', { id: telegramUser.id });
     gtag('set', 'user_properties', { 'custom_user_id': telegramUser.id });
     gtag('event', 'app_launch', {
@@ -727,7 +730,7 @@ Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
             'event_category': 'App',
             'event_label': 'App Minimized',
             'session_id': sessionId,
-            'custom_user_id': telegramUser.id
+            'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
         });
         sendSessionSummary();
     }
