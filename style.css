@@ -116,7 +116,7 @@ button:disabled {
     background-color: transparent;
     color: var(--result-text-color);
     display: flex;
-    justify-content: center;
+    justify-content: center بیان
     align-items: center;
     border-radius: 8px;
 }
@@ -143,6 +143,7 @@ button:disabled {
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
+    margin-bottom: 15px; /* Добавлен отступ снизу */
 }
 
 .mode-select, .attempts-mode {
