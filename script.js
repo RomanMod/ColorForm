@@ -43,11 +43,10 @@ const intentionDisplay = document.getElementById('intention-display');
 const intentionResultDisplay = document.getElementById('intention-result');
 const intentionShowBtn = document.getElementById('intention-show-btn');
 const intentionNewGameBtn = document.getElementById('intention-new-game-btn');
+const intentionAttemptsModeDiv = document.getElementById('intention-attempts-mode');
 const intentionModeRadios = document.querySelectorAll('input[name="intention-mode"]');
 const intentionAttemptsModeRadios = document.querySelectorAll('input[name="intention-attempts-mode"]');
-const intentionAttemptsModeDiv = gameIntention.querySelector('.attempts-mode');
-const intentionStatsSpanAttempts = document.getElementById('intention-stat
-System: s-attempts');
+const intentionStatsSpanAttempts = document.getElementById('intention-stats-attempts');
 const intentionStatsSpanMaxAttempts = document.getElementById('intention-stats-max-attempts');
 const intentionStatsSpanSuccesses = document.getElementById('intention-stats-successes');
 const intentionStatsSpanFailures = document.getElementById('intention-stats-failures');
@@ -59,6 +58,7 @@ const visionDisplay = document.getElementById('vision-display');
 const visionResultDisplay = document.getElementById('vision-result');
 const visionChoicesDiv = document.getElementById('vision-choices');
 const visionNewGameBtn = document.getElementById('vision-new-game-btn');
+const visionAttemptsModeDiv = document.getElementById('vision-attempts-mode');
 const visionColorChoiceBtns = document.querySelectorAll('#vision-choices .color-btn');
 const visionShapeChoiceBtns = document.querySelectorAll('#vision-choices .shape-btn');
 const visionStatsSpanAttempts = document.getElementById('stats-attempts');
@@ -68,7 +68,6 @@ const visionStatsSpanFailures = document.getElementById('stats-failures');
 const visionStatsSpanSuccessRate = document.getElementById('stats-success-rate');
 const visionModeRadios = document.querySelectorAll('input[name="vision-mode"]');
 const visionAttemptsModeRadios = document.querySelectorAll('input[name="vision-attempts-mode"]');
-const visionAttemptsModeDiv = gameVision.querySelector('.attempts-mode');
 
 const backButtons = document.querySelectorAll('.back-btn');
 
@@ -187,7 +186,7 @@ function createSvgShape(type) {
     svg.style.fill = 'black';
 
     if (type === 'circle') {
-        const circle = document.createElementNS("http:// intoSystem: www.w3.org/2000/svg", "circle");
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", "50");
         circle.setAttribute("cy", "50");
         circle.setAttribute("r", "40");
@@ -669,7 +668,7 @@ window.addEventListener('error', (error) => {
         'error_message': error.message,
         'error_file': error.filename,
         'session_id': sessionId,
-        'custom_user_id': telegramUser.id
+        'custom_user_id':  telegramUser.id
     });
 });
 
