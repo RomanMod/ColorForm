@@ -45,7 +45,9 @@ const intentionShowBtn = document.getElementById('intention-show-btn');
 const intentionNewGameBtn = document.getElementById('intention-new-game-btn');
 const intentionModeRadios = document.querySelectorAll('input[name="intention-mode"]');
 const intentionAttemptsModeRadios = document.querySelectorAll('input[name="intention-attempts-mode"]');
-const intentionStatsSpanAttempts = document.getElementById('intention-stats-attempts');
+const intentionAttemptsModeDiv = gameIntention.querySelector('.attempts-mode');
+const intentionStatsSpanAttempts = document.getElementById('intention-stat
+System: s-attempts');
 const intentionStatsSpanMaxAttempts = document.getElementById('intention-stats-max-attempts');
 const intentionStatsSpanSuccesses = document.getElementById('intention-stats-successes');
 const intentionStatsSpanFailures = document.getElementById('intention-stats-failures');
@@ -66,6 +68,7 @@ const visionStatsSpanFailures = document.getElementById('stats-failures');
 const visionStatsSpanSuccessRate = document.getElementById('stats-success-rate');
 const visionModeRadios = document.querySelectorAll('input[name="vision-mode"]');
 const visionAttemptsModeRadios = document.querySelectorAll('input[name="vision-attempts-mode"]');
+const visionAttemptsModeDiv = gameVision.querySelector('.attempts-mode');
 
 const backButtons = document.querySelectorAll('.back-btn');
 
@@ -149,6 +152,7 @@ function showScreen(screenId) {
         startIntentionGame();
         updateIntentionStatsDisplay();
         intentionNewGameBtn.classList.add('hidden');
+        intentionAttemptsModeDiv.classList.remove('hidden');
         Telegram.WebApp.MainButton.hide();
     } else if (screenId === 'game-vision') {
         gameVision.classList.remove('hidden');
@@ -157,6 +161,7 @@ function showScreen(screenId) {
         updateVisionStatsDisplay();
         visionShuffleBtn.disabled = false;
         visionNewGameBtn.classList.add('hidden');
+        visionAttemptsModeDiv.classList.remove('hidden');
         setVisionChoiceButtonsEnabled(false);
         visionResultDisplay.classList.add('hidden');
         visionDisplay.style.backgroundColor = 'black';
@@ -182,7 +187,7 @@ function createSvgShape(type) {
     svg.style.fill = 'black';
 
     if (type === 'circle') {
-        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        const circle = document.createElementNS("http:// intoSystem: www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", "50");
         circle.setAttribute("cy", "50");
         circle.setAttribute("r", "40");
@@ -202,6 +207,7 @@ function resetIntentionGame() {
     updateIntentionStatsDisplay();
     intentionShowBtn.disabled = false;
     intentionNewGameBtn.classList.add('hidden');
+    intentionAttemptsModeDiv.classList.remove('hidden');
 }
 
 function resetVisionGame() {
@@ -211,6 +217,7 @@ function resetVisionGame() {
     updateVisionStatsDisplay();
     visionShuffleBtn.disabled = false;
     visionNewGameBtn.classList.add('hidden');
+    visionAttemptsModeDiv.classList.remove('hidden');
 }
 
 function startIntentionGame() {
@@ -254,6 +261,9 @@ function showIntentionResult() {
 
     console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult);
     intentionStats.attempts++;
+    if (intentionStats.attempts === 1) {
+        intentionAttemptsModeDiv.classList.add('hidden');
+    }
     updateIntentionStatsDisplay();
 
     gtag('event', 'show_result', {
@@ -414,6 +424,9 @@ function handleVisionChoice(event) {
     setVisionChoiceButtonsEnabled(false);
     visionShuffleBtn.disabled = true;
     visionStats.attempts++;
+    if (visionStats.attempts === 1) {
+        visionAttemptsModeDiv.classList.add('hidden');
+    }
     const isCorrect = (choice === visionCurrentResult);
 
     gtag('event', 'guess', {
