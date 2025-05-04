@@ -1,7 +1,13 @@
-// Константы для времени "перемешивания" и генерации результата
+// Константы для времени "перемешивания" и генерации результата в Виденье
 const SHUFFLE_BUTTON_DISABLE_TIME = 3000; // Время недоступности кнопки "Перемешать" (в мс)
 const RANDOM_RESULT_MIN_TIME = 1200; // Минимальное время для генерации результата (в мс)
 const RANDOM_RESULT_MAX_TIME = 2800; // Максимальное время для генерации результата (в мс)
+
+// Константы для рандомизации в Намеренье
+const INTENTION_RANDOMIZER_MIN_INTERVAL = 30; // Минимальный интервал обновления результата (в мс)
+const INTENTION_RANDOMIZER_MAX_INTERVAL = 100; // Максимальный интервал обновления результата (в мс)
+const INTENTION_FIXATION_DELAY_MIN = 0; // Минимальная задержка перед фиксацией результата (в мс)
+const INTENTION_FIXATION_DELAY_MAX = 200; // Максимальная задержка перед фиксацией результата (в мс)
 
 // Инициализация переменных
 let telegramUser = null;
@@ -232,10 +238,19 @@ function startIntentionGame() {
     console.log('Starting Intention game');
     intentionCurrentResult = getRandomResult(intentionMode);
     console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult);
-    intentionRandomizerInterval = setInterval(() => {
+
+    // Функция для обновления результата с случайным интервалом
+    function updateRandomResult() {
         intentionCurrentResult = getRandomResult(intentionMode);
         console.log('Randomizer updated, result:', intentionCurrentResult);
-    }, 50);
+        // Планируем следующее обновление с новым случайным интервалом
+        intentionRandomizerInterval = setTimeout(updateRandomResult, 
+            INTENTION_RANDOMIZER_MIN_INTERVAL + Math.random() * (INTENTION_RANDOMIZER_MAX_INTERVAL - INTENTION_RANDOMIZER_MIN_INTERVAL));
+    }
+
+    // Запускаем первый цикл обновления
+    updateRandomResult();
+
     intentionShowBtn.classList.remove('hidden');
     intentionResultDisplay.classList.add('hidden');
     intentionDisplay.style.backgroundColor = 'black';
@@ -253,7 +268,7 @@ function startIntentionGame() {
 
 function stopIntentionGame() {
     if (intentionRandomizerInterval !== null) {
-        clearInterval(intentionRandomizerInterval);
+        clearTimeout(intentionRandomizerInterval); // Изменено с clearInterval на clearTimeout
         intentionRandomizerInterval = null;
     }
     intentionShowBtn.classList.remove('hidden');
@@ -268,103 +283,108 @@ function showIntentionResult() {
         return;
     }
 
-    console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult);
-    intentionStats.attempts++;
-    if (intentionStats.attempts === 1) {
-        intentionAttemptsModeDiv.classList.add('hidden');
-    }
-    updateIntentionStatsDisplay();
+    // Генерируем случайную задержку перед фиксацией результата
+    const randomDelay = INTENTION_FIXATION_DELAY_MIN + Math.random() * (INTENTION_FIXATION_DELAY_MAX - INTENTION_FIXATION_DELAY_MIN);
 
-    gtag('event', 'show_result', {
-        'event_category': 'Game',
-        'event_label': 'Intention Show',
-        'mode': intentionMode,
-        'session_id': sessionId,
-        'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
-    });
-
-    clearInterval(intentionRandomizerInterval);
-    intentionRandomizerInterval = null;
-    intentionResultDisplay.innerHTML = '';
-    intentionResultDisplay.style.backgroundColor = 'white';
-    intentionResultDisplay.style.display = 'flex';
-
-    if (intentionMode === 'color') {
-        const colorBlock = document.createElement('div');
-        colorBlock.style.width = '100%';
-        colorBlock.style.height = '100%';
-        colorBlock.style.backgroundColor = intentionCurrentResult || 'gray';
-        intentionResultDisplay.appendChild(colorBlock);
-        intentionResultDisplay.style.flexDirection = 'row';
-        intentionResultDisplay.style.gap = '0';
-    } else {
-        const svg = createSvgShape(intentionCurrentResult || 'circle');
-        intentionResultDisplay.appendChild(svg);
-        intentionResultDisplay.style.flexDirection = 'column';
-        intentionResultDisplay.style.gap = '0';
-    }
-
-    intentionResultDisplay.classList.remove('hidden');
-    intentionDisplay.style.backgroundColor = 'transparent';
-    intentionShowBtn.classList.add('hidden');
-
-    const feedbackButtons = document.createElement('div');
-    feedbackButtons.className = 'feedback-buttons';
-    const successBtn = document.createElement('button');
-    successBtn.textContent = 'Угадал';
-    successBtn.className = 'small-btn';
-    successBtn.addEventListener('click', () => {
-        intentionStats.successes++;
-        updateIntentionStatsDisplay();
-        gtag('event', 'intention_guess', {
-            'event_category': 'Game',
-            'event_label': 'Intention Guess',
-            'value': 'success',
-            'mode': intentionMode,
-            'result': intentionCurrentResult,
-            'session_id': sessionId,
-            'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
-        });
-        cleanupAndRestart();
-    });
-    const failureBtn = document.createElement('button');
-    failureBtn.textContent = 'Не угадал';
-    failureBtn.className = 'small-btn';
-    failureBtn.addEventListener('click', () => {
-        intentionStats.failures++;
-        updateIntentionStatsDisplay();
-        gtag('event', 'intention_guess', {
-            'event_category': 'Game',
-            'event_label': 'Intention Guess',
-            'value': 'failure',
-            'mode': intentionMode,
-            'result': intentionCurrentResult,
-            'session_id': sessionId,
-            'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
-        });
-        cleanupAndRestart();
-    });
-    feedbackButtons.appendChild(successBtn);
-    feedbackButtons.appendChild(failureBtn);
-
-    intentionDisplay.insertAdjacentElement('afterend', feedbackButtons);
-
-    const timeout = setTimeout(cleanupAndRestart, 10000);
-
-    function cleanupAndRestart() {
-        clearTimeout(timeout);
-        feedbackButtons.remove();
-        intentionResultDisplay.classList.add('hidden');
-        intentionDisplay.style.backgroundColor = 'black';
-        intentionResultDisplay.style.backgroundColor = 'white';
-        intentionShowBtn.classList.remove('hidden');
-        if (intentionAttemptsMode === 'limited' && intentionStats.attempts >= intentionMaxAttempts) {
-            intentionShowBtn.disabled = true;
-            intentionNewGameBtn.classList.remove('hidden');
-        } else {
-            startIntentionGame();
+    setTimeout(() => {
+        console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult);
+        intentionStats.attempts++;
+        if (intentionStats.attempts === 1) {
+            intentionAttemptsModeDiv.classList.add('hidden');
         }
-    }
+        updateIntentionStatsDisplay();
+
+        gtag('event', 'show_result', {
+            'event_category': 'Game',
+            'event_label': 'Intention Show',
+            'mode': intentionMode,
+            'session_id': sessionId,
+            'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
+        });
+
+        clearTimeout(intentionRandomizerInterval); // Изменено с clearInterval на clearTimeout
+        intentionRandomizerInterval = null;
+        intentionResultDisplay.innerHTML = '';
+        intentionResultDisplay.style.backgroundColor = 'white';
+        intentionResultDisplay.style.display = 'flex';
+
+        if (intentionMode === 'color') {
+            const colorBlock = document.createElement('div');
+            colorBlock.style.width = '100%';
+            colorBlock.style.height = '100%';
+            colorBlock.style.backgroundColor = intentionCurrentResult || 'gray';
+            intentionResultDisplay.appendChild(colorBlock);
+            intentionResultDisplay.style.flexDirection = 'row';
+            intentionResultDisplay.style.gap = '0';
+        } else {
+            const svg = createSvgShape(intentionCurrentResult || 'circle');
+            intentionResultDisplay.appendChild(svg);
+            intentionResultDisplay.style.flexDirection = 'column';
+            intentionResultDisplay.style.gap = '0';
+        }
+
+        intentionResultDisplay.classList.remove('hidden');
+        intentionDisplay.style.backgroundColor = 'transparent';
+        intentionShowBtn.classList.add('hidden');
+
+        const feedbackButtons = document.createElement('div');
+        feedbackButtons.className = 'feedback-buttons';
+        const successBtn = document.createElement('button');
+        successBtn.textContent = 'Угадал';
+        successBtn.className = 'small-btn';
+        successBtn.addEventListener('click', () => {
+            intentionStats.successes++;
+            updateIntentionStatsDisplay();
+            gtag('event', 'intention_guess', {
+                'event_category': 'Game',
+                'event_label': 'Intention Guess',
+                'value': 'success',
+                'mode': intentionMode,
+                'result': intentionCurrentResult,
+                'session_id': sessionId,
+                'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
+            });
+            cleanupAndRestart();
+        });
+        const failureBtn = document.createElement('button');
+        failureBtn.textContent = 'Не угадал';
+        failureBtn.className = 'small-btn';
+        failureBtn.addEventListener('click', () => {
+            intentionStats.failures++;
+            updateIntentionStatsDisplay();
+            gtag('event', 'intention_guess', {
+                'event_category': 'Game',
+                'event_label': 'Intention Guess',
+                'value': 'failure',
+                'mode': intentionMode,
+                'result': intentionCurrentResult,
+                'session_id': sessionId,
+                'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
+            });
+            cleanupAndRestart();
+        });
+        feedbackButtons.appendChild(successBtn);
+        feedbackButtons.appendChild(failureBtn);
+
+        intentionDisplay.insertAdjacentElement('afterend', feedbackButtons);
+
+        const timeout = setTimeout(cleanupAndRestart, 10000);
+
+        function cleanupAndRestart() {
+            clearTimeout(timeout);
+            feedbackButtons.remove();
+            intentionResultDisplay.classList.add('hidden');
+            intentionDisplay.style.backgroundColor = 'black';
+            intentionResultDisplay.style.backgroundColor = 'white';
+            intentionShowBtn.classList.remove('hidden');
+            if (intentionAttemptsMode === 'limited' && intentionStats.attempts >= intentionMaxAttempts) {
+                intentionShowBtn.disabled = true;
+                intentionNewGameBtn.classList.remove('hidden');
+            } else {
+                startIntentionGame();
+            }
+        }
+    }, randomDelay);
 }
 
 function updateIntentionStatsDisplay() {
