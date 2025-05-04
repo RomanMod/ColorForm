@@ -244,18 +244,15 @@ function startIntentionGame() {
         console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult);
     }
 
-    // Функция для обновления результата с случайным интервалом
     function updateRandomResult() {
         intentionCurrentResult = getRandomResult(intentionMode);
         const randomInterval = INTENTION_RANDOMIZER_MIN_INTERVAL + Math.random() * (INTENTION_RANDOMIZER_MAX_INTERVAL - INTENTION_RANDOMIZER_MIN_INTERVAL);
         if (ENABLE_LOGGING) {
             console.log(`Randomizer updated, result: ${intentionCurrentResult}, next update in ${randomInterval.toFixed(2)}ms`);
         }
-        // Планируем следующее обновление с новым случайным интервалом
         intentionRandomizerInterval = setTimeout(updateRandomResult, randomInterval);
     }
 
-    // Запускаем первый цикл обновления
     updateRandomResult();
 
     intentionShowBtn.classList.remove('hidden');
@@ -290,7 +287,8 @@ function showIntentionResult() {
         return;
     }
 
-    // Генерируем случайную задержку перед фиксацией результата
+    const attemptStartTime = Date.now(); // Начало попытки
+
     const randomDelay = INTENTION_FIXATION_DELAY_MIN + Math.random() * (INTENTION_FIXATION_DELAY_MAX - INTENTION_FIXATION_DELAY_MIN);
     if (ENABLE_LOGGING) {
         console.log(`Fixation delay: ${randomDelay.toFixed(2)}ms`);
@@ -305,6 +303,8 @@ function showIntentionResult() {
             intentionAttemptsModeDiv.classList.add('hidden');
         }
         updateIntentionStatsDisplay();
+
+        const timeToGuess = Math.round((Date.now() - attemptStartTime) / 1000); // Время на попытку, округленное до целого
 
         gtag('event', 'show_result', {
             'event_category': 'Game',
@@ -351,8 +351,10 @@ function showIntentionResult() {
                 'event_category': 'Game',
                 'event_label': 'Intention Guess',
                 'value': 'success',
+                'guess_result': 1, // 1 для "угадал"
                 'mode': intentionMode,
                 'result': intentionCurrentResult,
+                'time_to_guess': timeToGuess,
                 'session_id': sessionId,
                 'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
             });
@@ -368,8 +370,10 @@ function showIntentionResult() {
                 'event_category': 'Game',
                 'event_label': 'Intention Guess',
                 'value': 'failure',
+                'guess_result': 0, // 0 для "не угадал"
                 'mode': intentionMode,
                 'result': intentionCurrentResult,
+                'time_to_guess': timeToGuess,
                 'session_id': sessionId,
                 'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
             });
@@ -420,17 +424,14 @@ function startVisionShuffle() {
         'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
     });
 
-    // Отключаем кнопку "Перемешать" и кнопки выбора
     visionShuffleBtn.disabled = true;
     setVisionChoiceButtonsEnabled(false);
     visionResultDisplay.classList.add('hidden');
     visionDisplay.style.backgroundColor = 'black';
     visionResultDisplay.style.backgroundColor = 'transparent';
 
-    // Генерируем случайное время для выбора результата
     const randomTime = RANDOM_RESULT_MIN_TIME + Math.random() * (RANDOM_RESULT_MAX_TIME - RANDOM_RESULT_MIN_TIME);
 
-    // Устанавливаем таймер для генерации случайного результата в randomTime
     visionRandomizerTimeout = setTimeout(() => {
         visionCurrentResult = getRandomResult(visionMode);
         if (ENABLE_LOGGING) {
@@ -438,7 +439,6 @@ function startVisionShuffle() {
         }
     }, randomTime);
 
-    // Устанавливаем таймер для завершения цикла перемешивания
     setTimeout(() => {
         visionShuffleBtn.disabled = false;
         setVisionChoiceButtonsEnabled(true);
@@ -474,7 +474,7 @@ function handleVisionChoice(event) {
     if (visionCurrentResult === null || !targetBtn || targetBtn.disabled) return;
 
     const choice = targetBtn.dataset.choice;
-    const guessTime = shuffleStartTime ? (Date.now() - shuffleStartTime) / 1000 : 0;
+    const guessTime = shuffleStartTime ? Math.round((Date.now() - shuffleStartTime) / 1000) : 0; // Округляем до целого
     setVisionChoiceButtonsEnabled(false);
     visionShuffleBtn.disabled = true;
     visionStats.attempts++;
@@ -482,11 +482,13 @@ function handleVisionChoice(event) {
         visionAttemptsModeDiv.classList.add('hidden');
     }
     const isCorrect = (choice === visionCurrentResult);
+    const guessResult = isCorrect ? 1 : 0; // 1 для "угадал", 0 для "не угадал"
 
     gtag('event', 'guess', {
         'event_category': 'Game',
         'event_label': 'Vision Guess',
         'value': isCorrect ? 'success' : 'failure',
+        'guess_result': guessResult,
         'mode': visionMode,
         'choice': choice,
         'correct_answer': visionCurrentResult,
@@ -766,7 +768,6 @@ if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
     });
 }
 
-// Периодическая отправка статистики каждые 30 секунд
 setInterval(() => {
     if (!sessionSummarySent) {
         sendSessionSummary();
