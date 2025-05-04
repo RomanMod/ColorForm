@@ -148,7 +148,7 @@ button:disabled {
     gap: 10px;
     flex-wrap: wrap;
     margin-bottom: 15px;
-    margin-top: 5px; /* Настрой margin-top для расстояния от названия игры до настроек */
+    margin-top: 0px; /* Настрой margin-top для расстояния от названия игры до настроек */
 }
 
 .action-btn {
