@@ -21,7 +21,7 @@ jobs:
       - name: Copy files to publish directory
         run: |
           mkdir -p ./publish
-          cp index.html script.js style.css config.js ./publish/ || { echo "Copy failed"; exit 1; }
+          cp index.html script.js style.css config.js favicon.ico ./publish/ || { echo "Copy failed"; exit 1; }
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
