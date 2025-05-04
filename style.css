@@ -166,19 +166,10 @@ button:disabled {
     background-color: #3C3F41;
     padding: 10px 15px;
     font-size: 0.9em;
+    margin: 10px 0; /* Добавлен отступ для кнопки "Новая игра" */
 }
 
 .back-btn:hover:not(:disabled) {
-    background-color: #6A6A6C;
-}
-
-.new-game-btn {
-    background-color: #3C3F41;
-    padding: 10px 15px;
-    font-size: 0.9em;
-}
-
-.new-game-btn:hover:not(:disabled) {
     background-color: #6A6A6C;
 }
 
