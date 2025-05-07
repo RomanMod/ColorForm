@@ -92,6 +92,15 @@ const visionAttemptsModeRadios = document.querySelectorAll('input[name="vision-a
 
 const backButtons = document.querySelectorAll('.back-btn');
 
+// Кэшированные элементы для оптимизации showIntentionResult
+const cachedElements = {
+    colorBlock: document.createElement('div'),
+    svgCircle: null, // Будет инициализирован после определения createSvgShape
+    svgTriangle: null
+};
+cachedElements.colorBlock.style.width = '100%';
+cachedElements.colorBlock.style.height = '100%';
+
 function sendSessionSummary() {
     if (!gameStartTime || currentGameMode === 'menu' || sessionSummarySent) return;
     if (currentGameMode === 'vision' && visionStats.attempts === 0) return;
@@ -226,6 +235,10 @@ function createSvgShape(type) {
     }
     return svg;
 }
+
+// Инициализация кэшированных SVG после определения createSvgShape
+cachedElements.svgCircle = createSvgShape('circle');
+cachedElements.svgTriangle = createSvgShape('triangle');
 
 function resetIntentionGame() {
     console.log('Resetting Intention game');
@@ -368,26 +381,40 @@ function showIntentionResult() {
         intentionResultDisplay.style.backgroundColor = 'white';
         intentionResultDisplay.style.display = 'flex';
 
-        if (intentionMode === 'color') {
-            const colorBlock = document.createElement('div');
-            colorBlock.style.width = '100%';
-            colorBlock.style.height = '100%';
-            colorBlock.style.backgroundColor = intentionCurrentResult || 'gray';
-            intentionResultDisplay.appendChild(colorBlock);
-            intentionResultDisplay.style.flexDirection = 'row';
-            intentionResultDisplay.style.gap = '0';
-        } else {
-            const svg = createSvgShape(intentionCurrentResult || 'circle');
-            intentionResultDisplay.appendChild(svg);
-            intentionResultDisplay.style.flexDirection = 'column';
-            intentionResultDisplay.style.gap = '0';
-        }
+        // Оптимизированные изменения стилей
+        const stylesToUpdate = {
+            intentionResultDisplay: {
+                flexDirection: intentionMode === 'color' ? 'row' : 'column',
+                gap: '0',
+                classList: { remove: ['hidden'] }
+            },
+            intentionDisplay: {
+                backgroundColor: 'transparent',
+                classList: { remove: ['processing'] }
+            },
+            intentionShowBtn: {
+                classList: { add: ['hidden'], remove: ['processing'] }
+            }
+        };
 
-        intentionResultDisplay.classList.remove('hidden');
-        intentionDisplay.style.backgroundColor = 'transparent';
-        intentionShowBtn.classList.add('hidden');
-        intentionShowBtn.classList.remove('processing');
-        intentionDisplay.classList.remove('processing');
+        // Применяем стили
+        Object.keys(stylesToUpdate).forEach(element => {
+            const el = eval(element); // Предполагается, что intentionResultDisplay и др. определены
+            Object.assign(el.style, stylesToUpdate[element]);
+            if (stylesToUpdate[element].classList) {
+                Object.keys(stylesToUpdate[element].classList).forEach(action => {
+                    stylesToUpdate[element].classList[action].forEach(cls => el.classList[action](cls));
+                });
+            }
+        });
+
+        if (intentionMode === 'color') {
+            cachedElements.colorBlock.style.backgroundColor = intentionCurrentResult || 'gray';
+            intentionResultDisplay.appendChild(cachedElements.colorBlock);
+        } else {
+            const svg = intentionCurrentResult === 'circle' ? cachedElements.svgCircle : cachedElements.svgTriangle;
+            intentionResultDisplay.appendChild(svg.cloneNode(true));
+        }
 
         intentionDisplay.insertAdjacentElement('afterend', feedbackButtons);
 
