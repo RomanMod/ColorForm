@@ -246,6 +246,28 @@ function resetIntentionGame() {
     }
 }
 
+function resetVisionGame() {
+    console.log('Resetting Vision game');
+    visionStats.attempts = 0;
+    visionStats.successes = 0;
+    visionStats.failures = 0;
+    visionGuessSequence = [];
+    stopVisionGame();
+    updateVisionStatsDisplay();
+    visionShuffleBtn.disabled = false;
+    visionNewGameBtn.classList.add('hidden');
+    visionAttemptsModeDiv.classList.remove('hidden');
+    setVisionChoiceButtonsEnabled(false);
+    visionResultDisplay.classList.add('hidden');
+    visionDisplay.style.backgroundColor = 'black';
+    visionResultDisplay.style.backgroundColor = 'transparent';
+    visionCurrentResult = null;
+    choiceButtonsEnabledTime = null;
+    if (ENABLE_LOGGING) {
+        console.log('Vision game reset, guess sequence cleared');
+    }
+}
+
 function startIntentionGame() {
     console.log('Starting Intention game');
     intentionCurrentResult = getRandomResult(intentionMode);
