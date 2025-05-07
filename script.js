@@ -34,6 +34,7 @@ const intentionStats = {
     successes: 0,
     failures: 0
 };
+let intentionGuessSequence = []; // Массив для последовательности угадал/не угадал в Намеренье
 
 let visionRandomizerTimeout = null;
 let visionCurrentResult = null;
@@ -45,6 +46,7 @@ const visionStats = {
     successes: 0,
     failures: 0
 };
+let visionGuessSequence = []; // Массив для последовательности угадал/не угадал в Виденье
 
 const appDiv = document.getElementById('app');
 const userNameSpan = document.getElementById('telegram-user-name');
@@ -164,6 +166,12 @@ function showScreen(screenId) {
         Telegram.WebApp.MainButton.hide();
         readMoreArea.classList.add('hidden');
         btnReadMore.classList.remove('hidden');
+        if (ENABLE_LOGGING && gameStartTime) {
+            const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
+            console.log(`Returning to menu, total game time: ${totalTime}s`);
+            console.log(`Intention guess sequence: [${intentionGuessSequence.join(', ')}]`);
+            console.log(`Vision guess sequence: [${visionGuessSequence.join(', ')}]`);
+        }
     } else if (screenId === 'game-intention') {
         gameIntention.classList.remove('hidden');
         currentGameMode = 'intention';
@@ -185,8 +193,7 @@ function showScreen(screenId) {
         visionDisplay.style.backgroundColor = 'black';
         visionResultDisplay.style.backgroundColor = 'transparent';
         visionCurrentResult = null;
-        choiceButtonsEnabledTime = null; // Сбрасываем при переходе на экран
-        Telegram.WebApp.MainButton.hide();
+        choiceButtonsEnabledTime = null;
     }
 }
 
@@ -224,12 +231,16 @@ function resetIntentionGame() {
     intentionStats.attempts = 0;
     intentionStats.successes = 0;
     intentionStats.failures = 0;
+    intentionGuessSequence = []; // Сбрасываем последовательность
     stopIntentionGame();
     startIntentionGame();
     updateIntentionStatsDisplay();
     intentionShowBtn.disabled = false;
     intentionNewGameBtn.classList.add('hidden');
     intentionAttemptsModeDiv.classList.remove('hidden');
+    if (ENABLE_LOGGING) {
+        console.log('Intention game reset, guess sequence cleared');
+    }
 }
 
 function resetVisionGame() {
@@ -237,13 +248,17 @@ function resetVisionGame() {
     visionStats.attempts = 0;
     visionStats.successes = 0;
     visionStats.failures = 0;
+    visionGuessSequence = []; // Сбрасываем последовательность
     stopVisionGame();
     updateVisionChoicesDisplay();
     updateVisionStatsDisplay();
     visionShuffleBtn.disabled = false;
     visionNewGameBtn.classList.add('hidden');
     visionAttemptsModeDiv.classList.remove('hidden');
-    choiceButtonsEnabledTime = null; // Сбрасываем при сбросе игры
+    choiceButtonsEnabledTime = null;
+    if (ENABLE_LOGGING) {
+        console.log('Vision game reset, guess sequence cleared');
+    }
 }
 
 function startIntentionGame() {
@@ -364,6 +379,7 @@ function showIntentionResult() {
                 : Math.round((guessTime - lastIntentionGuessTime) / 1000);
             lastIntentionGuessTime = guessTime;
             intentionStats.successes++;
+            intentionGuessSequence.push(1); // Добавляем успех
             updateIntentionStatsDisplay();
             gtag('event', 'intention_guess', {
                 'event_category': 'Game',
@@ -376,6 +392,10 @@ function showIntentionResult() {
                 'session_id': sessionId,
                 'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
             });
+            if (ENABLE_LOGGING) {
+                const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
+                console.log(`Intention guess: Success, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
+            }
             cleanupAndRestart();
         });
         const failureBtn = document.createElement('button');
@@ -390,6 +410,7 @@ function showIntentionResult() {
                 : Math.round((guessTime - lastIntentionGuessTime) / 1000);
             lastIntentionGuessTime = guessTime;
             intentionStats.failures++;
+            intentionGuessSequence.push(0); // Добавляем неудачу
             updateIntentionStatsDisplay();
             gtag('event', 'intention_guess', {
                 'event_category': 'Game',
@@ -402,6 +423,10 @@ function showIntentionResult() {
                 'session_id': sessionId,
                 'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
             });
+            if (ENABLE_LOGGING) {
+                const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
+                console.log(`Intention guess: Failure, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
+            }
             cleanupAndRestart();
         });
         feedbackButtons.appendChild(successBtn);
@@ -468,7 +493,7 @@ function startVisionShuffle() {
     setTimeout(() => {
         visionShuffleBtn.disabled = false;
         setVisionChoiceButtonsEnabled(true);
-        choiceButtonsEnabledTime = Date.now(); // Фиксируем время активации кнопок
+        choiceButtonsEnabledTime = Date.now();
         if (ENABLE_LOGGING) {
             console.log(`Choice buttons enabled at: ${choiceButtonsEnabledTime}`);
         }
@@ -486,7 +511,7 @@ function stopVisionGame() {
     visionDisplay.style.backgroundColor = 'black';
     visionResultDisplay.style.backgroundColor = 'transparent';
     visionCurrentResult = null;
-    choiceButtonsEnabledTime = null; // Сбрасываем при остановке игры
+    choiceButtonsEnabledTime = null;
 }
 
 function setVisionChoiceButtonsEnabled(enabled) {
@@ -514,14 +539,16 @@ function handleVisionChoice(event) {
     const isCorrect = (choice === visionCurrentResult);
     const guessResult = isCorrect ? 1 : 0;
 
-    visionResultDisplay.classList.remove('hidden'); // Момент появления результата
-    const resultDisplayTime = Date.now(); // Фиксируем время появления результата
+    visionResultDisplay.classList.remove('hidden');
+    const resultDisplayTime = Date.now();
     const guessTime = choiceButtonsEnabledTime
         ? Math.round((resultDisplayTime - choiceButtonsEnabledTime) / 1000)
         : 0;
-    choiceButtonsEnabledTime = null; // Сбрасываем после попытки
+    choiceButtonsEnabledTime = null;
+    visionGuessSequence.push(guessResult); // Добавляем результат попытки
     if (ENABLE_LOGGING) {
-        console.log(`Result displayed at: ${resultDisplayTime}, time_to_guess: ${guessTime}s`);
+        const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
+        console.log(`Vision guess: ${isCorrect ? 'Success' : 'Failure'}, time_to_guess: ${guessTime}s, sequence: [${visionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
     }
 
     gtag('event', 'guess', {
@@ -740,7 +767,7 @@ visionModeRadios.forEach(radio => {
         visionDisplay.style.backgroundColor = 'black';
         visionResultDisplay.style.backgroundColor = 'transparent';
         visionCurrentResult = null;
-        choiceButtonsEnabledTime = null; // Сбрасываем при смене режима
+        choiceButtonsEnabledTime = null;
     });
 });
 
