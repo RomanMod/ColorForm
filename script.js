@@ -10,15 +10,15 @@ const RANDOM_RESULT_MAX_TIME = 2800;
 const INTENTION_RANDOMIZER_MIN_INTERVAL = 30;
 const INTENTION_RANDOMIZER_MAX_INTERVAL = 100;
 const INTENTION_FIXATION_DELAY_MIN = 0;
-const INTENTION_FIXATION_DELAY_MAX = 500; // Увеличено до 500 мс для вариативности time_to_guess
+const INTENTION_FIXATION_DELAY_MAX = 500;
 
 // Инициализация переменных
 let telegramUser = null;
 let currentGameMode = 'menu';
 let gameStartTime = null;
 let shuffleStartTime = null;
-let intentionShowTime = null; // Время нажатия "Показать" в Намеренье
-let choiceButtonsEnabledTime = null; // Время активации кнопок выбора в Виденье
+let intentionShowTime = null;
+let choiceButtonsEnabledTime = null;
 const sessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
 const sessionStartTime = Date.now();
 let sessionSummarySent = false;
@@ -34,8 +34,8 @@ const intentionStats = {
     successes: 0,
     failures: 0
 };
-let intentionGuessSequence = []; // Массив для последовательности угадал/не угадал в Намеренье
-let intentionRandomizerCount = 0; // Счетчик обновлений рандомайзера
+let intentionGuessSequence = [];
+let intentionRandomizerCount = 0;
 
 let visionRandomizerTimeout = null;
 let visionCurrentResult = null;
@@ -47,7 +47,7 @@ const visionStats = {
     successes: 0,
     failures: 0
 };
-let visionGuessSequence = []; // Массив для последовательности угадал/не угадал в Виденье
+let visionGuessSequence = [];
 
 const appDiv = document.getElementById('app');
 const userNameSpan = document.getElementById('telegram-user-name');
@@ -92,10 +92,9 @@ const visionAttemptsModeRadios = document.querySelectorAll('input[name="vision-a
 
 const backButtons = document.querySelectorAll('.back-btn');
 
-// Кэшированные элементы для оптимизации showIntentionResult и handleVisionChoice
 const cachedElements = {
     colorBlock: document.createElement('div'),
-    svgCircle: null, // Будет инициализирован после определения createSvgShape
+    svgCircle: null,
     svgTriangle: null
 };
 cachedElements.colorBlock.style.width = '100%';
@@ -236,7 +235,6 @@ function createSvgShape(type) {
     return svg;
 }
 
-// Инициализация кэшированных SVG после определения createSvgShape
 cachedElements.svgCircle = createSvgShape('circle');
 cachedElements.svgTriangle = createSvgShape('triangle');
 
@@ -246,8 +244,8 @@ function resetIntentionGame() {
     intentionStats.successes = 0;
     intentionStats.failures = 0;
     intentionGuessSequence = [];
-    intentionShowTime = null; // Сбрасываем время показа
-    intentionRandomizerCount = 0; // Сбрасываем счетчик рандомайзера
+    intentionShowTime = null;
+    intentionRandomizerCount = 0;
     stopIntentionGame();
     startIntentionGame();
     updateIntentionStatsDisplay();
@@ -284,8 +282,8 @@ function resetVisionGame() {
 function startIntentionGame() {
     console.log('Starting Intention game');
     intentionCurrentResult = getRandomResult(intentionMode);
-    intentionShowTime = null; // Сбрасываем время показа
-    intentionRandomizerCount = 0; // Сбрасываем счетчик
+    intentionShowTime = null;
+    intentionRandomizerCount = 0;
     if (ENABLE_LOGGING) {
         console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult);
     }
@@ -294,7 +292,7 @@ function startIntentionGame() {
         intentionCurrentResult = getRandomResult(intentionMode);
         const randomInterval = INTENTION_RANDOMIZER_MIN_INTERVAL + Math.random() * (INTENTION_RANDOMIZER_MAX_INTERVAL - INTENTION_RANDOMIZER_MIN_INTERVAL);
         intentionRandomizerCount++;
-        if (ENABLE_LOGGING && intentionRandomizerCount % 10 === 0) { // Логируем каждое 10-е обновление
+        if (ENABLE_LOGGING && intentionRandomizerCount % 10 === 0) {
             console.log(`Randomizer updated (count: ${intentionRandomizerCount}), result: ${intentionCurrentResult}, next update in ${randomInterval.toFixed(2)}ms`);
         }
         intentionRandomizerInterval = setTimeout(updateRandomResult, randomInterval);
@@ -326,7 +324,7 @@ function stopIntentionGame() {
     intentionResultDisplay.classList.add('hidden');
     intentionDisplay.style.backgroundColor = 'black';
     intentionResultDisplay.style.backgroundColor = 'white';
-    intentionShowTime = null; // Сбрасываем время показа
+    intentionShowTime = null;
 }
 
 function showIntentionResult() {
@@ -336,7 +334,7 @@ function showIntentionResult() {
     }
     isProcessingIntention = true;
     intentionShowTime = Date.now();
-    const randomDelay = INTENTION_FIXATION_DELAY_MIN + Math.random() * (INTENTION_FIXATION_DELAY_MAX - INTENTION_FIXATION_DELAY_MIN);
+    const randomDelay = INTENTION_FIXATION_DELAY_MIN + Math.random() * (INTENTION_FIXATION_DELAY_MAX - INTENTION_RANDOMIZER_MIN_INTERVAL);
     if (ENABLE_LOGGING) {
         console.log(`Fixation delay: ${randomDelay.toFixed(2)}ms, show time: ${intentionShowTime}`);
     }
@@ -344,7 +342,6 @@ function showIntentionResult() {
     intentionShowBtn.classList.add('processing');
     intentionDisplay.classList.add('processing');
 
-    // Создаем кнопки заранее
     const feedbackButtons = document.createElement('div');
     feedbackButtons.className = 'feedback-buttons';
     const successBtn = document.createElement('button');
@@ -381,7 +378,6 @@ function showIntentionResult() {
         intentionResultDisplay.style.backgroundColor = 'white';
         intentionResultDisplay.style.display = 'flex';
 
-        // Оптимизированные изменения стилей
         const stylesToUpdate = {
             intentionResultDisplay: {
                 flexDirection: intentionMode === 'color' ? 'row' : 'column',
@@ -397,9 +393,8 @@ function showIntentionResult() {
             }
         };
 
-        // Применяем стили
         Object.keys(stylesToUpdate).forEach(element => {
-            const el = eval(element); // Предполагается, что intentionResultDisplay и др. определены
+            const el = eval(element);
             Object.assign(el.style, stylesToUpdate[element]);
             if (stylesToUpdate[element].classList) {
                 Object.keys(stylesToUpdate[element].classList).forEach(action => {
@@ -423,7 +418,7 @@ function showIntentionResult() {
             isProcessingIntention = false;
             const guessTimeMs = Date.now();
             const timeDiffMs = intentionShowTime ? (guessTimeMs - intentionShowTime) : 0;
-            const timeToGuess = timeDiffMs ? Math.max(1.0, Number((timeDiffMs / 1000).toFixed(1))) : 1.0;
+            const timeToGuess = timeDiffMs ? Math.max(0.1, Number((timeDiffMs / 1000).toFixed(1))) : 0.1;
             intentionStats.successes++;
             intentionGuessSequence.push(1);
             updateIntentionStatsDisplay();
@@ -450,7 +445,7 @@ function showIntentionResult() {
             isProcessingIntention = false;
             const guessTimeMs = Date.now();
             const timeDiffMs = intentionShowTime ? (guessTimeMs - intentionShowTime) : 0;
-            const timeToGuess = timeDiffMs ? Math.max(1.0, Number((timeDiffMs / 1000).toFixed(1))) : 1.0;
+            const timeToGuess = timeDiffMs ? Math.max(0.1, Number((timeDiffMs / 1000).toFixed(1))) : 0.1;
             intentionStats.failures++;
             intentionGuessSequence.push(0);
             updateIntentionStatsDisplay();
@@ -472,7 +467,20 @@ function showIntentionResult() {
             cleanupAndRestart();
         });
 
-        const timeout = setTimeout(cleanupAndRestart, 10000);
+        const timeout = setTimeout(() => {
+            if (ENABLE_LOGGING) {
+                console.log('Intention attempt timed out');
+            }
+            gtag('event', 'intention_timeout', {
+                'event_category': 'Game',
+                'event_label': 'Intention Timeout',
+                'mode': intentionMode,
+                'result': intentionCurrentResult,
+                'session_id': sessionId,
+                'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
+            });
+            cleanupAndRestart();
+        }, 60000);
 
         function cleanupAndRestart() {
             clearTimeout(timeout);
@@ -583,7 +591,7 @@ function handleVisionChoice(event) {
     visionResultDisplay.classList.remove('hidden');
     const resultDisplayTime = Date.now();
     const timeDiffMs = choiceButtonsEnabledTime ? (resultDisplayTime - choiceButtonsEnabledTime) : 0;
-    const timeToGuess = timeDiffMs ? Math.max(1.0, Number((timeDiffMs / 1000).toFixed(1))) : 1.0;
+    const timeToGuess = timeDiffMs ? Math.max(0.1, Number((timeDiffMs / 1000).toFixed(1))) : 0.1;
     choiceButtonsEnabledTime = null;
     visionGuessSequence.push(guessResult);
     if (ENABLE_LOGGING) {
@@ -617,8 +625,7 @@ function handleVisionChoice(event) {
     if (visionMode === 'color') {
         visionResultDisplay.style.backgroundColor = visionCurrentResult;
         let messageText = document.createElement('p');
-        messageText.classList.add('feedback-text');
-        messageText.textContent = isCorrect ? `Успех! (${timeToGuess}s)` : `Попробуй ещё! (${timeToGuess}s)`;
+        messageText.textContent = isCorrect ? `Успех!` : `Попробуй ещё!`;
         messageText.style.color = 'white';
         messageText.style.textShadow = '1px 1px 3px rgba(0,0,0,0.5)';
         visionResultDisplay.appendChild(messageText);
@@ -631,8 +638,7 @@ function handleVisionChoice(event) {
         const svg = visionCurrentResult === 'circle' ? cachedElements.svgCircle : cachedElements.svgTriangle;
         feedbackContent.appendChild(svg.cloneNode(true));
         const messageText = document.createElement('p');
-        messageText.classList.add('feedback-text');
-        messageText.textContent = isCorrect ? `Успех! (${timeToGuess}s)` : `Попробуй ещё! (${timeToGuess}s)`;
+        messageText.textContent = isCorrect ? `Успех!` : `Попробуй ещё!`;
         messageText.style.color = 'black';
         feedbackContent.appendChild(messageText);
         visionResultDisplay.appendChild(feedbackContent);
