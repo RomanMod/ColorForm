@@ -142,7 +142,7 @@ function sendSessionSummary() {
             session_start_time: Math.floor(sessionStartTime),
             attempts: intentionStats.attempts,
             successes: intentionStats.successes,
-            failures: visionStats.failures,
+            failures: intentionStats.failures,
             mode: intentionMode
         });
         gtag('event', 'intention_session_summary', {
@@ -421,10 +421,9 @@ function showIntentionResult() {
         successBtn.addEventListener('click', () => {
             if (!isProcessingIntention) return;
             isProcessingIntention = false;
-            const guessTime = Date.now();
-            const timeToGuess = intentionShowTime
-                ? Math.round((guessTime - intentionShowTime) / 1000)
-                : 0;
+            const guessTimeMs = Date.now();
+            const timeDiffMs = intentionShowTime ? (guessTimeMs - intentionShowTime) : 0;
+            const timeToGuess = timeDiffMs ? Math.max(1.0, Number((timeDiffMs / 1000).toFixed(1))) : 1.0;
             intentionStats.successes++;
             intentionGuessSequence.push(1);
             updateIntentionStatsDisplay();
@@ -441,7 +440,7 @@ function showIntentionResult() {
             });
             if (ENABLE_LOGGING) {
                 const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-                console.log(`Intention guess: Success, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
+                console.log(`Intention guess: Success, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, time_diff_ms: ${timeDiffMs}, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
             }
             cleanupAndRestart();
         });
@@ -449,10 +448,9 @@ function showIntentionResult() {
         failureBtn.addEventListener('click', () => {
             if (!isProcessingIntention) return;
             isProcessingIntention = false;
-            const guessTime = Date.now();
-            const timeToGuess = intentionShowTime
-                ? Math.round((guessTime - intentionShowTime) / 1000)
-                : 0;
+            const guessTimeMs = Date.now();
+            const timeDiffMs = intentionShowTime ? (guessTimeMs - intentionShowTime) : 0;
+            const timeToGuess = timeDiffMs ? Math.max(1.0, Number((timeDiffMs / 1000).toFixed(1))) : 1.0;
             intentionStats.failures++;
             intentionGuessSequence.push(0);
             updateIntentionStatsDisplay();
@@ -469,7 +467,7 @@ function showIntentionResult() {
             });
             if (ENABLE_LOGGING) {
                 const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-                console.log(`Intention guess: Failure, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
+                console.log(`Intention guess: Failure, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, time_diff_ms: ${timeDiffMs}, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
             }
             cleanupAndRestart();
         });
@@ -535,8 +533,10 @@ function startVisionShuffle() {
         visionShuffleBtn.disabled = false;
         setVisionChoiceButtonsEnabled(true);
         choiceButtonsEnabledTime = Date.now();
+        visionChoicesDiv.classList.add('active');
+        setTimeout(() => visionChoicesDiv.classList.remove('active'), 1000);
         if (ENABLE_LOGGING) {
-            console.log(`Choice buttons enabled at: ${choiceButtonsEnabledTime}`);
+            console.log(`Choice buttons enabled at: ${choiceButtonsEnabledTime}, mode: ${visionMode}`);
         }
     }, SHUFFLE_BUTTON_DISABLE_TIME);
 }
@@ -582,14 +582,13 @@ function handleVisionChoice(event) {
 
     visionResultDisplay.classList.remove('hidden');
     const resultDisplayTime = Date.now();
-    const guessTime = choiceButtonsEnabledTime
-        ? Math.round((resultDisplayTime - choiceButtonsEnabledTime) / 1000)
-        : 0;
+    const timeDiffMs = choiceButtonsEnabledTime ? (resultDisplayTime - choiceButtonsEnabledTime) : 0;
+    const timeToGuess = timeDiffMs ? Math.max(1.0, Number((timeDiffMs / 1000).toFixed(1))) : 1.0;
     choiceButtonsEnabledTime = null;
     visionGuessSequence.push(guessResult);
     if (ENABLE_LOGGING) {
-        const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-        console.log(`Vision guess: ${isCorrect ? 'Success' : 'Failure'}, choice: ${choice}, correct: ${visionCurrentResult}, time_to_guess: ${guessTime}s, sequence: [${visionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
+        const totalTime = gameStartTime ? ((Date.now() - gameStartTime) / 1000).toFixed(1) : 'N/A';
+        console.log(`Vision guess: ${isCorrect ? 'Success' : 'Failure'}, choice: ${choice}, correct: ${visionCurrentResult}, time_to_guess: ${timeToGuess}s, time_diff_ms: ${timeDiffMs}, sequence: [${visionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
     }
 
     gtag('event', 'guess', {
@@ -600,7 +599,7 @@ function handleVisionChoice(event) {
         'mode': visionMode,
         'choice': choice,
         'correct_answer': visionCurrentResult,
-        'time_to_guess': guessTime,
+        'time_to_guess': timeToGuess,
         'session_id': sessionId,
         'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
     });
@@ -619,7 +618,7 @@ function handleVisionChoice(event) {
         visionResultDisplay.style.backgroundColor = visionCurrentResult;
         let messageText = document.createElement('p');
         messageText.classList.add('feedback-text');
-        messageText.textContent = isCorrect ? 'Успех!' : 'Попробуй ещё!';
+        messageText.textContent = isCorrect ? `Успех! (${timeToGuess}s)` : `Попробуй ещё! (${timeToGuess}s)`;
         messageText.style.color = 'white';
         messageText.style.textShadow = '1px 1px 3px rgba(0,0,0,0.5)';
         visionResultDisplay.appendChild(messageText);
@@ -631,6 +630,11 @@ function handleVisionChoice(event) {
         feedbackContent.style.backgroundColor = 'white';
         const svg = visionCurrentResult === 'circle' ? cachedElements.svgCircle : cachedElements.svgTriangle;
         feedbackContent.appendChild(svg.cloneNode(true));
+        const messageText = document.createElement('p');
+        messageText.classList.add('feedback-text');
+        messageText.textContent = isCorrect ? `Успех! (${timeToGuess}s)` : `Попробуй ещё! (${timeToGuess}s)`;
+        messageText.style.color = 'black';
+        feedbackContent.appendChild(messageText);
         visionResultDisplay.appendChild(feedbackContent);
         visionResultDisplay.style.flexDirection = 'row';
         visionResultDisplay.style.gap = '0';
