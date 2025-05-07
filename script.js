@@ -17,7 +17,7 @@ let telegramUser = null;
 let currentGameMode = 'menu';
 let gameStartTime = null;
 let shuffleStartTime = null;
-let lastIntentionGuessTime = null;
+let intentionShowTime = null; // Время нажатия "Показать" в Намеренье
 let choiceButtonsEnabledTime = null; // Время активации кнопок выбора в Виденье
 const sessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
 const sessionStartTime = Date.now();
@@ -35,6 +35,7 @@ const intentionStats = {
     failures: 0
 };
 let intentionGuessSequence = []; // Массив для последовательности угадал/не угадал в Намеренье
+let intentionRandomizerCount = 0; // Счетчик обновлений рандомайзера
 
 let visionRandomizerTimeout = null;
 let visionCurrentResult = null;
@@ -231,7 +232,9 @@ function resetIntentionGame() {
     intentionStats.attempts = 0;
     intentionStats.successes = 0;
     intentionStats.failures = 0;
-    intentionGuessSequence = []; // Сбрасываем последовательность
+    intentionGuessSequence = [];
+    intentionShowTime = null; // Сбрасываем время показа
+    intentionRandomizerCount = 0; // Сбрасываем счетчик рандомайзера
     stopIntentionGame();
     startIntentionGame();
     updateIntentionStatsDisplay();
@@ -239,32 +242,15 @@ function resetIntentionGame() {
     intentionNewGameBtn.classList.add('hidden');
     intentionAttemptsModeDiv.classList.remove('hidden');
     if (ENABLE_LOGGING) {
-        console.log('Intention game reset, guess sequence cleared');
-    }
-}
-
-function resetVisionGame() {
-    console.log('Resetting Vision game');
-    visionStats.attempts = 0;
-    visionStats.successes = 0;
-    visionStats.failures = 0;
-    visionGuessSequence = []; // Сбрасываем последовательность
-    stopVisionGame();
-    updateVisionChoicesDisplay();
-    updateVisionStatsDisplay();
-    visionShuffleBtn.disabled = false;
-    visionNewGameBtn.classList.add('hidden');
-    visionAttemptsModeDiv.classList.remove('hidden');
-    choiceButtonsEnabledTime = null;
-    if (ENABLE_LOGGING) {
-        console.log('Vision game reset, guess sequence cleared');
+        console.log('Intention game reset, guess sequence and show time cleared');
     }
 }
 
 function startIntentionGame() {
     console.log('Starting Intention game');
     intentionCurrentResult = getRandomResult(intentionMode);
-    lastIntentionGuessTime = null;
+    intentionShowTime = null; // Сбрасываем время показа
+    intentionRandomizerCount = 0; // Сбрасываем счетчик
     if (ENABLE_LOGGING) {
         console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult);
     }
@@ -272,8 +258,9 @@ function startIntentionGame() {
     function updateRandomResult() {
         intentionCurrentResult = getRandomResult(intentionMode);
         const randomInterval = INTENTION_RANDOMIZER_MIN_INTERVAL + Math.random() * (INTENTION_RANDOMIZER_MAX_INTERVAL - INTENTION_RANDOMIZER_MIN_INTERVAL);
-        if (ENABLE_LOGGING) {
-            console.log(`Randomizer updated, result: ${intentionCurrentResult}, next update in ${randomInterval.toFixed(2)}ms`);
+        intentionRandomizerCount++;
+        if (ENABLE_LOGGING && intentionRandomizerCount % 10 === 0) { // Логируем каждое 10-е обновление
+            console.log(`Randomizer updated (count: ${intentionRandomizerCount}), result: ${intentionCurrentResult}, next update in ${randomInterval.toFixed(2)}ms`);
         }
         intentionRandomizerInterval = setTimeout(updateRandomResult, randomInterval);
     }
@@ -304,6 +291,7 @@ function stopIntentionGame() {
     intentionResultDisplay.classList.add('hidden');
     intentionDisplay.style.backgroundColor = 'black';
     intentionResultDisplay.style.backgroundColor = 'white';
+    intentionShowTime = null; // Сбрасываем время показа
 }
 
 function showIntentionResult() {
@@ -313,9 +301,10 @@ function showIntentionResult() {
     }
 
     isProcessingIntention = true;
+    intentionShowTime = Date.now(); // Фиксируем время нажатия "Показать"
     const randomDelay = INTENTION_FIXATION_DELAY_MIN + Math.random() * (INTENTION_FIXATION_DELAY_MAX - INTENTION_FIXATION_DELAY_MIN);
     if (ENABLE_LOGGING) {
-        console.log(`Fixation delay: ${randomDelay.toFixed(2)}ms`);
+        console.log(`Fixation delay: ${randomDelay.toFixed(2)}ms, show time: ${intentionShowTime}`);
     }
 
     intentionShowBtn.classList.add('processing');
@@ -323,6 +312,7 @@ function showIntentionResult() {
     setTimeout(() => {
         if (ENABLE_LOGGING) {
             console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult);
+            console.log(`Intention result displayed at: ${Date.now()}`);
         }
         intentionStats.attempts++;
         if (intentionStats.attempts === 1) {
@@ -374,12 +364,11 @@ function showIntentionResult() {
             if (!isProcessingIntention) return;
             isProcessingIntention = false;
             const guessTime = Date.now();
-            const timeToGuess = lastIntentionGuessTime === null
-                ? Math.round((guessTime - gameStartTime) / 1000)
-                : Math.round((guessTime - lastIntentionGuessTime) / 1000);
-            lastIntentionGuessTime = guessTime;
+            const timeToGuess = intentionShowTime
+                ? Math.round((guessTime - intentionShowTime) / 1000)
+                : 0;
             intentionStats.successes++;
-            intentionGuessSequence.push(1); // Добавляем успех
+            intentionGuessSequence.push(1);
             updateIntentionStatsDisplay();
             gtag('event', 'intention_guess', {
                 'event_category': 'Game',
@@ -394,7 +383,7 @@ function showIntentionResult() {
             });
             if (ENABLE_LOGGING) {
                 const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-                console.log(`Intention guess: Success, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
+                console.log(`Intention guess: Success, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
             }
             cleanupAndRestart();
         });
@@ -405,12 +394,11 @@ function showIntentionResult() {
             if (!isProcessingIntention) return;
             isProcessingIntention = false;
             const guessTime = Date.now();
-            const timeToGuess = lastIntentionGuessTime === null
-                ? Math.round((guessTime - gameStartTime) / 1000)
-                : Math.round((guessTime - lastIntentionGuessTime) / 1000);
-            lastIntentionGuessTime = guessTime;
+            const timeToGuess = intentionShowTime
+                ? Math.round((guessTime - intentionShowTime) / 1000)
+                : 0;
             intentionStats.failures++;
-            intentionGuessSequence.push(0); // Добавляем неудачу
+            intentionGuessSequence.push(0);
             updateIntentionStatsDisplay();
             gtag('event', 'intention_guess', {
                 'event_category': 'Game',
@@ -425,7 +413,7 @@ function showIntentionResult() {
             });
             if (ENABLE_LOGGING) {
                 const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-                console.log(`Intention guess: Failure, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
+                console.log(`Intention guess: Failure, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
             }
             cleanupAndRestart();
         });
@@ -444,6 +432,7 @@ function showIntentionResult() {
             intentionResultDisplay.style.backgroundColor = 'white';
             intentionShowBtn.classList.remove('hidden');
             isProcessingIntention = false;
+            intentionShowTime = null; // Сбрасываем после попытки
             if (intentionAttemptsMode === 'limited' && intentionStats.attempts >= intentionMaxAttempts) {
                 intentionShowBtn.disabled = true;
                 intentionNewGameBtn.classList.remove('hidden');
@@ -545,10 +534,10 @@ function handleVisionChoice(event) {
         ? Math.round((resultDisplayTime - choiceButtonsEnabledTime) / 1000)
         : 0;
     choiceButtonsEnabledTime = null;
-    visionGuessSequence.push(guessResult); // Добавляем результат попытки
+    visionGuessSequence.push(guessResult);
     if (ENABLE_LOGGING) {
         const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-        console.log(`Vision guess: ${isCorrect ? 'Success' : 'Failure'}, time_to_guess: ${guessTime}s, sequence: [${visionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
+        console.log(`Vision guess: ${isCorrect ? 'Success' : 'Failure'}, choice: ${choice}, correct: ${visionCurrentResult}, time_to_guess: ${guessTime}s, sequence: [${visionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
     }
 
     gtag('event', 'guess', {
