@@ -321,9 +321,8 @@ function showIntentionResult() {
         console.warn('Randomizer interval is null or processing, cannot show result');
         return;
     }
-
     isProcessingIntention = true;
-    intentionShowTime = Date.now(); // Фиксируем время нажатия "Показать"
+    intentionShowTime = Date.now();
     const randomDelay = INTENTION_FIXATION_DELAY_MIN + Math.random() * (INTENTION_FIXATION_DELAY_MAX - INTENTION_FIXATION_DELAY_MIN);
     if (ENABLE_LOGGING) {
         console.log(`Fixation delay: ${randomDelay.toFixed(2)}ms, show time: ${intentionShowTime}`);
@@ -331,6 +330,19 @@ function showIntentionResult() {
 
     intentionShowBtn.classList.add('processing');
     intentionDisplay.classList.add('processing');
+
+    // Создаем кнопки заранее
+    const feedbackButtons = document.createElement('div');
+    feedbackButtons.className = 'feedback-buttons';
+    const successBtn = document.createElement('button');
+    successBtn.textContent = 'Угадал';
+    successBtn.className = 'small-btn';
+    const failureBtn = document.createElement('button');
+    failureBtn.textContent = 'Не угадал';
+    failureBtn.className = 'small-btn';
+    feedbackButtons.appendChild(successBtn);
+    feedbackButtons.appendChild(failureBtn);
+
     setTimeout(() => {
         if (ENABLE_LOGGING) {
             console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult);
@@ -377,11 +389,8 @@ function showIntentionResult() {
         intentionShowBtn.classList.remove('processing');
         intentionDisplay.classList.remove('processing');
 
-        const feedbackButtons = document.createElement('div');
-        feedbackButtons.className = 'feedback-buttons';
-        const successBtn = document.createElement('button');
-        successBtn.textContent = 'Угадал';
-        successBtn.className = 'small-btn';
+        intentionDisplay.insertAdjacentElement('afterend', feedbackButtons);
+
         successBtn.addEventListener('click', () => {
             if (!isProcessingIntention) return;
             isProcessingIntention = false;
@@ -409,9 +418,7 @@ function showIntentionResult() {
             }
             cleanupAndRestart();
         });
-        const failureBtn = document.createElement('button');
-        failureBtn.textContent = 'Не угадал';
-        failureBtn.className = 'small-btn';
+
         failureBtn.addEventListener('click', () => {
             if (!isProcessingIntention) return;
             isProcessingIntention = false;
@@ -439,10 +446,6 @@ function showIntentionResult() {
             }
             cleanupAndRestart();
         });
-        feedbackButtons.appendChild(successBtn);
-        feedbackButtons.appendChild(failureBtn);
-
-        intentionDisplay.insertAdjacentElement('afterend', feedbackButtons);
 
         const timeout = setTimeout(cleanupAndRestart, 10000);
 
@@ -454,7 +457,7 @@ function showIntentionResult() {
             intentionResultDisplay.style.backgroundColor = 'white';
             intentionShowBtn.classList.remove('hidden');
             isProcessingIntention = false;
-            intentionShowTime = null; // Сбрасываем после попытки
+            intentionShowTime = null;
             if (intentionAttemptsMode === 'limited' && intentionStats.attempts >= intentionMaxAttempts) {
                 intentionShowBtn.disabled = true;
                 intentionNewGameBtn.classList.remove('hidden');
