@@ -18,6 +18,7 @@ let currentGameMode = 'menu';
 let gameStartTime = null;
 let shuffleStartTime = null;
 let lastIntentionGuessTime = null;
+let choiceButtonsEnabledTime = null; // Время активации кнопок выбора в Виденье
 const sessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
 const sessionStartTime = Date.now();
 let sessionSummarySent = false;
@@ -184,6 +185,7 @@ function showScreen(screenId) {
         visionDisplay.style.backgroundColor = 'black';
         visionResultDisplay.style.backgroundColor = 'transparent';
         visionCurrentResult = null;
+        choiceButtonsEnabledTime = null; // Сбрасываем при переходе на экран
         Telegram.WebApp.MainButton.hide();
     }
 }
@@ -241,6 +243,7 @@ function resetVisionGame() {
     visionShuffleBtn.disabled = false;
     visionNewGameBtn.classList.add('hidden');
     visionAttemptsModeDiv.classList.remove('hidden');
+    choiceButtonsEnabledTime = null; // Сбрасываем при сбросе игры
 }
 
 function startIntentionGame() {
@@ -465,6 +468,10 @@ function startVisionShuffle() {
     setTimeout(() => {
         visionShuffleBtn.disabled = false;
         setVisionChoiceButtonsEnabled(true);
+        choiceButtonsEnabledTime = Date.now(); // Фиксируем время активации кнопок
+        if (ENABLE_LOGGING) {
+            console.log(`Choice buttons enabled at: ${choiceButtonsEnabledTime}`);
+        }
     }, SHUFFLE_BUTTON_DISABLE_TIME);
 }
 
@@ -479,6 +486,7 @@ function stopVisionGame() {
     visionDisplay.style.backgroundColor = 'black';
     visionResultDisplay.style.backgroundColor = 'transparent';
     visionCurrentResult = null;
+    choiceButtonsEnabledTime = null; // Сбрасываем при остановке игры
 }
 
 function setVisionChoiceButtonsEnabled(enabled) {
@@ -497,7 +505,6 @@ function handleVisionChoice(event) {
     if (visionCurrentResult === null || !targetBtn || targetBtn.disabled) return;
 
     const choice = targetBtn.dataset.choice;
-    const guessTime = shuffleStartTime ? Math.round((Date.now() - shuffleStartTime) / 1000) : 0;
     setVisionChoiceButtonsEnabled(false);
     visionShuffleBtn.disabled = true;
     visionStats.attempts++;
@@ -506,6 +513,16 @@ function handleVisionChoice(event) {
     }
     const isCorrect = (choice === visionCurrentResult);
     const guessResult = isCorrect ? 1 : 0;
+
+    visionResultDisplay.classList.remove('hidden'); // Момент появления результата
+    const resultDisplayTime = Date.now(); // Фиксируем время появления результата
+    const guessTime = choiceButtonsEnabledTime
+        ? Math.round((resultDisplayTime - choiceButtonsEnabledTime) / 1000)
+        : 0;
+    choiceButtonsEnabledTime = null; // Сбрасываем после попытки
+    if (ENABLE_LOGGING) {
+        console.log(`Result displayed at: ${resultDisplayTime}, time_to_guess: ${guessTime}s`);
+    }
 
     gtag('event', 'guess', {
         'event_category': 'Game',
@@ -526,7 +543,6 @@ function handleVisionChoice(event) {
         visionStats.failures++;
     }
 
-    visionResultDisplay.classList.remove('hidden');
     visionDisplay.style.backgroundColor = 'transparent';
     visionResultDisplay.innerHTML = '';
     visionResultDisplay.style.backgroundColor = 'transparent';
@@ -724,6 +740,7 @@ visionModeRadios.forEach(radio => {
         visionDisplay.style.backgroundColor = 'black';
         visionResultDisplay.style.backgroundColor = 'transparent';
         visionCurrentResult = null;
+        choiceButtonsEnabledTime = null; // Сбрасываем при смене режима
     });
 });
 
