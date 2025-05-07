@@ -10,7 +10,7 @@ const RANDOM_RESULT_MAX_TIME = 2800;
 const INTENTION_RANDOMIZER_MIN_INTERVAL = 30;
 const INTENTION_RANDOMIZER_MAX_INTERVAL = 100;
 const INTENTION_FIXATION_DELAY_MIN = 0;
-const INTENTION_FIXATION_DELAY_MAX = 200;
+const INTENTION_FIXATION_DELAY_MAX = 500; // Увеличено до 500 мс для вариативности time_to_guess
 
 // Инициализация переменных
 let telegramUser = null;
@@ -92,7 +92,7 @@ const visionAttemptsModeRadios = document.querySelectorAll('input[name="vision-a
 
 const backButtons = document.querySelectorAll('.back-btn');
 
-// Кэшированные элементы для оптимизации showIntentionResult
+// Кэшированные элементы для оптимизации showIntentionResult и handleVisionChoice
 const cachedElements = {
     colorBlock: document.createElement('div'),
     svgCircle: null, // Будет инициализирован после определения createSvgShape
@@ -142,7 +142,7 @@ function sendSessionSummary() {
             session_start_time: Math.floor(sessionStartTime),
             attempts: intentionStats.attempts,
             successes: intentionStats.successes,
-            failures: intentionStats.failures,
+            failures: visionStats.failures,
             mode: intentionMode
         });
         gtag('event', 'intention_session_summary', {
@@ -629,7 +629,8 @@ function handleVisionChoice(event) {
         const feedbackContent = document.createElement('div');
         feedbackContent.classList.add('vision-feedback-content');
         feedbackContent.style.backgroundColor = 'white';
-        feedbackContent.appendChild(createSvgShape(visionCurrentResult));
+        const svg = visionCurrentResult === 'circle' ? cachedElements.svgCircle : cachedElements.svgTriangle;
+        feedbackContent.appendChild(svg.cloneNode(true));
         visionResultDisplay.appendChild(feedbackContent);
         visionResultDisplay.style.flexDirection = 'row';
         visionResultDisplay.style.gap = '0';
