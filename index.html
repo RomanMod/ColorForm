@@ -2,80 +2,121 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Игра</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-store, must-revalidate">
+    <title>Намеренье или Виденье</title>
+    <link rel="icon" type="image/x-icon" href="/ColorForm/favicon.ico">
     <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-4VJ8Z9L8P2"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js"></script>
+    <script src="config.js"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
-        gtag('config', 'G-4VJ8Z9L8P2', { 'debug_mode': true });
+        if (window.GA_MEASUREMENT_ID) {
+            console.log('GA4 initialized with ID:', window.GA_MEASUREMENT_ID);
+            gtag('config', window.GA_MEASUREMENT_ID, { 'debug_mode': true });
+        } else {
+            console.error('GA4 Measurement ID not found');
+            gtag('event', 'error', {
+                'event_category': 'App',
+                'event_label': 'Config Load Failure'
+            });
+        }
     </script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-    <div class="container">
-        <!-- Главное меню -->
-        <div id="menu-screen" class="screen">
-            <h1>Выберите игру</h1>
+    <div id="app">
+        <div id="user-greeting">Привет, <span id="telegram-user-name">Игрок</span>!</div>
+
+        <div id="menu-screen" class="game-screen">
+            <h1>Намеренье или Виденье</h1>
             <div class="menu-buttons">
-                <button id="start-intention" class="btn">Намеренье</button>
-                <button id="start-vision" class="btn">Видение</button>
+                <button id="btn-start-intention" class="large-btn">Играть в Намеренье</button>
+                <button id="btn-start-vision" class="large-btn">Играть в Виденье</button>
+            </div>
+            <div class="read-more-container">
+                <button id="btn-read-more" class="small-btn">Прочти</button>
+            </div>
+            <div id="read-more-area" class="hidden">
+                <h3>Отличие Намеренья и Виденья</h3>
+                <p>Намеренье — это игра, где ты загадываешь цвет или фигуру, а затем проверяешь, совпадает ли твой выбор с случайным результатом.</p>
+                <p>Виденье — это игра, где ты должен угадать, какой цвет или фигура были выбраны после перемешивания.</p>
+                <button id="btn-close-read-more" class="small-btn">Закрыть</button>
             </div>
         </div>
 
-        <!-- Экран игры Намеренье -->
-        <div id="game-intention" class="screen hidden">
-            <div class="game-header">
-                <button class="back-btn small-btn">Назад</button>
-                <h2>Намеренье</h2>
-                <button id="intention-new-game" class="small-btn hidden">Новая игра</button>
+        <div id="game-intention" class="game-screen hidden">
+            <h2>Намеренье</h2>
+            <button id="intention-new-game-btn" class="new-game-btn hidden">Новая игра</button>
+            <div class="controls">
+                <div class="mode-select">
+                    <label><input type="radio" name="intention-mode" value="color" checked> Цвет</label>
+                    <label><input type="radio" name="intention-mode" value="shape"> Фигура</label>
+                </div>
+                <div class="attempts-mode" id="intention-attempts-mode">
+                    <label><input type="radio" name="intention-attempts-mode" value="limited" checked> 10 попыток</label>
+                    <label><input type="radio" name="intention-attempts-mode" value="unlimited"> Безлимит</label>
+                </div>
             </div>
-            <div id="intention-attempts-mode" class="attempts-mode">
-                <label><input type="radio" name="intention-attempts" value="limited" checked> 10 попыток</label>
-                <label><input type="radio" name="intention-attempts" value="unlimited"> Без ограничений</label>
+            <div class="display" id="intention-display">
+                <div class="result-display" id="intention-result"></div>
             </div>
-            <div class="stats">
-                <p>Попытки: <span id="intention-attempts">0</span></p>
-                <p>Успехи: <span id="intention-successes">0</span></p>
-                <p>Неудачи: <span id="intention-failures">0</span></p>
+            <div class="action-btn">
+                <button id="intention-show-btn" class="small-btn">Показать</button>
             </div>
-            <div id="intention-mode" class="mode-selector">
-                <label><input type="radio" name="intention-mode" value="color" checked> Цвет</label>
-                <label><input type="radio" name="intention-mode" value="shape"> Форма</label>
+            <div id="intention-stats">
+                <p>Попытки: <span id="intention-stats-attempts">0</span>/<span id="intention-stats-max-attempts">10</span></p>
+                <p>Успехи: <span id="intention-stats-successes">0</span></p>
+                <p>Неудачи: <span id="intention-stats-failures">0</span></p>
+                <p>Процент успеха: <span id="intention-stats-success-rate">0%</span></p>
             </div>
-            <div id="intention-display" class="display"></div>
-            <div id="intention-result-display" class="result-display hidden"></div>
-            <button id="intention-show-btn" class="small-btn hidden">Показать</button>
+            <button class="back-btn">Выход</button>
         </div>
 
-        <!-- Экран игры Видение -->
-        <div id="game-vision" class="screen hidden">
-            <div class="game-header">
-                <button class="back-btn small-btn">Назад</button>
-                <h2>Видение</h2>
-                <button id="vision-new-game" class="small-btn hidden">Новая игра</button>
+        <div id="game-vision" class="game-screen hidden">
+            <h2>Виденье</h2>
+            <button id="vision-new-game-btn" class="new-game-btn hidden">Новая игра</button>
+            <div class="controls">
+                <div class="mode-select">
+                    <label><input type="radio" name="vision-mode" value="color" checked> Цвет</label>
+                    <label><input type="radio" name="vision-mode" value="shape"> Фигура</label>
+                </div>
+                <div class="attempts-mode" id="vision-attempts-mode">
+                    <label><input type="radio" name="vision-attempts-mode" value="limited" checked> 10 попыток</label>
+                    <label><input type="radio" name="vision-attempts-mode" value="unlimited"> Безлимит</label>
+                </div>
             </div>
-            <div id="vision-attempts-mode" class="attempts-mode">
-                <label><input type="radio" name="vision-attempts" value="limited" checked> 10 попыток</label>
-                <label><input type="radio" name="vision-attempts" value="unlimited"> Без ограничений</label>
+            <div class="display" id="vision-display">
+                <div class="result-display" id="vision-result"></div>
             </div>
-            <div class="stats">
-                <p>Попытки: <span id="vision-attempts">0</span></p>
-                <p>Успехи: <span id="vision-successes">0</span></p>
-                <p>Неудачи: <span id="vision-failures">0</span></p>
+            <div class="action-btn">
+                <button id="vision-shuffle-btn" class="small-btn">Перемешать</button>
             </div>
-            <div id="vision-mode" class="mode-selector">
-                <label><input type="radio" name="vision-mode" value="color" checked> Цвет</label>
-                <label><input type="radio" name="vision-mode" value="shape"> Форма</label>
+            <div id="vision-choices">
+                <button class="choice-btn color-btn" data-choice="red"></button>
+                <button class="choice-btn color-btn" data-choice="blue"></button>
+                <button class="choice-btn shape-btn hidden" data-choice="circle">
+                    <svg width="100" height="100" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="40"></circle>
+                    </svg>
+                </button>
+                <button class="choice-btn shape-btn hidden" data-choice="triangle">
+                    <svg width="100" height="100" viewBox="0 0 100 100">
+                        <polygon points="50,10 90,90 10,90"></polygon>
+                    </svg>
+                </button>
             </div>
-            <div id="vision-display" class="display"></div>
-            <div id="vision-result-display" class="result-display hidden"></div>
-            <button id="vision-shuffle-btn" class="small-btn">Перемешать</button>
-            <div id="vision-choice-buttons" class="choice-buttons"></div>
+            <div id="vision-stats">
+                <p>Попытки: <span id="stats-attempts">0</span>/<span id="stats-max-attempts">10</span></p>
+                <p>Успехи: <span id="stats-successes">0</span></p>
+                <p>Неудачи: <span id="stats-failures">0</span></p>
+                <p>Процент успеха: <span id="stats-success-rate">0%</span></p>
+            </div>
+            <button class="back-btn">Выход</button>
         </div>
     </div>
+    <script src="script.js" defer></script>
 </body>
 </html>
