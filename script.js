@@ -1,5 +1,5 @@
 // Настройки логирования
-const ENABLE_LOGGING = false;
+const ENABLE_LOGGING = true;
 
 // Константы для времени "перемешивания" и генерации результата в Виденье
 const SHUFFLE_BUTTON_DISABLE_TIME = 3000;
