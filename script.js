@@ -1,127 +1,114 @@
-// Глобальные переменные
-let intentionStartTime = null; // Время начала игры Намеренье
-let lastIntentionGuessTime = null; // Время последнего угадывания в Намеренье
-let visionChoiceButtonsEnabledTime = null; // Время активации кнопок в Видении
-let gameStartTime = null; // Время начала сессии
-let sessionSummarySent = false; // Флаг отправки сводки сессии
-let sessionId = Math.random().toString(36).substring(2); // Уникальный ID сессии
-let sessionStartTime = Date.now(); // Время начала сессии
-const ENABLE_LOGGING = true; // Включить логирование для отладки
+const ENABLE_LOGGING = true;
 
-// Константы для Намеренья
-const INTENTION_FIXATION_DELAY_MIN = 0;
-const INTENTION_FIXATION_DELAY_MAX = 500; // Увеличено для плавности
 const INTENTION_RANDOMIZER_MIN_INTERVAL = 50;
 const INTENTION_RANDOMIZER_MAX_INTERVAL = 200;
+const INTENTION_FIXATION_DELAY_MIN = 0;
+const INTENTION_FIXATION_DELAY_MAX = 500;
+const SHUFFLE_BUTTON_DISABLE_TIME = 3000;
+const RANDOM_RESULT_MIN_TIME = 1000;
+const RANDOM_RESULT_MAX_TIME = 4000;
 
-// Константы для Видения
-const SHUFFLE_BUTTON_DISABLE_TIME = 2000;
-const RANDOM_RESULT_MIN_TIME = 500;
-const RANDOM_RESULT_MAX_TIME = 2000;
-
-// Переменные состояния
 let currentGameMode = 'menu';
-let intentionMode = 'color'; // или 'shape'
-let visionMode = 'color'; // или 'shape'
-let intentionCurrentResult = null;
-let visionCurrentResult = null;
-let intentionRandomizerInterval = null;
-let visionRandomizerTimeout = null;
-let intentionAttemptsMode = 'unlimited'; // или 'limited'
-let visionAttemptsMode = 'unlimited'; // или 'limited'
-let intentionMaxAttempts = 10;
-let visionMaxAttempts = 10;
+let gameStartTime = null;
+let sessionStartTime = Date.now();
+let sessionSummarySent = false;
+const sessionId = Math.floor(Math.random() * 1000000000).toString();
+let telegramUser = null;
 
-// Статистика
+let intentionMode = 'color';
+let intentionAttemptsMode = 'limited';
+const intentionMaxAttempts = 10;
+let intentionCurrentResult = null;
+let intentionRandomizerInterval = null;
 const intentionStats = { attempts: 0, successes: 0, failures: 0 };
+
+let visionMode = 'color';
+let visionAttemptsMode = 'limited';
+const visionMaxAttempts = 10;
+let visionCurrentResult = null;
+let visionRandomizerTimeout = null;
+let shuffleStartTime = null;
 const visionStats = { attempts: 0, successes: 0, failures: 0 };
 
-// Элементы DOM (предполагается, что они определены в HTML)
-const intentionShowBtn = document.querySelector('#intention-show-btn');
-const intentionDisplay = document.querySelector('#intention-display');
-const intentionResultDisplay = document.querySelector('#intention-result-display');
-const intentionAttemptsModeDiv = document.querySelector('#intention-attempts-mode');
-const intentionNewGameBtn = document.querySelector('#intention-new-game-btn');
-const visionShuffleBtn = document.querySelector('#vision-shuffle-btn');
-const visionDisplay = document.querySelector('#vision-display');
-const visionResultDisplay = document.querySelector('#vision-result-display');
-const visionAttemptsModeDiv = document.querySelector('#vision-attempts-mode');
-const visionNewGameBtn = document.querySelector('#vision-new-game-btn');
-const btnStartIntention = document.querySelector('#start-intention-btn');
-const btnStartVision = document.querySelector('#start-vision-btn');
-const backButtons = document.querySelectorAll('.back-btn');
+let intentionStartTime = null;
+let lastIntentionGuessTime = null;
+let visionChoiceButtonsEnabledTime = null;
 
-// Telegram WebApp (предполагается, что Telegram.WebApp доступен)
-const telegramUser = Telegram.WebApp.initDataUnsafe.user || { id: 'unknown' };
+const intentionColors = ['red', 'green', 'blue', 'yellow'];
+const intentionShapes = ['circle', 'square', 'triangle', 'pentagon'];
+const visionColors = ['red', 'green', 'blue', 'yellow'];
+const visionShapes = ['circle', 'square', 'triangle', 'pentagon'];
+
+const btnStartIntention = document.getElementById('start-intention');
+const btnStartVision = document.getElementById('start-vision');
+const backButtons = document.querySelectorAll('.back-btn');
+const intentionShowBtn = document.getElementById('intention-show-btn');
+const intentionDisplay = document.getElementById('intention-display');
+const intentionResultDisplay = document.getElementById('intention-result-display');
+const intentionNewGameBtn = document.getElementById('intention-new-game');
+const intentionAttemptsModeDiv = document.getElementById('intention-attempts-mode');
+const intentionModeSelector = document.getElementById('intention-mode');
+const visionShuffleBtn = document.getElementById('vision-shuffle-btn');
+const visionDisplay = document.getElementById('vision-display');
+const visionResultDisplay = document.getElementById('vision-result-display');
+const visionChoiceButtons = document.getElementById('vision-choice-buttons');
+const visionNewGameBtn = document.getElementById('vision-new-game');
+const visionAttemptsModeDiv = document.getElementById('vision-attempts-mode');
+const visionModeSelector = document.getElementById('vision-mode');
 
 function getRandomResult(mode) {
-    if (mode === 'color') {
-        const colors = ['red', 'blue', 'green', 'yellow'];
-        return colors[Math.floor(Math.random() * colors.length)];
-    } else {
-        const shapes = ['circle', 'square', 'triangle'];
-        return shapes[Math.floor(Math.random() * shapes.length)];
-    }
+    const options = mode === 'color' ? (currentGameMode === 'intention' ? intentionColors : visionColors) : (currentGameMode === 'intention' ? intentionShapes : visionShapes);
+    return options[Math.floor(Math.random() * options.length)];
 }
 
 function createSvgShape(shape) {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('width', '100');
     svg.setAttribute('height', '100');
-    let shapeElement;
+    const shapeElement = document.createElementNS('http://www.w3.org/2000/svg', shape === 'circle' ? 'circle' : shape === 'square' ? 'rect' : 'polygon');
     if (shape === 'circle') {
-        shapeElement = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         shapeElement.setAttribute('cx', '50');
         shapeElement.setAttribute('cy', '50');
         shapeElement.setAttribute('r', '40');
     } else if (shape === 'square') {
-        shapeElement = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
         shapeElement.setAttribute('x', '10');
         shapeElement.setAttribute('y', '10');
         shapeElement.setAttribute('width', '80');
         shapeElement.setAttribute('height', '80');
     } else if (shape === 'triangle') {
-        shapeElement = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         shapeElement.setAttribute('points', '50,10 90,90 10,90');
+    } else if (shape === 'pentagon') {
+        shapeElement.setAttribute('points', '50,10 90,35 75,85 25,85 10,35');
     }
     shapeElement.setAttribute('fill', 'black');
     svg.appendChild(shapeElement);
     return svg;
 }
 
-function updateIntentionStatsDisplay() {
-    // Обновление отображения статистики (предполагается реализация)
-    console.log(`Intention stats: attempts=${intentionStats.attempts}, successes=${intentionStats.successes}, failures=${intentionStats.failures}`);
-}
-
-function updateVisionStatsDisplay() {
-    // Обновление отображения статистики (предполагается реализация)
-    console.log(`Vision stats: attempts=${visionStats.attempts}, successes=${visionStats.successes}, failures=${visionStats.failures}`);
-}
-
-function setVisionChoiceButtonsEnabled(enabled) {
-    document.querySelectorAll('.choice-btn').forEach(btn => {
-        btn.disabled = !enabled;
-    });
-}
-
 function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.add('hidden');
-    });
-    document.querySelector(`#${screenId}`).classList.remove('hidden');
-    currentGameMode = screenId === 'game-intention' ? 'intention' : screenId === 'game-vision' ? 'vision' : 'menu';
+    document.querySelectorAll('.screen').forEach(screen => screen.classList.add('hidden'));
+    document.getElementById(screenId).classList.remove('hidden');
+    currentGameMode = screenId === 'menu-screen' ? 'menu' : screenId === 'game-intention' ? 'intention' : 'vision';
+    if (currentGameMode !== 'intention') {
+        clearTimeout(intentionRandomizerInterval);
+        intentionRandomizerInterval = null;
+    }
+    if (currentGameMode !== 'vision') {
+        clearTimeout(visionRandomizerTimeout);
+        visionRandomizerTimeout = null;
+    }
 }
 
 function resetIntentionGame() {
     intentionStats.attempts = 0;
     intentionStats.successes = 0;
     intentionStats.failures = 0;
-    intentionCurrentResult = null;
-    intentionRandomizerInterval = null;
+    updateIntentionStatsDisplay();
     intentionShowBtn.disabled = false;
     intentionNewGameBtn.classList.add('hidden');
-    updateIntentionStatsDisplay();
+    intentionAttemptsModeDiv.classList.remove('hidden');
+    intentionResultDisplay.classList.add('hidden');
+    intentionDisplay.style.backgroundColor = 'black';
     startIntentionGame();
 }
 
@@ -129,15 +116,52 @@ function resetVisionGame() {
     visionStats.attempts = 0;
     visionStats.successes = 0;
     visionStats.failures = 0;
-    visionCurrentResult = null;
-    visionRandomizerTimeout = null;
+    updateVisionStatsDisplay();
     visionShuffleBtn.disabled = false;
     setVisionChoiceButtonsEnabled(false);
     visionNewGameBtn.classList.add('hidden');
-    updateVisionStatsDisplay();
+    visionAttemptsModeDiv.classList.remove('hidden');
+    visionResultDisplay.classList.add('hidden');
+    visionDisplay.style.backgroundColor = 'black';
+    populateVisionChoiceButtons();
 }
 
-// Намеренье: Запуск игры
+function updateIntentionStatsDisplay() {
+    document.getElementById('intention-attempts').textContent = intentionStats.attempts;
+    document.getElementById('intention-successes').textContent = intentionStats.successes;
+    document.getElementById('intention-failures').textContent = intentionStats.failures;
+}
+
+function updateVisionStatsDisplay() {
+    document.getElementById('vision-attempts').textContent = visionStats.attempts;
+    document.getElementById('vision-successes').textContent = visionStats.successes;
+    document.getElementById('vision-failures').textContent = visionStats.failures;
+}
+
+function setVisionChoiceButtonsEnabled(enabled) {
+    visionChoiceButtons.querySelectorAll('.choice-btn').forEach(btn => {
+        btn.disabled = !enabled;
+        btn.classList.toggle('disabled', !enabled);
+    });
+}
+
+function populateVisionChoiceButtons() {
+    visionChoiceButtons.innerHTML = '';
+    const options = visionMode === 'color' ? visionColors : visionShapes;
+    options.forEach(option => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.dataset.choice = option;
+        if (visionMode === 'color') {
+            btn.style.backgroundColor = option;
+        } else {
+            const svg = createSvgShape(option);
+            btn.appendChild(svg);
+        }
+        visionChoiceButtons.appendChild(btn);
+    });
+}
+
 function startIntentionGame() {
     console.log('Starting Intention game');
     intentionCurrentResult = getRandomResult(intentionMode);
@@ -163,7 +187,6 @@ function startIntentionGame() {
     intentionDisplay.style.backgroundColor = 'black';
     intentionResultDisplay.style.backgroundColor = 'white';
     intentionResultDisplay.style.display = 'flex';
-    intentionResultDisplay.style.zIndex = '10';
     gtag('event', 'randomizer_start', {
         'event_category': 'Game',
         'event_label': 'Intention Randomizer',
@@ -173,7 +196,6 @@ function startIntentionGame() {
     });
 }
 
-// Намеренье: Показ результата
 function showIntentionResult() {
     if (intentionRandomizerInterval === null) {
         console.warn('Randomizer interval is null, cannot show result');
@@ -318,21 +340,6 @@ function showIntentionResult() {
     }, randomDelay);
 }
 
-// Намеренье: Клик по дисплею
-intentionDisplay.addEventListener('click', () => {
-    if (!intentionShowBtn.classList.contains('hidden') && !intentionShowBtn.disabled && currentGameMode === 'intention' && !isProcessingIntention) {
-        console.log('Intention display clicked, triggering show result');
-        gtag('event', 'display_click', {
-            'event_category': 'Game',
-            'event_label': 'Intention Display',
-            'session_id': sessionId,
-            'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
-        });
-        intentionShowBtn.click();
-    }
-});
-
-// Видение: Запуск перемешивания
 function startVisionShuffle() {
     console.log('Starting Vision shuffle');
     if (visionShuffleBtn.disabled) return;
@@ -370,7 +377,6 @@ function startVisionShuffle() {
     }, SHUFFLE_BUTTON_DISABLE_TIME);
 }
 
-// Видение: Обработка выбора
 function handleVisionChoice(event) {
     const targetBtn = event.target.closest('.choice-btn');
     if (visionCurrentResult === null || !targetBtn || targetBtn.disabled) return;
@@ -452,7 +458,6 @@ function handleVisionChoice(event) {
     }, 2500);
 }
 
-// Отправка сводки сессии
 function sendSessionSummary() {
     if (!gameStartTime || currentGameMode === 'menu' || sessionSummarySent) return;
     if (currentGameMode === 'vision' && visionStats.attempts === 0) return;
@@ -513,7 +518,6 @@ function sendSessionSummary() {
     sessionSummarySent = true;
 }
 
-// Обработчики событий
 btnStartIntention.addEventListener('click', () => {
     if (gameStartTime && !sessionSummarySent && currentGameMode === 'vision') {
         const duration = ((Date.now() - gameStartTime) / 1000).toFixed(1);
@@ -592,6 +596,54 @@ backButtons.forEach(button => {
     });
 });
 
+intentionDisplay.addEventListener('click', () => {
+    if (!intentionShowBtn.classList.contains('hidden') && !intentionShowBtn.disabled && currentGameMode === 'intention' && !isProcessingIntention) {
+        console.log('Intention display clicked, triggering show result');
+        gtag('event', 'display_click', {
+            'event_category': 'Game',
+            'event_label': 'Intention Display',
+            'session_id': sessionId,
+            'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
+        });
+        intentionShowBtn.click();
+    }
+});
+
+visionShuffleBtn.addEventListener('click', startVisionShuffle);
+visionChoiceButtons.addEventListener('click', handleVisionChoice);
+
+intentionModeSelector.addEventListener('change', (e) => {
+    intentionMode = e.target.value;
+    if (ENABLE_LOGGING) {
+        console.log('Intention mode changed to:', intentionMode);
+    }
+});
+
+visionModeSelector.addEventListener('change', (e) => {
+    visionMode = e.target.value;
+    populateVisionChoiceButtons();
+    if (ENABLE_LOGGING) {
+        console.log('Vision mode changed to:', visionMode);
+    }
+});
+
+intentionAttemptsModeDiv.addEventListener('change', (e) => {
+    intentionAttemptsMode = e.target.value;
+    if (ENABLE_LOGGING) {
+        console.log('Intention attempts mode changed to:', intentionAttemptsMode);
+    }
+});
+
+visionAttemptsModeDiv.addEventListener('change', (e) => {
+    visionAttemptsMode = e.target.value;
+    if (ENABLE_LOGGING) {
+        console.log('Vision attempts mode changed to:', visionAttemptsMode);
+    }
+});
+
+intentionNewGameBtn.addEventListener('click', resetIntentionGame);
+visionNewGameBtn.addEventListener('click', resetVisionGame);
+
 window.addEventListener('beforeunload', () => {
     if (gameStartTime && !sessionSummarySent) {
         const duration = ((Date.now() - gameStartTime) / 1000).toFixed(1);
@@ -620,5 +672,16 @@ Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
     }
 });
 
-// Инициализация (пример)
-showScreen('menu-screen');
+try {
+    Telegram.WebApp.ready();
+    telegramUser = Telegram.WebApp.initDataUnsafe.user || { id: 'anonymous_' + Math.random().toString(36).substr(2, 9) };
+    if (ENABLE_LOGGING) {
+        console.log('Telegram user:', telegramUser);
+    }
+    gtag('set', 'user_properties', {
+        'custom_user_id': telegramUser.id
+    });
+} catch (e) {
+    console.warn('Telegram WebApp not available, using anonymous user');
+    telegramUser = { id: 'anonymous_' + Math.random().toString(36).substr(2, 9) };
+}
