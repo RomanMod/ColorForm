@@ -393,10 +393,10 @@ function showIntentionResult() {
     const feedbackButtons = document.createElement('div');
     feedbackButtons.className = 'feedback-buttons';
     const successBtn = document.createElement('button');
-    successBtn.textContent = 'Угадал';
+    successBtn.textContent = 'Верно';
     successBtn.className = 'small-btn';
     const failureBtn = document.createElement('button');
-    failureBtn.textContent = 'Не угадал';
+    failureBtn.textContent = 'Далее';
     failureBtn.className = 'small-btn';
     feedbackButtons.appendChild(successBtn);
     feedbackButtons.appendChild(failureBtn);
@@ -696,7 +696,7 @@ function handleVisionChoice(event) {
     if (visionMode === 'color' && visionResultDisplay) {
         visionResultDisplay.style.backgroundColor = visionCurrentResult;
         let messageText = document.createElement('p');
-        messageText.textContent = isCorrect ? `Успех!` : `Попробуй ещё!`;
+        messageText.textContent = isCorrect ? `Успех!` : `Далее!`;
         messageText.style.color = 'white';
         messageText.style.textShadow = '1px 1px 3px rgba(0,0,0,0.5)';
         visionResultDisplay.appendChild(messageText);
@@ -709,7 +709,7 @@ function handleVisionChoice(event) {
         const svg = visionCurrentResult === 'circle' ? cachedElements.svgCircle : cachedElements.svgTriangle;
         feedbackContent.appendChild(svg.cloneNode(true));
         const messageText = document.createElement('p');
-        messageText.textContent = isCorrect ? `Успех!` : `Попробуй ещё!`;
+        messageText.textContent = isCorrect ? `Успех!` : `Далее`;
         messageText.style.color = 'black';
         feedbackContent.appendChild(messageText);
         visionResultDisplay.appendChild(feedbackContent);
