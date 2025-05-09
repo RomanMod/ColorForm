@@ -85,18 +85,7 @@ function sendSessionSummary() {
   }
 
   const duration = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-  console.log(`Sending session summary at ${Date.now()}, mode: ${currentGameMode}, duration: ${duration}s`);
   if (currentGameMode === 'vision') {
-    console.log('Sending game_session_summary:', {
-      sessionId,
-      custom_user_id: telegramUser.id,
-      session_duration_seconds: parseFloat(duration),
-      session_start_time: Math.floor(sessionStartTime),
-      attempts: visionStats.attempts,
-      successes: visionStats.successes,
-      failures: visionStats.failures,
-      mode: visionMode
-    });
     gtag('event', 'game_session_summary', {
       'event_category': 'Game',
       'event_label': 'Vision',
@@ -110,16 +99,6 @@ function sendSessionSummary() {
       'session_start_time': Math.floor(sessionStartTime)
     });
   } else if (currentGameMode === 'intention') {
-    console.log('Sending intention_session_summary:', {
-      sessionId,
-      custom_user_id: telegramUser.id,
-      session_duration_seconds: parseFloat(duration),
-      session_start_time: Math.floor(sessionStartTime),
-      attempts: intentionStats.attempts,
-      successes: intentionStats.successes,
-      failures: intentionStats.failures,
-      mode: intentionMode
-    });
     gtag('event', 'intention_session_summary', {
       'event_category': 'Game',
       'event_label': 'Intention',
@@ -322,9 +301,8 @@ function showIntentionResult() {
         'time_to_guess': timeToGuess,
         'session_id': sessionId,
         'custom_user_id': telegramUser ? telegramUser.id : 'unknown',
-        'attempt_id': intentionStats.attempts
+        'attempt_id': intentionStats.attempts // Добавлено
       });
-      console.log(`Sending intention_guess event: attempt_id=${intentionStats.attempts}, guess_result=1, time_to_guess=${timeToGuess}`);
       if (ENABLE_LOGGING) {
         const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
         console.log(`Intention guess: Success, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, time_diff_ms: ${timeDiffMs}, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
@@ -352,9 +330,8 @@ function showIntentionResult() {
         'time_to_guess': timeToGuess,
         'session_id': sessionId,
         'custom_user_id': telegramUser ? telegramUser.id : 'unknown',
-        'attempt_id': intentionStats.attempts
+        'attempt_id': intentionStats.attempts // Добавлено
       });
-      console.log(`Sending intention_guess event: attempt_id=${intentionStats.attempts}, guess_result=0, time_to_guess=${timeToGuess}`);
       if (ENABLE_LOGGING) {
         const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
         console.log(`Intention guess: Failure, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, time_diff_ms: ${timeDiffMs}, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
@@ -394,8 +371,7 @@ function startVisionShuffle() {
 
 function handleVisionChoice(event) {
   const targetBtn = event.target.closest('.choice-btn');
-  if (visionCurrentResult === null || !targetBtn || targetBtn.disabled || targetBtn.dataset.processing) return;
-  targetBtn.dataset.processing = true;
+  if (visionCurrentResult === null || !targetBtn || targetBtn.disabled) return;
 
   const choice = targetBtn.dataset.choice;
   setVisionChoiceButtonsEnabled(false);
@@ -429,9 +405,8 @@ function handleVisionChoice(event) {
     'time_to_guess': timeToGuess,
     'session_id': sessionId,
     'custom_user_id': telegramUser ? telegramUser.id : 'unknown',
-    'attempt_id': visionStats.attempts
+    'attempt_id': visionStats.attempts // Добавлено
   });
-  console.log(`Sending guess event: attempt_id=${visionStats.attempts}, guess_result=${guessResult}, time_to_guess=${timeToGuess}`);
 
   if (isCorrect) {
     visionStats.successes++;
@@ -465,11 +440,9 @@ function handleVisionChoice(event) {
       if (visionNewGameBtn) {
         visionNewGameBtn.classList.remove('hidden');
       }
-      delete targetBtn.dataset.processing;
       return;
     }
     startVisionShuffle();
-    delete targetBtn.dataset.processing;
   }, 2500);
 }
 
