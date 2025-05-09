@@ -567,7 +567,7 @@ function showIntentionResult() {
                 if (intentionShowBtn) intentionShowBtn.disabled = true;
                 if (intentionNewGameBtn) intentionNewGameBtn.classList.remove('hidden');
             } else {
-                start intentionGame();
+                startIntentionGame(); // Исправлено
             }
         }
     }, randomDelay);
@@ -1026,7 +1026,9 @@ Telegram.WebApp.expand();
 showScreen('menu-screen');
 
 Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
-    if (!isStateStable && !Telegram.WebApp.isExpanded()) {
+    if (!isStateStable && !Telegram.WebApp.isExpanded() && gameStartTime && !sessionSummarySent) {
+        console.log('Viewport changed, sending session summary');
+        sendSessionSummary();
         gtag('event', 'app_background', {
             'event_category': 'App',
             'event_label': 'App Minimized',
