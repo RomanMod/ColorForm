@@ -639,7 +639,7 @@ visionAttemptsModeInputs.forEach(input => {
 if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
   Telegram.WebApp.ready();
   Telegram.WebApp.expand();
-  telegramUser = Telegram.WebApp.initDataUnsafe MNTelegram.WebApp.initDataUnsafe.user || {};
+  telegramUser = Telegram.WebApp.initDataUnsafe.user || {};
   console.log('Anonymous User:', telegramUser);
   if (telegramUser.username) {
     const telegramUserName = document.getElementById('telegram-user-name');
