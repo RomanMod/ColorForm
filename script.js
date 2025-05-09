@@ -106,16 +106,14 @@ function sendSessionSummary() {
     if (!gameStartTime || currentGameMode === 'menu' || sessionSummarySent) return;
     if (currentGameMode === 'vision' && visionStats.attempts === 0) return;
     if (currentGameMode === 'intention' && intentionStats.attempts === 0) return;
-    if (!telegramUser || !telegramUser.id) {
-        console.warn('telegramUser.id is missing, cannot send session summary');
-        return;
-    }
 
     const duration = ((Date.now() - gameStartTime) / 1000).toFixed(1);
+    const userId = telegramUser ? telegramUser.id : 'anonymous_' + Math.random().toString(36).substr(2, 9);
+
     if (currentGameMode === 'vision') {
         console.log('Sending game_session_summary:', {
             sessionId,
-            custom_user_id: telegramUser.id,
+            custom_user_id: userId,
             session_duration_seconds: parseFloat(duration),
             session_start_time: Math.floor(sessionStartTime),
             attempts: visionStats.attempts,
@@ -132,13 +130,13 @@ function sendSessionSummary() {
             'mode': visionMode,
             'session_duration_seconds': parseFloat(duration),
             'session_id': sessionId,
-            'custom_user_id': telegramUser.id,
+            'custom_user_id': userId,
             'session_start_time': Math.floor(sessionStartTime)
         });
     } else if (currentGameMode === 'intention') {
         console.log('Sending intention_session_summary:', {
             sessionId,
-            custom_user_id: telegramUser.id,
+            custom_user_id: userId,
             session_duration_seconds: parseFloat(duration),
             session_start_time: Math.floor(sessionStartTime),
             attempts: intentionStats.attempts,
@@ -155,7 +153,7 @@ function sendSessionSummary() {
             'mode': intentionMode,
             'session_duration_seconds': parseFloat(duration),
             'session_id': sessionId,
-            'custom_user_id': telegramUser.id,
+            'custom_user_id': userId,
             'session_start_time': Math.floor(sessionStartTime)
         });
     }
@@ -169,6 +167,7 @@ function sendSavedStats() {
         savedStats.forEach(stat => {
             const eventName = key === 'visionStats' ? 'game_session_summary' : 'intention_session_summary';
             const eventLabel = key === 'visionStats' ? 'Vision' : 'Intention';
+            const userId = telegramUser ? telegramUser.id : stat.custom_user_id || 'anonymous';
             console.log(`Sending saved ${eventName}:`, stat);
             gtag('event', eventName, {
                 'event_category': 'Game',
@@ -179,7 +178,7 @@ function sendSavedStats() {
                 'mode': stat.mode,
                 'session_duration_seconds': parseFloat(stat.duration),
                 'session_id': stat.sessionId,
-                'custom_user_id': telegramUser ? telegramUser.id : 'anonymous',
+                'custom_user_id': userId,
                 'session_start_time': Math.floor(stat.timestamp - stat.duration * 1000)
             });
         });
@@ -276,7 +275,8 @@ function resetIntentionGame() {
             guessSequence: [...intentionGuessSequence],
             mode: intentionMode,
             duration: gameStartTime ? ((Date.now() - gameStartTime) / 1000).toFixed(1) : 0,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            custom_user_id: telegramUser ? telegramUser.id : 'anonymous_' + Math.random().toString(36).substr(2, 9)
         });
         localStorage.setItem('intentionStats', JSON.stringify(savedStats));
         if (!sessionSummarySent) {
@@ -312,7 +312,8 @@ function resetVisionGame() {
             guessSequence: [...visionGuessSequence],
             mode: visionMode,
             duration: gameStartTime ? ((Date.now() - gameStartTime) / 1000).toFixed(1) : 0,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            custom_user_id: telegramUser ? telegramUser.id : 'anonymous_' + Math.random().toString(36).substr(2, 9)
         });
         localStorage.setItem('visionStats', JSON.stringify(savedStats));
         if (!sessionSummarySent) {
@@ -369,7 +370,7 @@ function startIntentionGame() {
         intentionResultDisplay.style.display = 'flex';
         intentionResultDisplay.style.zIndex = '10';
     }
-    gtag('event', 'randomizer_start', {
+    gtag('event', 'randomizer_begin', {
         'event_category': 'Game',
         'event_label': 'Intention Randomizer',
         'mode': intentionMode,
@@ -549,8 +550,7 @@ function showIntentionResult() {
                 'mode': intentionMode,
                 'result': intentionCurrentResult,
                 'session_id': sessionId,
-                'custom_user_id': telegramUser ? telegramUser.id : 'unknown',
-                'time_to_guess': timeToGuess
+                'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
             });
             cleanupAndRestart();
         }, 60000);
@@ -567,7 +567,7 @@ function showIntentionResult() {
                 if (intentionShowBtn) intentionShowBtn.disabled = true;
                 if (intentionNewGameBtn) intentionNewGameBtn.classList.remove('hidden');
             } else {
-                startIntentionGame(); // Исправлено
+                startIntentionGame();
             }
         }
     }, randomDelay);
@@ -949,6 +949,23 @@ if (visionNewGameBtn) {
     visionNewGameBtn.addEventListener('click', resetVisionGame);
 }
 
+// Обработка закрытия приложения через крестик или системную кнопку
+Telegram.WebApp.onEvent('mainButtonClicked', () => {
+    if (gameStartTime && !sessionSummarySent) {
+        const duration = ((Date.now() - gameStartTime) / 1000).toFixed(1);
+        gtag('event', 'game_exit', {
+            'event_category': 'Game',
+            'event_label': currentGameMode === 'intention' ? 'Intention' : 'Vision',
+            'game_mode': currentGameMode === 'intention' ? intentionMode : visionMode,
+            'session_duration_seconds': parseFloat(duration),
+            'session_id': sessionId,
+            'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
+        });
+        sendSessionSummary();
+    }
+    Telegram.WebApp.close();
+});
+
 window.addEventListener('error', (error) => {
     gtag('event', 'error', {
         'event_category': 'App',
@@ -961,6 +978,9 @@ window.addEventListener('error', (error) => {
 });
 
 window.addEventListener('beforeunload', () => {
+    if (gameStartTime && !sessionSummarySent) {
+        sendSessionSummary();
+    }
     gtag('event', 'session_end', {
         'event_category': 'App',
         'event_label': 'App Closed',
@@ -968,7 +988,6 @@ window.addEventListener('beforeunload', () => {
         'session_duration_seconds': parseFloat(((Date.now() - sessionStartTime) / 1000).toFixed(1)),
         'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
     });
-    sendSessionSummary();
 });
 
 // Обработка сворачивания приложения
@@ -984,6 +1003,43 @@ document.addEventListener('visibilitychange', () => {
             'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
         });
     }
+});
+
+// Обработка потери и восстановления интернета
+window.addEventListener('offline', () => {
+    console.log('Network offline, saving session data');
+    if (gameStartTime && !sessionSummarySent) {
+        if (currentGameMode === 'vision' && visionStats.attempts > 0) {
+            const savedStats = JSON.parse(localStorage.getItem('visionStats') || '[]');
+            savedStats.push({
+                sessionId,
+                stats: { ...visionStats },
+                guessSequence: [...visionGuessSequence],
+                mode: visionMode,
+                duration: ((Date.now() - gameStartTime) / 1000).toFixed(1),
+                timestamp: Date.now(),
+                custom_user_id: telegramUser ? telegramUser.id : 'anonymous_' + Math.random().toString(36).substr(2, 9)
+            });
+            localStorage.setItem('visionStats', JSON.stringify(savedStats));
+        } else if (currentGameMode === 'intention' && intentionStats.attempts > 0) {
+            const savedStats = JSON.parse(localStorage.getItem('intentionStats') || '[]');
+            savedStats.push({
+                sessionId,
+                stats: { ...intentionStats },
+                guessSequence: [...intentionGuessSequence],
+                mode: intentionMode,
+                duration: ((Date.now() - gameStartTime) / 1000).toFixed(1),
+                timestamp: Date.now(),
+                custom_user_id: telegramUser ? telegramUser.id : 'anonymous_' + Math.random().toString(36).substr(2, 9)
+            });
+            localStorage.setItem('intentionStats', JSON.stringify(savedStats));
+        }
+    }
+});
+
+window.addEventListener('online', () => {
+    console.log('Network online, sending saved stats');
+    sendSavedStats();
 });
 
 try {
