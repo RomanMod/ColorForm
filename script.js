@@ -40,7 +40,7 @@ let intentionRandomizerCount = 0;
 let visionRandomizerTimeout = null;
 let visionCurrentResult = null;
 let visionMode = 'color';
-let visionAttemptsMode = 'limited';
+let visionAttemptMode = 'limited';
 let visionMaxAttempts = 10;
 const visionStats = {
     attempts: 0,
@@ -171,7 +171,7 @@ function showScreen(screenId) {
     stopVisionGame();
 
     if (screenId === 'menu-screen') {
-        sendSessionSummary();
+        sendSessionSummary(); // Изменено: отправка только при возврате в меню
         if (menuScreen) menuScreen.classList.remove('hidden');
         currentGameMode = 'menu';
         Telegram.WebApp.MainButton.hide();
@@ -439,7 +439,8 @@ function showIntentionResult() {
                 'result': intentionCurrentResult,
                 'time_to_guess': timeToGuess,
                 'session_id': sessionId,
-                'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
+                'custom_user_id': telegramUser ? telegramUser.id : 'unknown',
+                'attempt_id': intentionStats.attempts // Изменено: добавлен attempt_id
             });
             if (ENABLE_LOGGING) {
                 const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
@@ -467,7 +468,8 @@ function showIntentionResult() {
                 'result': intentionCurrentResult,
                 'time_to_guess': timeToGuess,
                 'session_id': sessionId,
-                'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
+                'custom_user_id': telegramUser ? telegramUser.id : 'unknown',
+                'attempt_id': intentionStats.attempts // Изменено: добавлен attempt_id
             });
             if (ENABLE_LOGGING) {
                 const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
@@ -488,7 +490,8 @@ function showIntentionResult() {
                 'mode': intentionMode,
                 'result': intentionCurrentResult,
                 'session_id': sessionId,
-                'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
+                'custom_user_id': telegramUser ? telegramUser.id : 'unknown',
+                'time_to_guess': timeToGuess // Изменено: добавлен time_to_guess для корректной обработки в getGA4Data
             });
             cleanupAndRestart();
         }, 60000);
@@ -622,7 +625,8 @@ function handleVisionChoice(event) {
         'correct_answer': visionCurrentResult,
         'time_to_guess': timeToGuess,
         'session_id': sessionId,
-        'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
+        'custom_user_id': telegramUser ? telegramUser.id : 'unknown',
+        'attempt_id': visionStats.attempts // Изменено: добавлен attempt_id
     });
 
     if (isCorrect) {
@@ -941,11 +945,7 @@ try {
     if (userNameSpan) userNameSpan.textContent = telegramUser.first_name;
 }
 
-setInterval(() => {
-    if (!sessionSummarySent) {
-        sendSessionSummary();
-    }
-}, 30000);
+// Удалено: setInterval для sendSessionSummary
 
 Telegram.WebApp.expand();
 showScreen('menu-screen');
@@ -959,6 +959,6 @@ Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
             'session_duration_seconds': parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
             'custom_user_id': telegramUser ? telegramUser.id : 'unknown'
         });
-        sendSessionSummary();
+        // Изменено: удален вызов sendSessionSummary
     }
 });
