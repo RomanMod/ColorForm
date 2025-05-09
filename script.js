@@ -396,7 +396,7 @@ function showIntentionResult() {
     successBtn.textContent = 'Верно';
     successBtn.className = 'small-btn';
     const failureBtn = document.createElement('button');
-    failureBtn.textContent = 'Далее';
+    failureBtn.textContent = 'Отвлекся';
     failureBtn.className = 'small-btn';
     feedbackButtons.appendChild(successBtn);
     feedbackButtons.appendChild(failureBtn);
