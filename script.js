@@ -110,22 +110,21 @@ function isOnline() {
 }
 
 // Функция для отправки событий с обработкой ошибок
-function sendGtagEvent(eventName, params, callback) {
+function sendGtagEvent(eventName, params) {
     if (!isOnline()) {
         console.warn(`No internet connection, saving ${eventName} to localStorage`);
         saveToLocalStorage(eventName, params);
-        return;
+        return false;
     }
-    gtag('event', eventName, params, (success) => {
-        if (success) {
-            console.log(`gtag ${eventName} sent successfully:`, params);
-            if (callback) callback(true);
-        } else {
-            console.warn(`gtag ${eventName} failed, saving to localStorage`);
-            saveToLocalStorage(eventName, params);
-            if (callback) callback(false);
-        }
-    });
+    try {
+        gtag('event', eventName, params);
+        console.log(`gtag ${eventName} sent:`, params);
+        return true;
+    } catch (error) {
+        console.error(`gtag ${eventName} failed:`, error);
+        saveToLocalStorage(eventName, params);
+        return false;
+    }
 }
 
 // Сохранение в localStorage
@@ -143,9 +142,18 @@ function saveToLocalStorage(eventName, params) {
 }
 
 function sendSessionSummary() {
-    if (!gameStartTime || currentGameMode === 'menu' || sessionSummarySent) return;
-    if (currentGameMode === 'vision' && visionStats.attempts === 0) return;
-    if (currentGameMode === 'intention' && intentionStats.attempts === 0) return;
+    if (!gameStartTime || currentGameMode === 'menu' || sessionSummarySent) {
+        console.log('sendSessionSummary skipped:', { gameStartTime, currentGameMode, sessionSummarySent });
+        return;
+    }
+    if (currentGameMode === 'vision' && visionStats.attempts === 0) {
+        console.log('No vision attempts, skipping sendSessionSummary');
+        return;
+    }
+    if (currentGameMode === 'intention' && intentionStats.attempts === 0) {
+        console.log('No intention attempts, skipping sendSessionSummary');
+        return;
+    }
 
     const duration = ((Date.now() - gameStartTime) / 1000).toFixed(1);
     const eventName = currentGameMode === 'vision' ? 'game_session_summary' : 'intention_session_summary';
@@ -168,17 +176,19 @@ function sendSessionSummary() {
     };
 
     console.log(`Sending ${eventName}:`, eventParams);
-    sendGtagEvent(eventName, eventParams, (success) => {
-        if (success) {
-            sessionSummarySent = true;
-        }
-    });
+    const success = sendGtagEvent(eventName, eventParams);
+    if (success) {
+        sessionSummarySent = true;
+    } else {
+        console.warn('sendSessionSummary failed, saved to localStorage');
+    }
 }
 
 function sendSavedStats() {
     ['visionStats', 'intentionStats'].forEach(key => {
         const savedStats = JSON.parse(localStorage.getItem(key) || '[]');
         if (savedStats.length === 0) return;
+        console.log(`Found ${savedStats.length} saved stats in ${key}`);
         savedStats.forEach(stat => {
             console.log(`Sending saved ${stat.eventName}:`, stat.params);
             sendGtagEvent(stat.eventName, stat.params);
@@ -268,7 +278,7 @@ cachedElements.svgTriangle = createSvgShape('triangle');
 
 function resetIntentionGame() {
     console.log('Resetting Intention game');
-    // Отправляем статистику перед сбросом
+    // Отправляем статистику перед сбросом, если есть попытки
     if (intentionStats.attempts > 0 && !sessionSummarySent) {
         sendSessionSummary();
     }
@@ -284,7 +294,7 @@ function resetIntentionGame() {
     if (intentionShowBtn) intentionShowBtn.disabled = false;
     if (intentionNewGameBtn) intentionNewGameBtn.classList.add('hidden');
     if (intentionAttemptsModeDiv) intentionAttemptsModeDiv.classList.remove('hidden');
-    sessionSummarySent = false; // Сбрасываем флаг для следующей сессии
+    sessionSummarySent = false; // Сбрасываем флаг для новой сессии
     if (ENABLE_LOGGING) {
         console.log('Intention game reset, guess sequence and attempt start time cleared');
     }
@@ -292,7 +302,7 @@ function resetIntentionGame() {
 
 function resetVisionGame() {
     console.log('Resetting Vision game');
-    // Отправляем статистику перед сбросом
+    // Отправляем статистику перед сбросом, если есть попытки
     if (visionStats.attempts > 0 && !sessionSummarySent) {
         sendSessionSummary();
     }
@@ -311,7 +321,7 @@ function resetVisionGame() {
     if (visionResultDisplay) visionResultDisplay.style.backgroundColor = 'transparent';
     visionCurrentResult = null;
     choiceButtonsEnabledTime = null;
-    sessionSummarySent = false; // Сбрасываем флаг для следующей сессии
+    sessionSummarySent = false; // Сбрасываем флаг для новой сессии
     if (ENABLE_LOGGING) {
         console.log('Vision game reset, guess sequence cleared');
     }
@@ -393,10 +403,10 @@ function showIntentionResult() {
     const feedbackButtons = document.createElement('div');
     feedbackButtons.className = 'feedback-buttons';
     const successBtn = document.createElement('button');
-    successBtn.textContent = 'Верно';
+    successBtn.textContent = 'Угадал';
     successBtn.className = 'small-btn';
     const failureBtn = document.createElement('button');
-    failureBtn.textContent = 'Отвлекся';
+    failureBtn.textContent = 'Не угадал';
     failureBtn.className = 'small-btn';
     feedbackButtons.appendChild(successBtn);
     feedbackButtons.appendChild(failureBtn);
@@ -696,7 +706,7 @@ function handleVisionChoice(event) {
     if (visionMode === 'color' && visionResultDisplay) {
         visionResultDisplay.style.backgroundColor = visionCurrentResult;
         let messageText = document.createElement('p');
-        messageText.textContent = isCorrect ? `Успех!` : `Отвлекся!`;
+        messageText.textContent = isCorrect ? `Успех!` : `Попробуй ещё!`;
         messageText.style.color = 'white';
         messageText.style.textShadow = '1px 1px 3px rgba(0,0,0,0.5)';
         visionResultDisplay.appendChild(messageText);
@@ -709,7 +719,7 @@ function handleVisionChoice(event) {
         const svg = visionCurrentResult === 'circle' ? cachedElements.svgCircle : cachedElements.svgTriangle;
         feedbackContent.appendChild(svg.cloneNode(true));
         const messageText = document.createElement('p');
-        messageText.textContent = isCorrect ? `Успех!` : `Отвлекся`;
+        messageText.textContent = isCorrect ? `Успех!` : `Попробуй ещё!`;
         messageText.style.color = 'black';
         feedbackContent.appendChild(messageText);
         visionResultDisplay.appendChild(feedbackContent);
@@ -1059,3 +1069,10 @@ Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
         });
     }
 });
+
+// Добавить отладку gtag
+window.dataLayer = window.dataLayer || [];
+function gtag() {
+    window.dataLayer.push(arguments);
+    console.log('gtag call:', arguments);
+}
