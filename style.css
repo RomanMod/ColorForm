@@ -66,6 +66,10 @@ h2 {
     display: none;
 }
 
+.choice-btn.hidden {
+    display: none !important;
+}
+
 button {
     background-color: var(--button-bg-color);
     color: var(--button-text-color);
@@ -107,7 +111,6 @@ button:focus-visible {
 .display {
     width: 100%;
     aspect-ratio: 16 / 9;
-    padding-bottom: 56.25%; /* Fallback for older browsers */
     background-color: var(--display-bg-color);
     border-radius: 8px;
     display: flex;
@@ -115,14 +118,6 @@ button:focus-visible {
     align-items: center;
     position: relative;
     overflow: hidden;
-}
-
-.display > * {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
 }
 
 .result-display {
@@ -137,6 +132,7 @@ button:focus-visible {
     justify-content: center;
     align-items: center;
     border-radius: 8px;
+    z-index: 10;
 }
 
 #intention-result {
