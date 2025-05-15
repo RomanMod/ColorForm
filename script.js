@@ -1,26 +1,26 @@
-// Настройки логирования
+// Logging settings
 const ENABLE_LOGGING = true;
 
-// Константы для времени "перемешивания" и генерации результата в Виденье
+// Constants for Vision game timing
 const SHUFFLE_BUTTON_DISABLE_TIME = 3000;
 const RANDOM_RESULT_MIN_TIME = 1200;
 const RANDOM_RESULT_MAX_TIME = 2800;
 
-// Константы для рандомизации в Намеренье
+// Constants for Intention game randomization
 const INTENTION_RANDOMIZER_MIN_INTERVAL = 30;
 const INTENTION_RANDOMIZER_MAX_INTERVAL = 100;
 const INTENTION_FIXATION_DELAY_MIN = 0;
 const INTENTION_FIXATION_DELAY_MAX = 500;
 const SHOW_INTENTION_THROTTLE_MS = 500;
 
-// Инициализация переменных
+// Initialize variables
 let telegramUser = null;
 let currentGameMode = 'menu';
 let gameStartTime = null;
 let shuffleStartTime = null;
 let intentionAttemptStartTime = null;
 let choiceButtonsEnabledTime = null;
-const sessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+const sessionId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`; // Unique session ID
 const sessionStartTime = Date.now();
 let sessionSummarySent = false;
 let lastShowIntentionTime = 0;
@@ -38,7 +38,7 @@ const intentionStats = {
 };
 let intentionGuessSequence = [];
 let intentionRandomizerCount = 0;
-const intentionAttempts = []; // Массив для хранения попыток
+const intentionAttempts = []; // Array to store attempts
 
 let visionRandomizerTimeout = null;
 let visionCurrentResult = null;
@@ -51,7 +51,7 @@ const visionStats = {
     failures: 0
 };
 let visionGuessSequence = [];
-const visionAttempts = []; // Массив для хранения попыток
+const visionAttempts = []; // Array to store attempts
 
 const appDiv = document.getElementById('app');
 const userNameSpan = document.getElementById('telegram-user-name');
@@ -74,7 +74,7 @@ const intentionStatsSpanMaxAttempts = document.getElementById('intention-stats-m
 const intentionStatsSpanSuccesses = document.getElementById('intention-stats-successes');
 const intentionStatsSpanFailures = document.getElementById('intention-stats-failures');
 const intentionStatsSpanSuccessRate = document.getElementById('intention-stats-success-rate');
-const intentionStatsSpanAvgTime = document.getElementById('intention-stats-avg-time'); // Новый элемент
+const intentionStatsSpanAvgTime = document.getElementById('intention-stats-avg-time');
 const gameVision = document.getElementById('game-vision');
 const visionShuffleBtn = document.getElementById('vision-shuffle-btn');
 const visionDisplay = document.getElementById('vision-display');
@@ -89,12 +89,12 @@ const visionStatsSpanMaxAttempts = document.getElementById('stats-max-attempts')
 const visionStatsSpanSuccesses = document.getElementById('stats-successes');
 const visionStatsSpanFailures = document.getElementById('stats-failures');
 const visionStatsSpanSuccessRate = document.getElementById('stats-success-rate');
-const visionStatsSpanAvgTime = document.getElementById('stats-avg-time'); // Новый элемент
+const visionStatsSpanAvgTime = document.getElementById('stats-avg-time');
 const visionModeRadios = document.querySelectorAll('input[name="vision-mode"]');
 const visionAttemptsModeRadios = document.querySelectorAll('input[name="vision-attempts-mode"]');
 const backButtons = document.querySelectorAll('.back-btn');
 
-// Проверка наличия критических DOM-элементов
+// Check for critical DOM elements
 if (!appDiv || !menuScreen || !gameIntention || !gameVision) {
     console.error('Critical DOM elements are missing. Check HTML for ids: app, menu-screen, game-intention, game-vision');
     throw new Error('Missing critical DOM elements');
@@ -108,20 +108,23 @@ const cachedElements = {
 cachedElements.colorBlock.style.width = '100%';
 cachedElements.colorBlock.style.height = '100%';
 
-// Функция для проверки сетевого статуса
+// Check network status
 function isOnline() {
     return navigator.onLine;
 }
 
-// Функция для отправки событий с обработкой ошибок
+// Send GA4 events with error handling
 function sendGtagEvent(eventName, params) {
+    if (intentionStats.attempts > 500 && eventName === 'intention_guess') {
+        console.warn(`Approaching GA4 event limit for session ${sessionId}`);
+    }
     if (!isOnline()) {
         console.warn(`No internet connection, saving ${eventName} to localStorage`);
         saveToLocalStorage(eventName, params);
         return false;
     }
     try {
-        gtag('event', eventName, params);
+        gtag('event', eventName, { ...params, debug_mode: 1 }); // Debug mode for GA4 DebugView
         console.log(`gtag ${eventName} sent:`, params);
         return true;
     } catch (error) {
@@ -131,7 +134,7 @@ function sendGtagEvent(eventName, params) {
     }
 }
 
-// Сохранение в localStorage
+// Save to localStorage
 function saveToLocalStorage(eventName, params) {
     const key = eventName.includes('vision') ? 'visionStats' : 'intentionStats';
     const savedStats = JSON.parse(localStorage.getItem(key) || '[]');
@@ -145,7 +148,7 @@ function saveToLocalStorage(eventName, params) {
     console.log(`Saved ${eventName} to localStorage:`, params);
 }
 
-// Сохранение попыток в localStorage
+// Save attempts to localStorage
 function saveAttempts(gameMode) {
     const key = gameMode === 'intention' ? 'intentionAttempts' : 'visionAttempts';
     const attempts = gameMode === 'intention' ? intentionAttempts : visionAttempts;
@@ -175,6 +178,7 @@ function sendSessionSummary() {
     const stats = currentGameMode === 'vision' ? visionStats : intentionStats;
     const mode = currentGameMode === 'vision' ? visionMode : intentionMode;
     const guessSequence = currentGameMode === 'vision' ? visionGuessSequence : intentionGuessSequence;
+    const attemptsMode = currentGameMode === 'vision' ? visionAttemptMode : intentionAttemptsMode;
 
     const eventParams = {
         event_category: 'Game',
@@ -183,6 +187,7 @@ function sendSessionSummary() {
         successes: stats.successes,
         failures: stats.failures,
         mode: mode,
+        attempts_mode: attemptsMode,
         session_duration_seconds: parseFloat(duration),
         session_id: sessionId,
         custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
@@ -299,7 +304,7 @@ function resetIntentionGame() {
     intentionStats.successes = 0;
     intentionStats.failures = 0;
     intentionGuessSequence = [];
-    intentionAttempts.length = 0; // Очистка массива попыток
+    intentionAttempts.length = 0; // Clear attempts array
     intentionAttemptStartTime = null;
     intentionRandomizerCount = 0;
     stopIntentionGame();
@@ -323,7 +328,7 @@ function resetVisionGame() {
     visionStats.successes = 0;
     visionStats.failures = 0;
     visionGuessSequence = [];
-    visionAttempts.length = 0; // Очистка массива попыток
+    visionAttempts.length = 0; // Clear attempts array
     stopVisionGame();
     updateVisionStatsDisplay();
     if (visionShuffleBtn) visionShuffleBtn.disabled = false;
@@ -347,7 +352,7 @@ function startIntentionGame() {
     intentionAttemptStartTime = Date.now();
     intentionRandomizerCount = 0;
     if (ENABLE_LOGGING) {
-        console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult, 'attempt_start_time:', intentionAttemptStartTime);
+        console.log('Starting intention game, mode: ', intentionMode, ', result: ', intentionCurrentResult, ', attempt_start_time: ', intentionAttemptStartTime);
     }
 
     function updateRandomResult() {
@@ -427,7 +432,7 @@ function showIntentionResult() {
 
     setTimeout(() => {
         if (ENABLE_LOGGING) {
-            console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult);
+            console.log('Showing intention result, mode: ', intentionMode, ', result: ', intentionCurrentResult);
             console.log(`Intention result displayed at: ${Date.now()}`);
         }
         intentionStats.attempts++;
@@ -467,8 +472,14 @@ function showIntentionResult() {
             }
         };
 
+        const elementsMap = {
+            intentionResultDisplay: intentionResultDisplay,
+            intentionDisplay: intentionDisplay,
+            intentionShowBtn: intentionShowBtn
+        };
+
         Object.keys(stylesToUpdate).forEach(element => {
-            const el = eval(element);
+            const el = elementsMap[element];
             if (el) {
                 Object.assign(el.style, stylesToUpdate[element]);
                 if (stylesToUpdate[element].classList) {
@@ -511,7 +522,7 @@ function showIntentionResult() {
                 time_to_guess: timeToGuess,
                 session_id: sessionId,
                 custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
-                attempt_id: intentionStats.attempts
+                attempt_number: intentionStats.attempts
             });
             if (ENABLE_LOGGING) {
                 const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
@@ -543,7 +554,7 @@ function showIntentionResult() {
                 time_to_guess: timeToGuess,
                 session_id: sessionId,
                 custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
-                attempt_id: intentionStats.attempts
+                attempt_number: intentionStats.attempts
             });
             if (ENABLE_LOGGING) {
                 const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
@@ -559,6 +570,8 @@ function showIntentionResult() {
             const guessTimeMs = Date.now();
             const timeDiffMs = intentionAttemptStartTime ? (guessTimeMs - intentionAttemptStartTime) : 0;
             const timeToGuess = timeDiffMs ? Math.max(0.1, Number((timeDiffMs / 1000).toFixed(1))) : 0.1;
+            intentionStats.failures++;
+            intentionGuessSequence.push(0);
             intentionAttempts.push({ time: timeToGuess, result: 0 });
             saveAttempts('intention');
             updateIntentionStatsDisplay();
@@ -569,10 +582,12 @@ function showIntentionResult() {
                 result: intentionCurrentResult,
                 time_to_guess: timeToGuess,
                 session_id: sessionId,
-                custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+                custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
+                attempt_number: intentionStats.attempts
             });
             if (ENABLE_LOGGING) {
-                console.log(`Intention attempt timed out, time_to_guess: ${timeToGuess}s`);
+                const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
+                console.log(`Intention attempt timed out, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
                 console.log('Intention attempts:', intentionAttempts);
             }
             cleanupAndRestart();
@@ -716,7 +731,7 @@ function handleVisionChoice(event) {
         time_to_guess: timeToGuess,
         session_id: sessionId,
         custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
-        attempt_id: visionStats.attempts
+        attempt_number: visionStats.attempts
     });
 
     if (isCorrect) {
