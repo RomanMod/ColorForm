@@ -31,7 +31,7 @@ body {
     width: 100%;
     max-width: 600px;
     text-align: center;
-    padding: 3px; /* Настрой padding или padding-top для расстояния от верха экрана до "Привет, Игрок" */
+    padding: 3px;
     background-color: var(--bg-color);
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
@@ -42,7 +42,7 @@ body {
 
 #user-greeting {
     font-size: 1.2em;
-    margin-bottom: 1px; /* Настрой margin-bottom для расстояния до названия игры */
+    margin-bottom: 1px;
     color: var(--text-color);
 }
 
@@ -52,7 +52,7 @@ h1, h2, h3 {
 }
 
 h2 {
-    margin-bottom: 0px; /* Настрой margin-bottom для расстояния от названия игры до настроек */
+    margin-bottom: 0px;
 }
 
 .game-screen {
@@ -88,15 +88,28 @@ button:disabled {
     opacity: 0.6;
 }
 
+button:focus-visible {
+    outline: 2px solid var(--blue-color);
+    outline-offset: 1px;
+}
+
 .large-btn {
     padding: 15px 25px;
     font-size: 1.2em;
+    min-height: 48px;
 }
 
 .small-btn {
     padding: 8px 15px;
     font-size: 0.9em;
     min-height: auto;
+}
+
+.feedback-buttons .small-btn {
+    padding: 8px 15px;
+    font-size: 0.9em;
+    min-height: 32px;
+    line-height: 1.2;
 }
 
 .display {
@@ -132,6 +145,7 @@ button:disabled {
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: visible;
 }
 
 #intention-result svg {
@@ -139,6 +153,9 @@ button:disabled {
     max-height: 100%;
     width: 100%;
     height: 100%;
+    object-fit: contain;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 .controls {
@@ -148,7 +165,7 @@ button:disabled {
     gap: 10px;
     flex-wrap: wrap;
     margin-bottom: 15px;
-    margin-top: 0px; /* Настрой margin-top для расстояния от названия игры до настроек */
+    margin-top: 0px;
 }
 
 .action-btn {
@@ -221,6 +238,7 @@ button:disabled {
     text-align: left;
     margin-top: 20px;
     color: var(--text-color);
+    box-sizing: border-box;
 }
 
 #read-more-area h3 {
@@ -229,14 +247,17 @@ button:disabled {
 }
 
 #read-more-area p {
-    margin-bottom: 10px;
-    line-height: 1.5;
+    margin-bottom: 8px;
 }
 
 #read-more-area button {
     margin-top: 15px;
     display: block;
     margin-left: auto;
+    padding: 8px 15px;
+    font-size: 0.9em;
+    min-height: 32px;
+    line-height: 1.2;
 }
 
 #vision-choices {
@@ -258,6 +279,11 @@ button:disabled {
     box-sizing: border-box;
 }
 
+.choice-btn:focus-visible {
+    outline: 2px solid var(--blue-color);
+    outline-offset: 1px;
+}
+
 .color-btn[data-choice="red"] {
     background-color: var(--red-color);
 }
@@ -277,25 +303,25 @@ button:disabled {
     fill: var(--result-text-color);
 }
 
-#vision-stats {
+#vision-stats, #intention-stats {
     margin-top: 15px;
     font-size: 1em;
     text-align: center;
     color: var(--text-color);
 }
 
-#vision-stats p {
+#vision-stats p, #intention-stats p {
     margin: 5px 0;
 }
 
-.feedback-text {
-    font-size: 20px;
-    font-weight: bold;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 2;
+#vision-stats p span, #intention-stats p span {
+    font-size: 1em;
+    vertical-align: baseline;
+}
+
+#intention-stats p:has(#intention-stats-avg-time),
+#vision-stats p:has(#stats-avg-time) {
+    display: none;
 }
 
 .vision-feedback-content {
@@ -308,6 +334,8 @@ button:disabled {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    overflow: visible;
 }
 
 .vision-feedback-content svg {
@@ -315,7 +343,14 @@ button:disabled {
     max-height: 100%;
     width: 100%;
     height: 100%;
+    object-fit: contain;
+    padding: 0;
+    box-sizing: border-box;
     fill: black;
+}
+
+.vision-feedback-content p {
+    display: none;
 }
 
 #vision-result {
@@ -329,16 +364,103 @@ button:disabled {
     display: flex;
     gap: 10px;
     justify-content: center;
-    margin-top: 10px;
-}
-
-#intention-stats {
     margin-top: 15px;
-    font-size: 1em;
-    text-align: center;
-    color: var(--text-color);
 }
 
-#intention-stats p {
-    margin: 5px 0;
+/* Адаптивность для маленьких экранов */
+@media screen and (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+
+    #app {
+        padding: 2px;
+        gap: 15px;
+    }
+
+    .display {
+        aspect-ratio: 4 / 3;
+        max-height: 200px;
+    }
+
+    #vision-choices {
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .choice-btn {
+        width: 100px;
+        height: 100px;
+    }
+
+    .shape-btn svg {
+        width: 85%;
+        height: 85%;
+    }
+
+    button {
+        padding: 10px 15px;
+        font-size: 0.9em;
+        min-height: 36px;
+    }
+
+    .large-btn {
+        padding: 12px 20px;
+        font-size: 1em;
+        min-height: 40px;
+    }
+
+    .small-btn {
+        padding: 6px 12px;
+        font-size: 0.8em;
+        min-height: 28px;
+    }
+
+    .feedback-buttons .small-btn {
+        padding: 6px 12px;
+        font-size: 0.8em;
+        min-height: 28px;
+    }
+
+    .menu-buttons {
+        gap: 10px;
+    }
+
+    #read-more-area button {
+        padding: 6px 12px;
+        font-size: 0.8em;
+        min-height: 28px;
+    }
+
+    .new-game-btn {
+        padding: 10px 15px;
+        font-size: 1em;
+    }
+
+    .back-btn {
+        padding: 8px 12px;
+        font-size: 0.8em;
+    }
+
+    .controls {
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .mode-select, .attempts-mode {
+        gap: 10px;
+    }
+
+    #read-more-area {
+        padding: 10px;
+        margin-top: 15px;
+    }
+
+    #read-more-area p {
+        margin-bottom: 6px;
+    }
+
+    #user-greeting {
+        font-size: 1em;
+    }
 }
