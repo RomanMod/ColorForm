@@ -31,7 +31,7 @@ body {
     width: 100%;
     max-width: 600px;
     text-align: center;
-    padding: 3px;
+    padding: 3px; /* Настрой padding или padding-top для расстояния от верха экрана до "Привет, Игрок" */
     background-color: var(--bg-color);
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
@@ -42,7 +42,7 @@ body {
 
 #user-greeting {
     font-size: 1.2em;
-    margin-bottom: 1px;
+    margin-bottom: 1px; /* Настрой margin-bottom для расстояния до названия игры */
     color: var(--text-color);
 }
 
@@ -52,7 +52,7 @@ h1, h2, h3 {
 }
 
 h2 {
-    margin-bottom: 0px;
+    margin-bottom: 0px; /* Настрой margin-bottom для расстояния от названия игры до настроек */
 }
 
 .game-screen {
@@ -63,10 +63,6 @@ h2 {
 }
 
 .hidden {
-    display: none;
-}
-
-.choice-btn.hidden {
     display: none !important;
 }
 
@@ -90,11 +86,6 @@ button:disabled {
     background-color: #48484a;
     cursor: not-allowed;
     opacity: 0.6;
-}
-
-button:focus-visible {
-    outline: 2px solid var(--blue-color);
-    outline-offset: 2px;
 }
 
 .large-btn {
@@ -132,7 +123,6 @@ button:focus-visible {
     justify-content: center;
     align-items: center;
     border-radius: 8px;
-    z-index: 10;
 }
 
 #intention-result {
@@ -158,7 +148,7 @@ button:focus-visible {
     gap: 10px;
     flex-wrap: wrap;
     margin-bottom: 15px;
-    margin-top: 0px;
+    margin-top: 0px; /* Настрой margin-top для расстояния от названия игры до настроек */
 }
 
 .action-btn {
@@ -268,11 +258,6 @@ button:focus-visible {
     box-sizing: border-box;
 }
 
-.choice-btn:focus-visible {
-    outline: 2px solid var(--blue-color);
-    outline-offset: 2px;
-}
-
 .color-btn[data-choice="red"] {
     background-color: var(--red-color);
 }
@@ -292,16 +277,25 @@ button:focus-visible {
     fill: var(--result-text-color);
 }
 
-#vision-stats, #intention-stats {
+#vision-stats {
     margin-top: 15px;
     font-size: 1em;
     text-align: center;
     color: var(--text-color);
 }
 
-#vision-stats p, #intention-stats p {
+#vision-stats p {
     margin: 5px 0;
-    line-height: 1.5;
+}
+
+.feedback-text {
+    font-size: 20px;
+    font-weight: bold;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
 }
 
 .vision-feedback-content {
@@ -324,13 +318,6 @@ button:focus-visible {
     fill: black;
 }
 
-.vision-feedback-content p {
-    margin: 10px 0 0;
-    font-size: 1em;
-    font-weight: bold;
-    color: var(--result-text-color);
-}
-
 #vision-result {
     display: flex;
     justify-content: center;
@@ -343,4 +330,15 @@ button:focus-visible {
     gap: 10px;
     justify-content: center;
     margin-top: 10px;
+}
+
+#intention-stats {
+    margin-top: 15px;
+    font-size: 1em;
+    text-align: center;
+    color: var(--text-color);
+}
+
+#intention-stats p {
+    margin: 5px 0;
 }
