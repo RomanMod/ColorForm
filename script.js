@@ -617,7 +617,7 @@ function showIntentionResult() {
                 });
                 if (intentionShowBtn) intentionShowBtn.disabled = true;
                 if (intentionNewGameBtn) intentionNewGameBtn.classList.remove('hidden');
-                resetIntentionGame();
+                // НЕ вызываем resetIntentionGame, ждём нажатия "Новая игра"
             } else {
                 // В неограниченном режиме создаём новую подгруппу для аналитики, но сохраняем статистику
                 if (intentionStats.attempts % intentionMaxAttempts === 0) {
