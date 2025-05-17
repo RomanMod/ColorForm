@@ -24,6 +24,8 @@ const sessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9
 const sessionStartTime = Date.now();
 let sessionSummarySent = false;
 let lastShowIntentionTime = 0;
+let subsessionCounter = 0; // Счётчик подгрупп
+let subsessionId = null; // Идентификатор текущей подгруппы
 
 let intentionRandomizerInterval = null;
 let intentionCurrentResult = null;
@@ -74,7 +76,7 @@ const intentionStatsSpanMaxAttempts = document.getElementById('intention-stats-m
 const intentionStatsSpanSuccesses = document.getElementById('intention-stats-successes');
 const intentionStatsSpanFailures = document.getElementById('intention-stats-failures');
 const intentionStatsSpanSuccessRate = document.getElementById('intention-stats-success-rate');
-const intentionStatsSpanAvgTime = document.getElementById('intention-stats-avg-time'); // Новый элемент
+const intentionStatsSpanAvgTime = document.getElementById('intention-stats-avg-time');
 const gameVision = document.getElementById('game-vision');
 const visionShuffleBtn = document.getElementById('vision-shuffle-btn');
 const visionDisplay = document.getElementById('vision-display');
@@ -89,7 +91,7 @@ const visionStatsSpanMaxAttempts = document.getElementById('stats-max-attempts')
 const visionStatsSpanSuccesses = document.getElementById('stats-successes');
 const visionStatsSpanFailures = document.getElementById('stats-failures');
 const visionStatsSpanSuccessRate = document.getElementById('stats-success-rate');
-const visionStatsSpanAvgTime = document.getElementById('stats-avg-time'); // Новый элемент
+const visionStatsSpanAvgTime = document.getElementById('stats-avg-time');
 const visionModeRadios = document.querySelectorAll('input[name="vision-mode"]');
 const visionAttemptsModeRadios = document.querySelectorAll('input[name="vision-attempts-mode"]');
 const backButtons = document.querySelectorAll('.back-btn');
@@ -115,18 +117,24 @@ function isOnline() {
 
 // Функция для отправки событий с обработкой ошибок
 function sendGtagEvent(eventName, params) {
+    const eventParams = {
+        ...params,
+        session_id: sessionId,
+        custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
+        subsession_id: eventName.includes('intention') ? (subsessionId || 'N/A') : undefined // Добавляем subsession_id только для Intention
+    };
     if (!isOnline()) {
         console.warn(`No internet connection, saving ${eventName} to localStorage`);
-        saveToLocalStorage(eventName, params);
+        saveToLocalStorage(eventName, eventParams);
         return false;
     }
     try {
-        gtag('event', eventName, params);
-        console.log(`gtag ${eventName} sent:`, params);
+        gtag('event', eventName, eventParams);
+        console.log(`gtag ${eventName} sent:`, eventParams);
         return true;
     } catch (error) {
         console.error(`gtag ${eventName} failed:`, error);
-        saveToLocalStorage(eventName, params);
+        saveToLocalStorage(eventName, eventParams);
         return false;
     }
 }
@@ -184,8 +192,6 @@ function sendSessionSummary() {
         failures: stats.failures,
         mode: mode,
         session_duration_seconds: parseFloat(duration),
-        session_id: sessionId,
-        custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
         session_start_time: Math.floor(sessionStartTime)
     };
 
@@ -299,9 +305,10 @@ function resetIntentionGame() {
     intentionStats.successes = 0;
     intentionStats.failures = 0;
     intentionGuessSequence = [];
-    intentionAttempts.length = 0; // Очистка массива попыток
+    intentionAttempts.length = 0;
     intentionAttemptStartTime = null;
     intentionRandomizerCount = 0;
+    subsessionId = null; // Сбрасываем subsession_id
     stopIntentionGame();
     startIntentionGame();
     updateIntentionStatsDisplay();
@@ -323,7 +330,7 @@ function resetVisionGame() {
     visionStats.successes = 0;
     visionStats.failures = 0;
     visionGuessSequence = [];
-    visionAttempts.length = 0; // Очистка массива попыток
+    visionAttempts.length = 0;
     stopVisionGame();
     updateVisionStatsDisplay();
     if (visionShuffleBtn) visionShuffleBtn.disabled = false;
@@ -343,11 +350,13 @@ function resetVisionGame() {
 
 function startIntentionGame() {
     console.log('Starting Intention game');
+    subsessionCounter++; // Увеличиваем счётчик подгрупп
+    subsessionId = `${sessionId}_${subsessionCounter}`; // Генерируем новый subsession_id
     intentionCurrentResult = getRandomResult(intentionMode);
     intentionAttemptStartTime = Date.now();
     intentionRandomizerCount = 0;
     if (ENABLE_LOGGING) {
-        console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult, 'attempt_start_time:', intentionAttemptStartTime);
+        console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult, 'attempt_start_time:', intentionAttemptStartTime, 'subsession_id:', subsessionId);
     }
 
     function updateRandomResult() {
@@ -373,9 +382,7 @@ function startIntentionGame() {
     sendGtagEvent('randomizer_start', {
         event_category: 'Game',
         event_label: 'Intention Randomizer',
-        mode: intentionMode,
-        session_id: sessionId,
-        custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+        mode: intentionMode
     });
 }
 
@@ -427,7 +434,7 @@ function showIntentionResult() {
 
     setTimeout(() => {
         if (ENABLE_LOGGING) {
-            console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult);
+            console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult, 'subsession_id:', subsessionId);
             console.log(`Intention result displayed at: ${Date.now()}`);
         }
         intentionStats.attempts++;
@@ -439,9 +446,7 @@ function showIntentionResult() {
         sendGtagEvent('show_result', {
             event_category: 'Game',
             event_label: 'Intention Show',
-            mode: intentionMode,
-            session_id: sessionId,
-            custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+            mode: intentionMode
         });
 
         clearTimeout(intentionRandomizerInterval);
@@ -509,13 +514,11 @@ function showIntentionResult() {
                 mode: intentionMode,
                 result: intentionCurrentResult,
                 time_to_guess: timeToGuess,
-                session_id: sessionId,
-                custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
                 attempt_id: intentionStats.attempts
             });
             if (ENABLE_LOGGING) {
                 const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-                console.log(`Intention guess: Success, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
+                console.log(`Intention guess: Success, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s, subsession_id: ${subsessionId}`);
                 console.log('Intention attempts:', intentionAttempts);
             }
             cleanupAndRestart();
@@ -541,13 +544,11 @@ function showIntentionResult() {
                 mode: intentionMode,
                 result: intentionCurrentResult,
                 time_to_guess: timeToGuess,
-                session_id: sessionId,
-                custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
                 attempt_id: intentionStats.attempts
             });
             if (ENABLE_LOGGING) {
                 const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-                console.log(`Intention guess: Failure, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
+                console.log(`Intention guess: Failure, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s, subsession_id: ${subsessionId}`);
                 console.log('Intention attempts:', intentionAttempts);
             }
             cleanupAndRestart();
@@ -567,12 +568,10 @@ function showIntentionResult() {
                 event_label: 'Intention Timeout',
                 mode: intentionMode,
                 result: intentionCurrentResult,
-                time_to_guess: timeToGuess,
-                session_id: sessionId,
-                custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+                time_to_guess: timeToGuess
             });
             if (ENABLE_LOGGING) {
-                console.log(`Intention attempt timed out, time_to_guess: ${timeToGuess}s`);
+                console.log(`Intention attempt timed out, time_to_guess: ${timeToGuess}s, subsession_id: ${subsessionId}`);
                 console.log('Intention attempts:', intentionAttempts);
             }
             cleanupAndRestart();
@@ -620,9 +619,7 @@ function startVisionShuffle() {
     sendGtagEvent('shuffle', {
         event_category: 'Game',
         event_label: 'Vision Shuffle',
-        mode: visionMode,
-        session_id: sessionId,
-        custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+        mode: visionMode
     });
 
     visionShuffleBtn.disabled = true;
@@ -717,8 +714,6 @@ function handleVisionChoice(event) {
         choice: choice,
         correct_answer: visionCurrentResult,
         time_to_guess: timeToGuess,
-        session_id: sessionId,
-        custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
         attempt_id: visionStats.attempts
     });
 
@@ -810,9 +805,7 @@ if (btnStartIntention) {
         sendGtagEvent('game_select', {
             event_category: 'Game',
             event_label: 'Intention',
-            game_mode: intentionMode,
-            session_id: sessionId,
-            custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+            game_mode: intentionMode
         });
     });
 }
@@ -826,9 +819,7 @@ if (btnStartVision) {
         sendGtagEvent('game_select', {
             event_category: 'Game',
             event_label: 'Vision',
-            game_mode: visionMode,
-            session_id: sessionId,
-            custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+            game_mode: visionMode
         });
     });
 }
@@ -839,9 +830,7 @@ if (btnReadMore) {
         btnReadMore.classList.add('hidden');
         sendGtagEvent('read_more', {
             event_category: 'App',
-            event_label: 'Read More Clicked',
-            session_id: sessionId,
-            custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+            event_label: 'Read More Clicked'
         });
     });
 }
@@ -862,9 +851,7 @@ if (backButtons) {
                     event_category: 'Game',
                     event_label: currentGameMode === 'intention' ? 'Intention' : 'Vision',
                     game_mode: currentGameMode === 'intention' ? intentionMode : visionMode,
-                    session_duration_seconds: parseFloat(duration),
-                    session_id: sessionId,
-                    custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+                    session_duration_seconds: parseFloat(duration)
                 });
                 sendSessionSummary();
             }
@@ -883,9 +870,7 @@ if (intentionDisplay) {
             console.log('Intention display clicked, triggering show result');
             sendGtagEvent('display_click', {
                 event_category: 'Game',
-                event_label: 'Intention Display',
-                session_id: sessionId,
-                custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+                event_label: 'Intention Display'
             });
             intentionShowBtn.click();
         }
@@ -899,9 +884,7 @@ if (intentionModeRadios) {
             sendGtagEvent('mode_change', {
                 event_category: 'Game',
                 event_label: 'Intention Mode',
-                value: intentionMode,
-                session_id: sessionId,
-                custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+                value: intentionMode
             });
             stopIntentionGame();
             startIntentionGame();
@@ -938,9 +921,7 @@ if (visionDisplay) {
         if (visionShuffleBtn && !visionShuffleBtn.disabled && currentGameMode === 'vision') {
             sendGtagEvent('display_click', {
                 event_category: 'Game',
-                event_label: 'Vision Display',
-                session_id: sessionId,
-                custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+                event_label: 'Vision Display'
             });
             visionShuffleBtn.click();
         }
@@ -958,9 +939,7 @@ if (visionModeRadios) {
             sendGtagEvent('mode_change', {
                 event_category: 'Game',
                 event_label: 'Vision Mode',
-                value: visionMode,
-                session_id: sessionId,
-                custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+                value: visionMode
             });
             updateVisionChoicesDisplay();
             setVisionChoiceButtonsEnabled(false);
@@ -997,9 +976,7 @@ window.addEventListener('error', (error) => {
         event_category: 'App',
         event_label: 'Runtime Error',
         error_message: error.message,
-        error_file: error.filename,
-        session_id: sessionId,
-        custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+        error_file: error.filename
     });
 });
 
@@ -1010,9 +987,7 @@ window.addEventListener('beforeunload', () => {
     sendGtagEvent('session_end', {
         event_category: 'App',
         event_label: 'App Closed',
-        session_id: sessionId,
-        session_duration_seconds: parseFloat(((Date.now() - sessionStartTime) / 1000).toFixed(1)),
-        custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+        session_duration_seconds: parseFloat(((Date.now() - sessionStartTime) / 1000).toFixed(1))
     });
 });
 
@@ -1023,9 +998,7 @@ document.addEventListener('visibilitychange', () => {
         sendGtagEvent('app_background', {
             event_category: 'App',
             event_label: 'App Minimized',
-            session_id: sessionId,
-            session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
-            custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+            session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1))
         });
     }
 });
@@ -1042,9 +1015,7 @@ Telegram.WebApp.MainButton.onClick(() => {
         sendGtagEvent('app_close', {
             event_category: 'App',
             event_label: 'MainButton Close',
-            session_id: sessionId,
-            session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
-            custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+            session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1))
         });
     }
     Telegram.WebApp.close();
@@ -1060,9 +1031,7 @@ try {
         sendGtagEvent('app_launch', {
             event_category: 'App',
             event_label: 'Mini App Started',
-            start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none',
-            session_id: sessionId,
-            custom_user_id: telegramUser.id
+            start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none'
         });
     } else {
         telegramUser = { id: 'anonymous_' + Math.random().toString(36).substr(2, 9), first_name: 'Игрок' };
@@ -1072,17 +1041,15 @@ try {
         sendGtagEvent('app_launch', {
             event_category: 'App',
             event_label: 'Mini App Started (No User)',
-            start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none',
-            session_id: sessionId,
-            custom_user_id: telegramUser.id
+            start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none'
         });
     }
 } catch (e) {
-    console.warn('Telegram WebApp not available, using anonymous user'); // ИСПРАВЛЕНИЕ: Убрана лишняя переноска строки
+    console.warn('Telegram WebApp not available, using anonymous user');
     telegramUser = { id: 'anonymous_' + Math.random().toString(36).substr(2, 9), first_name: 'Игрок' };
     if (userNameSpan) userNameSpan.textContent = telegramUser.first_name;
 }
-console.log('Initialization completed, calling sendSavedStats and showScreen'); // Добавлено для отладки
+console.log('Initialization completed, calling sendSavedStats and showScreen');
 sendSavedStats();
 Telegram.WebApp.expand();
 showScreen('menu-screen');
@@ -1094,9 +1061,7 @@ Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
         sendGtagEvent('app_background', {
             event_category: 'App',
             event_label: 'Viewport Minimized',
-            session_id: sessionId,
-            session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
-            custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+            session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1))
         });
     }
 });
