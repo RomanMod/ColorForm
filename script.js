@@ -187,10 +187,6 @@ function sendSessionSummary() {
         console.log('No vision attempts, skipping sendSessionSummary');
         return;
     }
-    if (currentGameMode === 'intention' && intentionStats.attempts === 0) {
-        console.log('No intention attempts, skipping sendSessionSummary');
-        return;
-    }
 
     const duration = ((Date.now() - gameStartTime) / 1000).toFixed(1);
     const eventName = currentGameMode === 'vision' ? 'game_session_summary' : 'intention_session_summary';
@@ -198,6 +194,15 @@ function sendSessionSummary() {
     const stats = currentGameMode === 'vision' ? visionStats : intentionStats;
     const mode = currentGameMode === 'vision' ? visionMode : intentionMode;
     const guessSequence = currentGameMode === 'vision' ? visionGuessSequence : intentionGuessSequence;
+
+    // Дополняем win_sequence звёздочками для незавершённых попыток
+    const adjustedSequence = [...guessSequence];
+    if (adjustedSequence.length < stats.attempts) {
+        console.log(`Adjusting win_sequence: ${adjustedSequence.length} < ${stats.attempts} attempts for subsession_id: ${subsessionId}`);
+        while (adjustedSequence.length < stats.attempts) {
+            adjustedSequence.push('*'); // Пометка для незавершённых попыток
+        }
+    }
 
     const eventParams = {
         event_category: 'Game',
@@ -208,17 +213,31 @@ function sendSessionSummary() {
         mode: mode,
         session_duration_seconds: parseFloat(duration),
         session_start_time: Math.floor(sessionStartTime),
-        win_sequence: guessSequence.join(',') // Добавлено: отправляем Win Sequence
+        win_sequence: adjustedSequence.join(','), // Используем дополненную последовательность
+        subsession_id: subsessionId
     };
 
     console.log(`Sending ${eventName}:`, eventParams);
     const success = sendGtagEvent(eventName, eventParams);
     if (success) {
         sessionSummarySent = true;
-        saveSubsessionSequence(); // Добавлено: сохраняем последовательность подгруппы
+        saveSubsessionSequence(adjustedSequence); // Сохраняем дополненную последовательность
     } else {
         console.warn('sendSessionSummary failed, saved to localStorage');
     }
+}
+
+// Обновляем saveSubsessionSequence для поддержки adjustedSequence
+function saveSubsessionSequence(sequence) {
+    const subsessionData = {
+        subsessionId: subsessionId,
+        sequence: sequence || intentionGuessSequence,
+        attempts: intentionStats.attempts,
+        successes: intentionStats.successes,
+        failures: intentionStats.failures
+    };
+    subsessionSequences.push(subsessionData);
+    console.log('Saved subsession sequence:', subsessionData);
 }
 
 function sendSavedStats() {
