@@ -890,7 +890,6 @@ if (intentionShowBtn) {
 
 if (intentionDisplay) {
     intentionDisplay.addEventListener('click', () => {
-       –
         if (intentionShowBtn && !intentionShowBtn.classList.contains('hidden') && !intentionShowBtn.disabled && currentGameMode === 'intention' && !isProcessingIntention) {
             console.log('Intention display clicked, triggering show result');
             sendGtagEvent('display_click', {
