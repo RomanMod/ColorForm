@@ -278,7 +278,7 @@ function showScreen(screenId) {
     } else if (screenId === 'game-intention') {
         if (gameIntention) gameIntention.classList.remove('hidden');
         currentGameMode = 'intention';
-        //startIntentionGame();
+        startIntentionGame();
         updateIntentionStatsDisplay();
         if (intentionNewGameBtn) intentionNewGameBtn.classList.add('hidden');
         if (intentionAttemptsModeDiv) intentionAttemptsModeDiv.classList.remove('hidden');
