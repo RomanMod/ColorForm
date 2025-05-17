@@ -26,6 +26,7 @@ let sessionSummarySent = false;
 let lastShowIntentionTime = 0;
 let subsessionCounter = 0; // Счётчик подгрупп
 let subsessionId = null; // Идентификатор текущей подгруппы
+let subsessionSequences = []; // Добавлено: массив для хранения Win Sequence каждой подгруппы
 
 let intentionRandomizerInterval = null;
 let intentionCurrentResult = null;
@@ -121,7 +122,7 @@ function sendGtagEvent(eventName, params) {
         ...params,
         session_id: sessionId,
         custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
-        subsession_id: eventName.includes('intention') ? (subsessionId || 'N/A') : undefined // Добавляем subsession_id только для Intention
+        subsession_id: eventName.includes('intention') ? (subsessionId || 'N/A') : undefined
     };
     if (!isOnline()) {
         console.warn(`No internet connection, saving ${eventName} to localStorage`);
@@ -163,6 +164,20 @@ function saveAttempts(gameMode) {
     }
 }
 
+// Изменено: добавляем сохранение Win Sequence для подгруппы
+function saveSubsessionSequence() {
+    if (intentionGuessSequence.length > 0) {
+        subsessionSequences.push({
+            subsessionId: subsessionId,
+            sequence: [...intentionGuessSequence],
+            attempts: intentionStats.attempts,
+            successes: intentionStats.successes,
+            failures: intentionStats.failures
+        });
+        console.log(`Saved subsession sequence:`, subsessionSequences[subsessionSequences.length - 1]);
+    }
+}
+
 function sendSessionSummary() {
     if (!gameStartTime || currentGameMode === 'menu' || sessionSummarySent) {
         console.log('sendSessionSummary skipped:', { gameStartTime, currentGameMode, sessionSummarySent });
@@ -192,13 +207,15 @@ function sendSessionSummary() {
         failures: stats.failures,
         mode: mode,
         session_duration_seconds: parseFloat(duration),
-        session_start_time: Math.floor(sessionStartTime)
+        session_start_time: Math.floor(sessionStartTime),
+        win_sequence: guessSequence.join(',') // Добавлено: отправляем Win Sequence
     };
 
     console.log(`Sending ${eventName}:`, eventParams);
     const success = sendGtagEvent(eventName, eventParams);
     if (success) {
         sessionSummarySent = true;
+        saveSubsessionSequence(); // Добавлено: сохраняем последовательность подгруппы
     } else {
         console.warn('sendSessionSummary failed, saved to localStorage');
     }
@@ -236,7 +253,7 @@ function showScreen(screenId) {
         if (ENABLE_LOGGING && gameStartTime) {
             const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
             console.log(`Returning to menu, total game time: ${totalTime}s`);
-            console.log(`Intention guess sequence: [${intentionGuessSequence.join(', ')}]`);
+            console.log(`Intention subsession sequences:`, subsessionSequences); // Изменено: логируем все подгруппы
             console.log(`Vision guess sequence: [${visionGuessSequence.join(', ')}]`);
         }
     } else if (screenId === 'game-intention') {
@@ -308,7 +325,8 @@ function resetIntentionGame() {
     intentionAttempts.length = 0;
     intentionAttemptStartTime = null;
     intentionRandomizerCount = 0;
-    subsessionId = null; // Сбрасываем subsession_id
+    subsessionCounter++; // Изменено: увеличиваем счётчик только при сбросе
+    subsessionId = `${sessionId}_${subsessionCounter}`; // Изменено: новый subsession_id
     stopIntentionGame();
     startIntentionGame();
     updateIntentionStatsDisplay();
@@ -317,7 +335,7 @@ function resetIntentionGame() {
     if (intentionAttemptsModeDiv) intentionAttemptsModeDiv.classList.remove('hidden');
     sessionSummarySent = false;
     if (ENABLE_LOGGING) {
-        console.log('Intention game reset, guess sequence and attempt start time cleared');
+        console.log('Intention game reset, new subsession_id:', subsessionId);
     }
 }
 
@@ -350,8 +368,6 @@ function resetVisionGame() {
 
 function startIntentionGame() {
     console.log('Starting Intention game');
-    subsessionCounter++; // Увеличиваем счётчик подгрупп
-    subsessionId = `${sessionId}_${subsessionCounter}`; // Генерируем новый subsession_id
     intentionCurrentResult = getRandomResult(intentionMode);
     intentionAttemptStartTime = Date.now();
     intentionRandomizerCount = 0;
@@ -595,7 +611,7 @@ function showIntentionResult() {
                     intentionNewGameBtn.classList.remove('hidden');
                 }
             } else {
-                startIntentionGame();
+                startIntentionGame(); // Изменено: продолжаем использовать тот же subsession_id
             }
         }
     }, randomDelay);
