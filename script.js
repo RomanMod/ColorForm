@@ -586,17 +586,15 @@ function showIntentionResult() {
             if (intentionResultDisplay) intentionResultDisplay.style.backgroundColor = 'white';
             if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
             isProcessingIntention = false;
-            // ИСПРАВЛЕНИЕ: Проверяем режим limited и количество попыток
             if (intentionAttemptsMode === 'limited' && intentionStats.attempts >= intentionMaxAttempts) {
                 if (intentionShowBtn) intentionShowBtn.disabled = true;
                 if (!sessionSummarySent) {
                     sendSessionSummary();
                 }
                 if (intentionNewGameBtn) {
-                    console.log('Showing New Game Button'); // Логирование для отладки
+                    console.log('Showing New Game Button');
                     intentionNewGameBtn.classList.remove('hidden');
                 }
-                // Останавливаем игру, не вызывая startIntentionGame
             } else {
                 startIntentionGame();
             }
@@ -925,7 +923,6 @@ if (intentionAttemptsModeRadios) {
 }
 
 if (intentionNewGameBtn) {
-    // ИСПРАВЛЕНИЕ: Убедимся, что обработчик кнопки работает корректно
     intentionNewGameBtn.addEventListener('click', () => {
         console.log('New Game Button Clicked');
         resetIntentionGame();
@@ -1081,13 +1078,11 @@ try {
         });
     }
 } catch (e) {
-    console.warn('Telegram WebApp not available, using anonymous
-
- user');
+    console.warn('Telegram WebApp not available, using anonymous user'); // ИСПРАВЛЕНИЕ: Убрана лишняя переноска строки
     telegramUser = { id: 'anonymous_' + Math.random().toString(36).substr(2, 9), first_name: 'Игрок' };
     if (userNameSpan) userNameSpan.textContent = telegramUser.first_name;
 }
-
+console.log('Initialization completed, calling sendSavedStats and showScreen'); // Добавлено для отладки
 sendSavedStats();
 Telegram.WebApp.expand();
 showScreen('menu-screen');
