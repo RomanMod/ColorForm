@@ -273,7 +273,7 @@ function showScreen(screenId) {
         if (intentionAttemptsModeDiv) intentionAttemptsModeDiv.classList.remove('hidden');
         Telegram.WebApp.MainButton.hide();
         if (intentionRandomizerInterval === null) {
-            startIntentionGame();
+            startIntentionGame('showScreen');
         } else {
             console.log('Intention randomizer already active, skipping startIntentionGame');
         }
@@ -340,14 +340,14 @@ function resetIntentionGame() {
     intentionRandomizerCount = 0;
     subsessionCounter++;
     subsessionId = `${sessionId}_${subsessionCounter}`;
+    sentRandomizerStartEvents.clear(); // Очищаем перед запуском новой подгруппы
     stopIntentionGame();
-    startIntentionGame();
+    startIntentionGame('resetIntentionGame');
     updateIntentionStatsDisplay();
     if (intentionShowBtn) intentionShowBtn.disabled = false;
     if (intentionNewGameBtn) intentionNewGameBtn.classList.add('hidden');
     if (intentionAttemptsModeDiv) intentionAttemptsModeDiv.classList.remove('hidden');
     sessionSummarySent = false;
-    sentRandomizerStartEvents.clear();
     if (ENABLE_LOGGING) {
         console.log('Intention game reset, new subsession_id:', subsessionId);
     }
@@ -380,7 +380,8 @@ function resetVisionGame() {
     }
 }
 
-function startIntentionGame() {
+function startIntentionGame(caller = 'unknown') {
+    console.log(`startIntentionGame called by: ${caller}`);
     if (intentionRandomizerInterval !== null) {
         console.log('Intention randomizer already running, skipping start');
         return;
@@ -391,17 +392,9 @@ function startIntentionGame() {
         return;
     }
 
-    if (!sentRandomizerStartEvents.has(subsessionId)) {
-        sendGtagEvent('randomizer_start', {
-            event_category: 'Game',
-            event_label: 'Intention Randomizer',
-            mode: intentionMode,
-            subsession_id: subsessionId
-        });
-        sentRandomizerStartEvents.add(subsessionId);
-        console.log(`randomizer_start event sent for subsession_id: ${subsessionId}`);
-    } else {
+    if (sentRandomizerStartEvents.has(subsessionId)) {
         console.log(`randomizer_start event skipped for subsession_id: ${subsessionId}, already sent`);
+        return;
     }
 
     console.log('Starting Intention game');
@@ -431,6 +424,15 @@ function startIntentionGame() {
     }
 
     updateRandomResult();
+
+    sendGtagEvent('randomizer_start', {
+        event_category: 'Game',
+        event_label: 'Intention Randomizer',
+        mode: intentionMode,
+        subsession_id: subsessionId
+    });
+    sentRandomizerStartEvents.add(subsessionId);
+    console.log(`randomizer_start event sent for subsession_id: ${subsessionId}`);
 
     if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
     if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
@@ -507,32 +509,19 @@ function showIntentionResult() {
                 intentionResultDisplay.style.display = 'flex';
             }
 
-            const stylesToUpdate = {
-                intentionResultDisplay: {
-                    flexDirection: intentionMode === 'color' ? 'row' : 'column',
-                    gap: '0',
-                    classList: { remove: ['hidden'] }
-                },
-                intentionDisplay: {
-                    backgroundColor: 'transparent',
-                    classList: { remove: ['processing'] }
-                },
-                intentionShowBtn: {
-                    classList: { add: ['hidden'], remove: ['processing'] }
-                }
-            };
-
-            Object.keys(stylesToUpdate).forEach(element => {
-                const el = eval(element);
-                if (el) {
-                    Object.assign(el.style, stylesToUpdate[element]);
-                    if (stylesToUpdate[element].classList) {
-                        Object.keys(stylesToUpdate[element].classList).forEach(action => {
-                            stylesToUpdate[element].classList[action].forEach(cls => el.classList[action](cls));
-                        });
-                    }
-                }
-            });
+            if (intentionResultDisplay) {
+                intentionResultDisplay.style.flexDirection = intentionMode === 'color' ? 'row' : 'column';
+                intentionResultDisplay.style.gap = '0';
+                intentionResultDisplay.classList.remove('hidden');
+            }
+            if (intentionDisplay) {
+                intentionDisplay.style.backgroundColor = 'transparent';
+                intentionDisplay.classList.remove('processing');
+            }
+            if (intentionShowBtn) {
+                intentionShowBtn.classList.add('hidden');
+                intentionShowBtn.classList.remove('processing');
+            }
 
             if (intentionMode === 'color' && intentionResultDisplay) {
                 cachedElements.colorBlock.style.backgroundColor = intentionCurrentResult || 'gray';
@@ -654,7 +643,10 @@ function showIntentionResult() {
                     }
                 } else {
                     if (intentionRandomizerInterval === null) {
-                        startIntentionGame();
+                        console.log('Restarting intention game from cleanupAndRestart');
+                        startIntentionGame('cleanupAndRestart');
+                    } else {
+                        console.log('Randomizer already active, skipping restart');
                     }
                 }
             }
@@ -948,7 +940,7 @@ if (intentionModeRadios) {
                 value: intentionMode
             });
             stopIntentionGame();
-            startIntentionGame();
+            startIntentionGame('modeChange');
         });
     });
 }
