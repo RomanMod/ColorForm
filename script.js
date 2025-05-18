@@ -131,7 +131,7 @@ function sendGtagEvent(eventName, params) {
         ...params,
         session_id: sessionId,
         custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
-        subsession_id: (eventName.includes('intention') || eventName === 'randomizer_start' || eventName === 'display_click') ? subsessionId : undefined
+        subsession_id: (eventName.includes('intention') || eventName === 'randomizer_start' || eventName === 'display_click' || eventName === 'game_select' || eventName === 'show_result') ? subsessionId : undefined
     };
     if (!eventName || !params) {
         console.error('Invalid eventName or params:', { eventName, params });
@@ -498,6 +498,7 @@ function showIntentionResult() {
             if (intentionStats.attempts === 1 && intentionAttemptsModeDiv) {
                 intentionAttemptsModeDiv.classList.add('hidden');
             }
+            updateIntentionStatsDisplay();
 
             sendGtagEvent('show_result', {
                 event_category: 'Game',
@@ -508,11 +509,13 @@ function showIntentionResult() {
 
             clearTimeout(intentionRandomizerInterval);
             intentionRandomizerInterval = null;
-
             if (intentionResultDisplay) {
                 intentionResultDisplay.innerHTML = '';
                 intentionResultDisplay.style.backgroundColor = 'white';
                 intentionResultDisplay.style.display = 'flex';
+            }
+
+            if (intentionResultDisplay) {
                 intentionResultDisplay.style.flexDirection = intentionMode === 'color' ? 'row' : 'column';
                 intentionResultDisplay.style.gap = '0';
                 intentionResultDisplay.classList.remove('hidden');
@@ -534,16 +537,14 @@ function showIntentionResult() {
                 intentionResultDisplay.appendChild(svg.cloneNode(true));
             }
 
-            setTimeout(() => {
-                const feedbackButtons = feedbackButtonsTemplate.cloneNode(true);
-                const successBtn = feedbackButtons.querySelectorAll('button')[0];
-                const failureBtn = feedbackButtons.querySelectorAll('button')[1];
-                if (intentionDisplay) intentionDisplay.insertAdjacentElement('afterend', feedbackButtons);
-                successBtn.addEventListener('click', handleSuccess);
-                failureBtn.addEventListener('click', handleFailure);
+            const feedbackButtons = feedbackButtonsTemplate.cloneNode(true);
+            const successBtn = feedbackButtons.querySelectorAll('button')[0];
+            const failureBtn = feedbackButtons.querySelectorAll('button')[1];
 
-                updateIntentionStatsDisplay();
-            }, 0);
+            if (intentionDisplay) intentionDisplay.insertAdjacentElement('afterend', feedbackButtons);
+
+            successBtn.addEventListener('click', handleSuccess);
+            failureBtn.addEventListener('click', handleFailure);
 
             const timeout = setTimeout(() => {
                 if (!isProcessingIntention) return;
@@ -633,29 +634,45 @@ function showIntentionResult() {
             }
 
             function cleanupAndRestart() {
-                clearTimeout(timeout);
-                feedbackButtons.remove();
-                if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
-                if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black';
-                if (intentionResultDisplay) intentionResultDisplay.style.backgroundColor = 'white';
-                if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
-                isProcessingIntention = false;
-                if (intentionAttemptsMode === 'limited' && intentionStats.attempts >= intentionMaxAttempts) {
-                    if (intentionShowBtn) intentionShowBtn.disabled = true;
-                    if (!sessionSummarySent) {
-                        sendSessionSummary();
-                    }
-                    if (intentionNewGameBtn) {
-                        console.log('Showing New Game Button');
-                        intentionNewGameBtn.classList.remove('hidden');
-                    }
-                } else {
-                    if (intentionRandomizerInterval === null) {
-                        console.log('Restarting intention game from cleanupAndRestart');
-                        startIntentionGame('cleanupAndRestart');
+                try {
+                    clearTimeout(timeout);
+                    if (feedbackButtons && feedbackButtons.parentNode) {
+                        feedbackButtons.remove();
+                        console.log('Feedback buttons removed');
                     } else {
-                        console.log('Randomizer already active, skipping restart');
+                        console.warn('Feedback buttons not found or already removed');
                     }
+                    if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
+                    if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black';
+                    if (intentionResultDisplay) intentionResultDisplay.style.backgroundColor = 'white';
+                    if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
+                    isProcessingIntention = false;
+                    if (intentionAttemptsMode === 'limited' && intentionStats.attempts >= intentionMaxAttempts) {
+                        if (intentionShowBtn) intentionShowBtn.disabled = true;
+                        if (!sessionSummarySent) {
+                            sendSessionSummary();
+                        }
+                        if (intentionNewGameBtn) {
+                            console.log('Showing New Game Button');
+                            intentionNewGameBtn.classList.remove('hidden');
+                        }
+                    } else {
+                        if (intentionRandomizerInterval === null) {
+                            console.log('Restarting intention game from cleanupAndRestart');
+                            startIntentionGame('cleanupAndRestart');
+                        } else {
+                            console.log('Randomizer already active, skipping restart');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error in cleanupAndRestart:', error);
+                    sendGtagEvent('error', {
+                        event_category: 'App',
+                        event_label: 'Runtime Error',
+                        error_message: error.message,
+                        error_file: 'script.js',
+                        subsession_id: subsessionId
+                    });
                 }
             }
         });
@@ -1053,7 +1070,8 @@ window.addEventListener('error', (error) => {
         event_category: 'App',
         event_label: 'Runtime Error',
         error_message: error.message,
-        error_file: error.filename
+        error_file: error.filename,
+        subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
     });
 });
 
@@ -1064,7 +1082,8 @@ window.addEventListener('beforeunload', () => {
     sendGtagEvent('session_end', {
         event_category: 'App',
         event_label: 'App Closed',
-        session_duration_seconds: parseFloat(((Date.now() - sessionStartTime) / 1000).toFixed(1))
+        session_duration_seconds: parseFloat(((Date.now() - sessionStartTime) / 1000).toFixed(1)),
+        subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
     });
 });
 
