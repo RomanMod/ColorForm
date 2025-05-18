@@ -111,6 +111,18 @@ const cachedElements = {
 cachedElements.colorBlock.style.width = '100%';
 cachedElements.colorBlock.style.height = '100%';
 
+// Кэширование шаблона кнопок для showIntentionResult
+const feedbackButtonsTemplate = document.createElement('div');
+feedbackButtonsTemplate.className = 'feedback-buttons';
+const successBtnTemplate = document.createElement('button');
+successBtnTemplate.textContent = 'Угадал';
+successBtnTemplate.className = 'small-btn';
+const failureBtnTemplate = document.createElement('button');
+failureBtnTemplate.textContent = 'Не угадал';
+failureBtnTemplate.className = 'small-btn';
+feedbackButtonsTemplate.appendChild(successBtnTemplate);
+feedbackButtonsTemplate.appendChild(failureBtnTemplate);
+
 function isOnline() {
     return navigator.onLine;
 }
@@ -120,7 +132,7 @@ function sendGtagEvent(eventName, params) {
         ...params,
         session_id: sessionId,
         custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
-        subsession_id: eventName.includes('intention') ? subsessionId : undefined
+        subsession_id: (eventName.includes('intention') || eventName === 'randomizer_start') ? subsessionId : undefined
     };
     if (!isOnline()) {
         console.warn(`No internet connection, saving ${eventName} to localStorage`);
@@ -231,7 +243,7 @@ function sendSavedStats() {
 }
 
 function showScreen(screenId) {
-    console.log('Showing screen:', screenId);
+    console.log('Showing screen:', screenId, 'current subsessionId:', subsessionId);
     const screens = document.querySelectorAll('.game-screen');
     screens.forEach(screen => screen.classList.add('hidden'));
 
@@ -315,7 +327,7 @@ cachedElements.svgCircle = createSvgShape('circle');
 cachedElements.svgTriangle = createSvgShape('triangle');
 
 function resetIntentionGame() {
-    console.log('Resetting Intention game');
+    console.log('Resetting Intention game, current subsessionId:', subsessionId);
     if (intentionStats.attempts > 0 && !sessionSummarySent) {
         sendSessionSummary();
     }
@@ -374,33 +386,9 @@ function startIntentionGame() {
         return;
     }
 
-    console.log('Starting Intention game');
-    intentionCurrentResult = getRandomResult(intentionMode);
-    intentionAttemptStartTime = Date.now();
-    intentionRandomizerCount = 0;
-    if (ENABLE_LOGGING) {
-        console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult, 'attempt_start_time:', intentionAttemptStartTime, 'subsession_id:', subsessionId);
-    }
-
-    function updateRandomResult() {
-        intentionCurrentResult = getRandomResult(intentionMode);
-        const randomInterval = INTENTION_RANDOMIZER_MIN_INTERVAL + Math.random() * (INTENTION_RANDOMIZER_MAX_INTERVAL - INTENTION_RANDOMIZER_MIN_INTERVAL);
-        intentionRandomizerCount++;
-        if (ENABLE_LOGGING && intentionRandomizerCount % 10 === 0) {
-            console.log(`Randomizer updated (count: ${intentionRandomizerCount}), result: ${intentionCurrentResult}, next update in ${randomInterval.toFixed(2)}ms`);
-        }
-        intentionRandomizerInterval = setTimeout(updateRandomResult, randomInterval);
-    }
-
-    updateRandomResult();
-
-    if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
-    if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
-    if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black';
-    if (intentionResultDisplay) {
-        intentionResultDisplay.style.backgroundColor = 'white';
-        intentionResultDisplay.style.display = 'flex';
-        intentionResultDisplay.style.zIndex = '10';
+    if (!subsessionId) {
+        console.error('subsessionId is not defined, cannot start intention game');
+        return;
     }
 
     if (!sentRandomizerStartEvents.has(subsessionId)) {
@@ -414,6 +402,43 @@ function startIntentionGame() {
         console.log(`randomizer_start event sent for subsession_id: ${subsessionId}`);
     } else {
         console.log(`randomizer_start event skipped for subsession_id: ${subsessionId}, already sent`);
+    }
+
+    console.log('Starting Intention game');
+    intentionCurrentResult = getRandomResult(intentionMode);
+    intentionAttemptStartTime = Date.now();
+    intentionRandomizerCount = 0;
+    if (ENABLE_LOGGING) {
+        console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult, 'attempt_start_time:', intentionAttemptStartTime, 'subsession_id:', subsessionId);
+    }
+
+    const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 минут
+    let inactivityTimer = null;
+
+    function updateRandomResult() {
+        intentionCurrentResult = getRandomResult(intentionMode);
+        const randomInterval = INTENTION_RANDOMIZER_MIN_INTERVAL + Math.random() * (INTENTION_RANDOMIZER_MAX_INTERVAL - INTENTION_RANDOMIZER_MIN_INTERVAL);
+        intentionRandomizerCount++;
+        if (ENABLE_LOGGING && intentionRandomizerCount % 10 === 0) {
+            console.log(`Randomizer updated (count: ${intentionRandomizerCount}), result: ${intentionCurrentResult}, next update in ${randomInterval.toFixed(2)}ms`);
+        }
+        intentionRandomizerInterval = setTimeout(updateRandomResult, randomInterval);
+        if (inactivityTimer) clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            console.log('Inactivity timeout, stopping intention randomizer');
+            stopIntentionGame();
+        }, INACTIVITY_TIMEOUT);
+    }
+
+    updateRandomResult();
+
+    if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
+    if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
+    if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black';
+    if (intentionResultDisplay) {
+        intentionResultDisplay.style.backgroundColor = 'white';
+        intentionResultDisplay.style.display = 'flex';
+        intentionResultDisplay.style.zIndex = '10';
     }
 }
 
@@ -456,186 +481,184 @@ function showIntentionResult() {
     if (intentionShowBtn) intentionShowBtn.classList.add('processing');
     if (intentionDisplay) intentionDisplay.classList.add('processing');
 
-    const feedbackButtons = document.createElement('div');
-    feedbackButtons.className = 'feedback-buttons';
-    const successBtn = document.createElement('button');
-    successBtn.textContent = 'Угадал';
-    successBtn.className = 'small-btn';
-    const failureBtn = document.createElement('button');
-    failureBtn.textContent = 'Не угадал';
-    failureBtn.className = 'small-btn';
-    feedbackButtons.appendChild(successBtn);
-    feedbackButtons.appendChild(failureBtn);
-
     setTimeout(() => {
-        if (ENABLE_LOGGING) {
-            console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult, 'subsession_id:', subsessionId);
-            console.log(`Intention result displayed at: ${Date.now()}`);
-        }
-        intentionStats.attempts++;
-        if (intentionStats.attempts === 1 && intentionAttemptsModeDiv) {
-            intentionAttemptsModeDiv.classList.add('hidden');
-        }
-        updateIntentionStatsDisplay();
-
-        sendGtagEvent('show_result', {
-            event_category: 'Game',
-            event_label: 'Intention Show',
-            mode: intentionMode
-        });
-
-        clearTimeout(intentionRandomizerInterval);
-        intentionRandomizerInterval = null;
-        if (intentionResultDisplay) {
-            intentionResultDisplay.innerHTML = '';
-            intentionResultDisplay.style.backgroundColor = 'white';
-            intentionResultDisplay.style.display = 'flex';
-        }
-
-        const stylesToUpdate = {
-            intentionResultDisplay: {
-                flexDirection: intentionMode === 'color' ? 'row' : 'column',
-                gap: '0',
-                classList: { remove: ['hidden'] }
-            },
-            intentionDisplay: {
-                backgroundColor: 'transparent',
-                classList: { remove: ['processing'] }
-            },
-            intentionShowBtn: {
-                classList: { add: ['hidden'], remove: ['processing'] }
-            }
-        };
-
-        Object.keys(stylesToUpdate).forEach(element => {
-            const el = eval(element);
-            if (el) {
-                Object.assign(el.style, stylesToUpdate[element]);
-                if (stylesToUpdate[element].classList) {
-                    Object.keys(stylesToUpdate[element].classList).forEach(action => {
-                        stylesToUpdate[element].classList[action].forEach(cls => el.classList[action](cls));
-                    });
-                }
-            }
-        });
-
-        if (intentionMode === 'color' && intentionResultDisplay) {
-            cachedElements.colorBlock.style.backgroundColor = intentionCurrentResult || 'gray';
-            intentionResultDisplay.appendChild(cachedElements.colorBlock);
-        } else if (intentionResultDisplay) {
-            const svg = intentionCurrentResult === 'circle' ? cachedElements.svgCircle : cachedElements.svgTriangle;
-            intentionResultDisplay.appendChild(svg.cloneNode(true));
-        }
-
-        if (intentionDisplay) intentionDisplay.insertAdjacentElement('afterend', feedbackButtons);
-
-        successBtn.addEventListener('click', () => {
-            if (!isProcessingIntention) return;
-            isProcessingIntention = false;
-            const guessTimeMs = Date.now();
-            const timeDiffMs = intentionAttemptStartTime ? (guessTimeMs - intentionAttemptStartTime) : 0;
-            const timeToGuess = timeDiffMs ? Math.max(0.1, Number((timeDiffMs / 1000).toFixed(1))) : 0.1;
-            intentionAttemptStartTime = guessTimeMs;
-            intentionStats.successes++;
-            intentionGuessSequence.push(1);
-            intentionAttempts.push({ time: timeToGuess, result: 1 });
-            saveAttempts('intention');
-            updateIntentionStatsDisplay();
-            sendGtagEvent('intention_guess', {
-                event_category: 'Game',
-                event_labelme: true,
-                event_label: 'Intention Guess',
-                value: 'success',
-                guess_result: 1,
-                mode: intentionMode,
-                result: intentionCurrentResult,
-                time_to_guess: timeToGuess,
-                attempt_id: intentionStats.attempts
-            });
+        requestAnimationFrame(() => {
             if (ENABLE_LOGGING) {
-                const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-                console.log(`Intention guess: Success, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s, subsession_id: ${subsessionId}`);
-                console.log('Intention attempts:', intentionAttempts);
+                console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult, 'subsession_id:', subsessionId);
+                console.log(`Intention result displayed at: ${Date.now()}`);
             }
-            cleanupAndRestart();
-        });
-
-        failureBtn.addEventListener('click', () => {
-            if (!isProcessingIntention) return;
-            isProcessingIntention = false;
-            const guessTimeMs = Date.now();
-            const timeDiffMs = intentionAttemptStartTime ? (guessTimeMs - intentionAttemptStartTime) : 0;
-            const timeToGuess = timeDiffMs ? Math.max(0.1, Number((timeDiffMs / 1000).toFixed(1))) : 0.1;
-            intentionAttemptStartTime = guessTimeMs;
-            intentionStats.failures++;
-            intentionGuessSequence.push(0);
-            intentionAttempts.push({ time: timeToGuess, result: 0 });
-            saveAttempts('intention');
+            intentionStats.attempts++;
+            if (intentionStats.attempts === 1 && intentionAttemptsModeDiv) {
+                intentionAttemptsModeDiv.classList.add('hidden');
+            }
             updateIntentionStatsDisplay();
-            sendGtagEvent('intention_guess', {
+
+            sendGtagEvent('show_result', {
                 event_category: 'Game',
-                event_label: 'Intention Guess',
-                value: 'failure',
-                guess_result: 0,
-                mode: intentionMode,
-                result: intentionCurrentResult,
-                time_to_guess: timeToGuess,
-                attempt_id: intentionStats.attempts
+                event_label: 'Intention Show',
+                mode: intentionMode
             });
-            if (ENABLE_LOGGING) {
-                const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-                console.log(`Intention guess: Failure, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s, subsession_id: ${subsessionId}`);
-                console.log('Intention attempts:', intentionAttempts);
+
+            clearTimeout(intentionRandomizerInterval);
+            intentionRandomizerInterval = null;
+            if (intentionResultDisplay) {
+                intentionResultDisplay.innerHTML = '';
+                intentionResultDisplay.style.backgroundColor = 'white';
+                intentionResultDisplay.style.display = 'flex';
             }
-            cleanupAndRestart();
+
+            const stylesToUpdate = {
+                intentionResultDisplay: {
+                    flexDirection: intentionMode === 'color' ? 'row' : 'column',
+                    gap: '0',
+                    classList: { remove: ['hidden'] }
+                },
+                intentionDisplay: {
+                    backgroundColor: 'transparent',
+                    classList: { remove: ['processing'] }
+                },
+                intentionShowBtn: {
+                    classList: { add: ['hidden'], remove: ['processing'] }
+                }
+            };
+
+            Object.keys(stylesToUpdate).forEach(element => {
+                const el = eval(element);
+                if (el) {
+                    Object.assign(el.style, stylesToUpdate[element]);
+                    if (stylesToUpdate[element].classList) {
+                        Object.keys(stylesToUpdate[element].classList).forEach(action => {
+                            stylesToUpdate[element].classList[action].forEach(cls => el.classList[action](cls));
+                        });
+                    }
+                }
+            });
+
+            if (intentionMode === 'color' && intentionResultDisplay) {
+                cachedElements.colorBlock.style.backgroundColor = intentionCurrentResult || 'gray';
+                intentionResultDisplay.appendChild(cachedElements.colorBlock);
+            } else if (intentionResultDisplay) {
+                const svg = intentionCurrentResult === 'circle' ? cachedElements.svgCircle : cachedElements.svgTriangle;
+                intentionResultDisplay.appendChild(svg.cloneNode(true));
+            }
+
+            const feedbackButtons = feedbackButtonsTemplate.cloneNode(true);
+            const successBtn = feedbackButtons.querySelectorAll('button')[0];
+            const failureBtn = feedbackButtons.querySelectorAll('button')[1];
+
+            if (intentionDisplay) intentionDisplay.insertAdjacentElement('afterend', feedbackButtons);
+
+            successBtn.addEventListener('click', handleSuccess);
+            failureBtn.addEventListener('click', handleFailure);
+
+            const timeout = setTimeout(() => {
+                if (!isProcessingIntention) return;
+                isProcessingIntention = false;
+                const guessTimeMs = Date.now();
+                const timeDiffMs = intentionAttemptStartTime ? (guessTimeMs - intentionAttemptStartTime) : 0;
+                const timeToGuess = timeDiffMs ? Math.max(0.1, Number((timeDiffMs / 1000).toFixed(1))) : 0.1;
+                intentionAttempts.push({ time: timeToGuess, result: 0 });
+                saveAttempts('intention');
+                updateIntentionStatsDisplay();
+                sendGtagEvent('intention_timeout', {
+                    event_category: 'Game',
+                    event_label: 'Intention Timeout',
+                    mode: intentionMode,
+                    result: intentionCurrentResult,
+                    time_to_guess: timeToGuess
+                });
+                if (ENABLE_LOGGING) {
+                    console.log(`Intention attempt timed out, time_to_guess: ${timeToGuess}s, subsession_id: ${subsessionId}`);
+                    console.log('Intention attempts:', intentionAttempts);
+                }
+                cleanupAndRestart();
+            }, 60000);
+
+            function handleSuccess() {
+                if (!isProcessingIntention) return;
+                isProcessingIntention = false;
+                const guessTimeMs = Date.now();
+                const timeDiffMs = intentionAttemptStartTime ? (guessTimeMs - intentionAttemptStartTime) : 0;
+                const timeToGuess = timeDiffMs ? Math.max(0.1, Number((timeDiffMs / 1000).toFixed(1))) : 0.1;
+                intentionAttemptStartTime = guessTimeMs;
+                intentionStats.successes++;
+                intentionGuessSequence.push(1);
+                intentionAttempts.push({ time: timeToGuess, result: 1 });
+                saveAttempts('intention');
+                updateIntentionStatsDisplay();
+                sendGtagEvent('intention_guess', {
+                    event_category: 'Game',
+                    event_labelme: true,
+                    event_label: 'Intention Guess',
+                    value: 'success',
+                    guess_result: 1,
+                    mode: intentionMode,
+                    result: intentionCurrentResult,
+                    time_to_guess: timeToGuess,
+                    attempt_id: intentionStats.attempts
+                });
+                if (ENABLE_LOGGING) {
+                    const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
+                    console.log(`Intention guess: Success, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s, subsession_id: ${subsessionId}`);
+                    console.log('Intention attempts:', intentionAttempts);
+                }
+                cleanupAndRestart();
+            }
+
+            function handleFailure() {
+                if (!isProcessingIntention) return;
+                isProcessingIntention = false;
+                const guessTimeMs = Date.now();
+                const timeDiffMs = intentionAttemptStartTime ? (guessTimeMs - intentionAttemptStartTime) : 0;
+                const timeToGuess = timeDiffMs ? Math.max(0.1, Number((timeDiffMs / 1000).toFixed(1))) : 0.1;
+                intentionAttemptStartTime = guessTimeMs;
+                intentionStats.failures++;
+                intentionGuessSequence.push(0);
+                intentionAttempts.push({ time: timeToGuess, result: 0 });
+                saveAttempts('intention');
+                updateIntentionStatsDisplay();
+                sendGtagEvent('intention_guess', {
+                    event_category: 'Game',
+                    event_label: 'Intention Guess',
+                    value: 'failure',
+                    guess_result: 0,
+                    mode: intentionMode,
+                    result: intentionCurrentResult,
+                    time_to_guess: timeToGuess,
+                    attempt_id: intentionStats.attempts
+                });
+                if (ENABLE_LOGGING) {
+                    const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
+                    console.log(`Intention guess: Failure, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s, subsession_id: ${subsessionId}`);
+                    console.log('Intention attempts:', intentionAttempts);
+                }
+                cleanupAndRestart();
+            }
+
+            function cleanupAndRestart() {
+                clearTimeout(timeout);
+                feedbackButtons.remove();
+                if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
+                if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black';
+                if (intentionResultDisplay) intentionResultDisplay.style.backgroundColor = 'white';
+                if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
+                isProcessingIntention = false;
+                if (intentionAttemptsMode === 'limited' && intentionStats.attempts >= intentionMaxAttempts) {
+                    if (intentionShowBtn) intentionShowBtn.disabled = true;
+                    if (!sessionSummarySent) {
+                        sendSessionSummary();
+                    }
+                    if (intentionNewGameBtn) {
+                        console.log('Showing New Game Button');
+                        intentionNewGameBtn.classList.remove('hidden');
+                    }
+                } else {
+                    if (intentionRandomizerInterval === null) {
+                        startIntentionGame();
+                    }
+                }
+            }
         });
-
-        const timeout = setTimeout(() => {
-            if (!isProcessingIntention) return;
-            isProcessingIntention = false;
-            const guessTimeMs = Date.now();
-            const timeDiffMs = intentionAttemptStartTime ? (guessTimeMs - intentionAttemptStartTime) : 0;
-            const timeToGuess = timeDiffMs ? Math.max(0.1, Number((timeDiffMs / 1000).toFixed(1))) : 0.1;
-            intentionAttempts.push({ time: timeToGuess, result: 0 });
-            saveAttempts('intention');
-            updateIntentionStatsDisplay();
-            sendGtagEvent('intention_timeout', {
-                event_category: 'Game',
-                event_label: 'Intention Timeout',
-                mode: intentionMode,
-                result: intentionCurrentResult,
-                time_to_guess: timeToGuess
-            });
-            if (ENABLE_LOGGING) {
-                console.log(`Intention attempt timed out, time_to_guess: ${timeToGuess}s, subsession_id: ${subsessionId}`);
-                console.log('Intention attempts:', intentionAttempts);
-            }
-            cleanupAndRestart();
-        }, 60000);
-
-        function cleanupAndRestart() {
-            clearTimeout(timeout);
-            feedbackButtons.remove();
-            if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
-            if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black';
-            if (intentionResultDisplay) intentionResultDisplay.style.backgroundColor = 'white';
-            if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
-            isProcessingIntention = false;
-            if (intentionAttemptsMode === 'limited' && intentionStats.attempts >= intentionMaxAttempts) {
-                if (intentionShowBtn) intentionShowBtn.disabled = true;
-                if (!sessionSummarySent) {
-                    sendSessionSummary();
-                }
-                if (intentionNewGameBtn) {
-                    console.log('Showing New Game Button');
-                    intentionNewGameBtn.classList.remove('hidden');
-                }
-            } else {
-                if (intentionRandomizerInterval === null) {
-                    startIntentionGame();
-                }
-            }
-        }
     }, randomDelay);
 }
 
