@@ -1,24 +1,24 @@
-// Настройки логирования
+// Logging settings
 const ENABLE_LOGGING = true;
 
-// Константы для времени "перемешивания" и генерации результата в Виденье
+// Constants for Vision game timing
 const SHUFFLE_BUTTON_DISABLE_TIME = 1500;
 const RANDOM_RESULT_MIN_TIME = 800;
 const RANDOM_RESULT_MAX_TIME = 1450;
 
-// Константы для рандомизации в Намеренье
+// Constants for Intention game randomization
 const INTENTION_RANDOMIZER_MIN_INTERVAL = 30;
 const INTENTION_RANDOMIZER_MAX_INTERVAL = 100;
 const INTENTION_FIXATION_DELAY_MIN = 0;
 const INTENTION_FIXATION_DELAY_MAX = 500;
 const SHOW_INTENTION_THROTTLE_MS = 500;
 
-// Инициализация sessionId и subsessionId
+// Initialize sessionId and subsessionId
 const sessionId = `${Date.now()}${Math.random().toString(36).slice(2)}`;
 let subsessionCounter = 0;
 let subsessionId = `${sessionId}_${subsessionCounter}`;
 
-// Инициализация переменных
+// Initialize variables
 let telegramUser = null;
 let currentGameMode = 'menu';
 let gameStartTime = null;
@@ -222,15 +222,18 @@ function sendSessionSummary() {
         mode: mode,
         session_duration_seconds: parseFloat(duration),
         session_start_time: Math.floor(gameStartTime),
-        win_sequence: guessSequence.join(','),
+        win_sequence: guessSequence.join(',') || 'none',
         subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
     };
 
-    console.log(`Sending ${eventName}:`, eventParams);
+    console.log(`Sending ${eventName} with win_sequence: [${guessSequence.join(', ')}]`, eventParams);
     const success = sendGtagEvent(eventName, eventParams);
     if (success) {
         sessionSummarySent = true;
-        saveSubsessionSequence();
+        if (currentGameMode === 'intention') {
+            saveSubsessionSequence();
+        }
+        saveAttempts(currentGameMode);
     } else {
         console.warn('sendSessionSummary failed, saved to localStorage');
     }
@@ -243,10 +246,19 @@ function sendSavedStats() {
         console.log(`Found ${savedStats.length} saved stats in ${key}`);
         savedStats.forEach(stat => {
             console.log(`Sending saved ${stat.eventName}:`, stat.params);
-            sendGtagEvent(stat.eventName, stat.params);
+            const success = sendGtagEvent(stat.eventName, stat.params);
+            if (success) {
+                console.log(`Successfully sent saved ${stat.eventName}`);
+            } else {
+                console.warn(`Failed to send saved ${stat.eventName}, keeping in localStorage`);
+            }
         });
-        localStorage.removeItem(key);
-        console.log(`Cleared ${key} from localStorage`);
+        if (savedStats.every(stat => sendGtagEvent(stat.eventName, stat.params))) {
+            localStorage.removeItem(key);
+            console.log(`Cleared ${key} from localStorage`);
+        } else {
+            console.log(`Retaining ${key} in localStorage due to failed sends`);
+        }
     });
 }
 
@@ -971,6 +983,9 @@ if (!intentionModeRadios.length) {
 } else {
     intentionModeRadios.forEach(radio => {
         radio.addEventListener('change', (event) => {
+            if (intentionStats.attempts > 0 && !sessionSummarySent) {
+                sendSessionSummary();
+            }
             intentionMode = event.target.value;
             if (!subsessionId) {
                 console.warn(`subsessionId is undefined in mode_change, generating new subsessionId`);
@@ -1034,6 +1049,9 @@ if (visionChoicesDiv) {
 if (visionModeRadios) {
     visionModeRadios.forEach(radio => {
         radio.addEventListener('click', (event) => {
+            if (visionStats.attempts > 0 && !sessionSummarySent) {
+                sendSessionSummary();
+            }
             visionMode = event.target.value;
             sendGtagEvent('mode_change', {
                 event_category: 'Game',
@@ -1083,13 +1101,14 @@ window.addEventListener('error', (error) => {
 window.addEventListener('beforeunload', () => {
     if (gameStartTime && !sessionSummarySent) {
         sendSessionSummary();
+        saveAttempts(currentGameMode);
+        sendGtagEvent('session_end', {
+            event_category: 'App',
+            event_label: 'App Closed',
+            session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
+            subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
+        });
     }
-    sendGtagEvent('session_end', {
-        event_category: 'App',
-        event_label: 'App Closed',
-        session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
-        subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
-    });
 });
 
 document.addEventListener('visibilitychange', () => {
