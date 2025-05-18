@@ -27,7 +27,7 @@ let lastShowIntentionTime = 0;
 let subsessionCounter = 0;
 let subsessionId = null;
 let subsessionSequences = [];
-const sentRandomizerStartEvents = new Set(); // Для отслеживания отправленных randomizer_start
+const sentRandomizerStartEvents = new Set();
 
 let intentionRandomizerInterval = null;
 let intentionCurrentResult = null;
@@ -111,7 +111,6 @@ const cachedElements = {
 cachedElements.colorBlock.style.width = '100%';
 cachedElements.colorBlock.style.height = '100%';
 
-// Кэширование шаблона кнопок для showIntentionResult
 const feedbackButtonsTemplate = document.createElement('div');
 feedbackButtonsTemplate.className = 'feedback-buttons';
 const successBtnTemplate = document.createElement('button');
@@ -132,8 +131,12 @@ function sendGtagEvent(eventName, params) {
         ...params,
         session_id: sessionId,
         custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
-        subsession_id: (eventName.includes('intention') || eventName === 'randomizer_start') ? subsessionId : undefined
+        subsession_id: (eventName.includes('intention') || eventName === 'randomizer_start' || eventName === 'display_click') ? subsessionId : undefined
     };
+    if (!eventName || !params) {
+        console.error('Invalid eventName or params:', { eventName, params });
+        return false;
+    }
     if (!isOnline()) {
         console.warn(`No internet connection, saving ${eventName} to localStorage`);
         saveToLocalStorage(eventName, eventParams);
@@ -215,7 +218,8 @@ function sendSessionSummary() {
         mode: mode,
         session_duration_seconds: parseFloat(duration),
         session_start_time: Math.floor(sessionStartTime),
-        win_sequence: guessSequence.join(',')
+        win_sequence: guessSequence.join(','),
+        subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
     };
 
     console.log(`Sending ${eventName}:`, eventParams);
@@ -340,7 +344,7 @@ function resetIntentionGame() {
     intentionRandomizerCount = 0;
     subsessionCounter++;
     subsessionId = `${sessionId}_${subsessionCounter}`;
-    sentRandomizerStartEvents.clear(); // Очищаем перед запуском новой подгруппы
+    sentRandomizerStartEvents.clear();
     stopIntentionGame();
     startIntentionGame('resetIntentionGame');
     updateIntentionStatsDisplay();
@@ -405,7 +409,7 @@ function startIntentionGame(caller = 'unknown') {
         console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult, 'attempt_start_time:', intentionAttemptStartTime, 'subsession_id:', subsessionId);
     }
 
-    const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 минут
+    const INACTIVITY_TIMEOUT = 5 * 60 * 1000;
     let inactivityTimer = null;
 
     function updateRandomResult() {
@@ -463,11 +467,12 @@ function stopIntentionGame() {
 function showIntentionResult() {
     const now = Date.now();
     const timeSinceLast = now - lastShowIntentionTime;
-    if (intentionRandomizerInterval === null || isProcessingIntention || timeSinceLast < SHOW_INTENTION_THROTTLE_MS) {
+    if (currentGameMode !== 'intention' || intentionCurrentResult === null || isProcessingIntention || timeSinceLast < SHOW_INTENTION_THROTTLE_MS) {
         if (ENABLE_LOGGING) {
             console.warn('showIntentionResult throttled or invalid state:', {
                 timeSinceLast,
-                randomizerInterval: intentionRandomizerInterval,
+                gameMode: currentGameMode,
+                currentResult: intentionCurrentResult,
                 isProcessing: isProcessingIntention
             });
         }
@@ -493,23 +498,21 @@ function showIntentionResult() {
             if (intentionStats.attempts === 1 && intentionAttemptsModeDiv) {
                 intentionAttemptsModeDiv.classList.add('hidden');
             }
-            updateIntentionStatsDisplay();
 
             sendGtagEvent('show_result', {
                 event_category: 'Game',
                 event_label: 'Intention Show',
-                mode: intentionMode
+                mode: intentionMode,
+                subsession_id: subsessionId
             });
 
             clearTimeout(intentionRandomizerInterval);
             intentionRandomizerInterval = null;
+
             if (intentionResultDisplay) {
                 intentionResultDisplay.innerHTML = '';
                 intentionResultDisplay.style.backgroundColor = 'white';
                 intentionResultDisplay.style.display = 'flex';
-            }
-
-            if (intentionResultDisplay) {
                 intentionResultDisplay.style.flexDirection = intentionMode === 'color' ? 'row' : 'column';
                 intentionResultDisplay.style.gap = '0';
                 intentionResultDisplay.classList.remove('hidden');
@@ -531,14 +534,16 @@ function showIntentionResult() {
                 intentionResultDisplay.appendChild(svg.cloneNode(true));
             }
 
-            const feedbackButtons = feedbackButtonsTemplate.cloneNode(true);
-            const successBtn = feedbackButtons.querySelectorAll('button')[0];
-            const failureBtn = feedbackButtons.querySelectorAll('button')[1];
+            setTimeout(() => {
+                const feedbackButtons = feedbackButtonsTemplate.cloneNode(true);
+                const successBtn = feedbackButtons.querySelectorAll('button')[0];
+                const failureBtn = feedbackButtons.querySelectorAll('button')[1];
+                if (intentionDisplay) intentionDisplay.insertAdjacentElement('afterend', feedbackButtons);
+                successBtn.addEventListener('click', handleSuccess);
+                failureBtn.addEventListener('click', handleFailure);
 
-            if (intentionDisplay) intentionDisplay.insertAdjacentElement('afterend', feedbackButtons);
-
-            successBtn.addEventListener('click', handleSuccess);
-            failureBtn.addEventListener('click', handleFailure);
+                updateIntentionStatsDisplay();
+            }, 0);
 
             const timeout = setTimeout(() => {
                 if (!isProcessingIntention) return;
@@ -554,7 +559,8 @@ function showIntentionResult() {
                     event_label: 'Intention Timeout',
                     mode: intentionMode,
                     result: intentionCurrentResult,
-                    time_to_guess: timeToGuess
+                    time_to_guess: timeToGuess,
+                    subsession_id: subsessionId
                 });
                 if (ENABLE_LOGGING) {
                     console.log(`Intention attempt timed out, time_to_guess: ${timeToGuess}s, subsession_id: ${subsessionId}`);
@@ -584,7 +590,8 @@ function showIntentionResult() {
                     mode: intentionMode,
                     result: intentionCurrentResult,
                     time_to_guess: timeToGuess,
-                    attempt_id: intentionStats.attempts
+                    attempt_id: intentionStats.attempts,
+                    subsession_id: subsessionId
                 });
                 if (ENABLE_LOGGING) {
                     const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
@@ -614,7 +621,8 @@ function showIntentionResult() {
                     mode: intentionMode,
                     result: intentionCurrentResult,
                     time_to_guess: timeToGuess,
-                    attempt_id: intentionStats.attempts
+                    attempt_id: intentionStats.attempts,
+                    subsession_id: subsessionId
                 });
                 if (ENABLE_LOGGING) {
                     const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
@@ -855,11 +863,14 @@ if (btnStartIntention) {
         sessionSummarySent = false;
         resetIntentionGame();
         showScreen('game-intention');
-        sendGtagEvent('game_select', {
-            event_category: 'Game',
-            event_label: 'Intention',
-            game_mode: intentionMode
-        });
+        setTimeout(() => {
+            sendGtagEvent('game_select', {
+                event_category: 'Game',
+                event_label: 'Intention',
+                game_mode: intentionMode,
+                subsession_id: subsessionId
+            });
+        }, 0);
     });
 }
 
@@ -869,11 +880,13 @@ if (btnStartVision) {
         sessionSummarySent = false;
         resetVisionGame();
         showScreen('game-vision');
-        sendGtagEvent('game_select', {
-            event_category: 'Game',
-            event_label: 'Vision',
-            game_mode: visionMode
-        });
+        setTimeout(() => {
+            sendGtagEvent('game_select', {
+                event_category: 'Game',
+                event_label: 'Vision',
+                game_mode: visionMode
+            });
+        }, 0);
     });
 }
 
@@ -904,7 +917,8 @@ if (backButtons) {
                     event_category: 'Game',
                     event_label: currentGameMode === 'intention' ? 'Intention' : 'Vision',
                     game_mode: currentGameMode === 'intention' ? intentionMode : visionMode,
-                    session_duration_seconds: parseFloat(duration)
+                    session_duration_seconds: parseFloat(duration),
+                    subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
                 });
                 sendSessionSummary();
             }
@@ -919,13 +933,22 @@ if (intentionShowBtn) {
 
 if (intentionDisplay) {
     intentionDisplay.addEventListener('click', () => {
-        if (intentionShowBtn && !intentionShowBtn.classList.contains('hidden') && !intentionShowBtn.disabled && currentGameMode === 'intention' && !isProcessingIntention) {
+        if (intentionShowBtn && !intentionShowBtn.classList.contains('hidden') && !intentionShowBtn.disabled && currentGameMode === 'intention' && !isProcessingIntention && intentionCurrentResult !== null) {
             console.log('Intention display clicked, triggering show result');
             sendGtagEvent('display_click', {
                 event_category: 'Game',
-                event_label: 'Intention Display'
+                event_label: 'Intention Display',
+                subsession_id: subsessionId
             });
             intentionShowBtn.click();
+        } else {
+            console.log('Intention display click ignored:', {
+                showBtnHidden: intentionShowBtn.classList.contains('hidden'),
+                showBtnDisabled: intentionShowBtn.disabled,
+                gameMode: currentGameMode,
+                isProcessing: isProcessingIntention,
+                currentResult: intentionCurrentResult
+            });
         }
     });
 }
@@ -937,7 +960,8 @@ if (intentionModeRadios) {
             sendGtagEvent('mode_change', {
                 event_category: 'Game',
                 event_label: 'Intention Mode',
-                value: intentionMode
+                value: intentionMode,
+                subsession_id: subsessionId
             });
             stopIntentionGame();
             startIntentionGame('modeChange');
@@ -1051,7 +1075,8 @@ document.addEventListener('visibilitychange', () => {
         sendGtagEvent('app_background', {
             event_category: 'App',
             event_label: 'App Minimized',
-            session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1))
+            session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
+            subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
         });
     }
 });
@@ -1068,7 +1093,8 @@ Telegram.WebApp.MainButton.onClick(() => {
         sendGtagEvent('app_close', {
             event_category: 'App',
             event_label: 'MainButton Close',
-            session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1))
+            session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
+            subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
         });
     }
     Telegram.WebApp.close();
@@ -1114,7 +1140,8 @@ Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
         sendGtagEvent('app_background', {
             event_category: 'App',
             event_label: 'Viewport Minimized',
-            session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1))
+            session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
+            subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
         });
     }
 });
