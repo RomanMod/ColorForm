@@ -13,10 +13,11 @@ const INTENTION_FIXATION_DELAY_MIN = 0;
 const INTENTION_FIXATION_DELAY_MAX = 500;
 const SHOW_INTENTION_THROTTLE_MS = 500;
 
-// Initialize sessionId and subsessionId
-const sessionId = `${Date.now()}${Math.random().toString(36).slice(2)}`;
+// Initialize sessionId, userId, and subsessionId
+window.sessionId = `${Date.now()}${Math.random().toString(36).slice(2)}`;
+window.userId = 'anonymous_' + Math.random().toString(36).slice(2, 9);
+window.currentSubsessionId = `${window.sessionId}_0`; // Initial subsession_id
 let subsessionCounter = 0;
-let subsessionId = `${sessionId}_${subsessionCounter}`;
 
 // Initialize variables
 let telegramUser = null;
@@ -58,6 +59,7 @@ const visionStats = {
 let visionGuessSequence = [];
 const visionAttempts = [];
 
+// DOM elements
 const appDiv = document.getElementById('app');
 const userNameSpan = document.getElementById('telegram-user-name');
 const menuScreen = document.getElementById('menu-screen');
@@ -99,11 +101,13 @@ const visionModeRadios = document.querySelectorAll('input[name="vision-mode"]');
 const visionAttemptsModeRadios = document.querySelectorAll('input[name="vision-attempts-mode"]');
 const backButtons = document.querySelectorAll('.back-btn');
 
+// Check critical DOM elements
 if (!appDiv || !menuScreen || !gameIntention || !gameVision) {
     console.error('Critical DOM elements are missing. Check HTML for ids: app, menu-screen, game-intention, game-vision');
     throw new Error('Missing critical DOM elements');
 }
 
+// Cached DOM elements
 const cachedElements = {
     colorBlock: document.createElement('div'),
     svgCircle: null,
@@ -112,6 +116,7 @@ const cachedElements = {
 cachedElements.colorBlock.style.width = '100%';
 cachedElements.colorBlock.style.height = '100%';
 
+// Feedback buttons template
 const feedbackButtonsTemplate = document.createElement('div');
 feedbackButtonsTemplate.className = 'feedback-buttons';
 const successBtnTemplate = document.createElement('button');
@@ -123,6 +128,20 @@ failureBtnTemplate.className = 'small-btn';
 feedbackButtonsTemplate.appendChild(successBtnTemplate);
 feedbackButtonsTemplate.appendChild(failureBtnTemplate);
 
+// Centralized subsession_id generation
+function generateSubsessionId() {
+    subsessionCounter++;
+    const newSubsessionId = `${window.sessionId}_${subsessionCounter}`;
+    window.currentSubsessionId = newSubsessionId;
+    logDebug(`Generated subsession_id: ${newSubsessionId}`);
+    return newSubsessionId;
+}
+
+// Debug logging function
+function logDebug(...args) {
+    if (ENABLE_LOGGING) console.log(...args);
+}
+
 function isOnline() {
     return navigator.onLine;
 }
@@ -132,23 +151,24 @@ function sendGtagEvent(eventName, params) {
         console.error('Invalid eventName or params:', { eventName, params });
         return false;
     }
-    if (!params.subsession_id && (eventName.includes('intention') || eventName === 'randomizer_start' || eventName === 'mode_change' || eventName === 'display_click' || eventName === 'game_select' || eventName === 'show_result' || eventName === 'game_exit')) {
-        console.warn(`subsession_id is undefined for ${eventName}, using default: ${subsessionId}`);
-        params.subsession_id = subsessionId || `${sessionId}_${subsessionCounter || 0}`;
-    }
+    const currentSubsessionId = window.currentSubsessionId || `temp_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`;
     const eventParams = {
         ...params,
-        session_id: sessionId,
-        custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+        subsession_id: params.subsession_id || currentSubsessionId,
+        session_id: window.sessionId,
+        custom_user_id: telegramUser ? telegramUser.id : window.userId
     };
+    if (!params.subsession_id && (eventName.includes('intention') || eventName === 'randomizer_start' || eventName === 'mode_change' || eventName === 'display_click' || eventName === 'game_select' || eventName === 'show_result' || eventName === 'game_exit')) {
+        logDebug(`subsession_id was undefined for ${eventName}, used: ${eventParams.subsession_id}`);
+    }
     if (!isOnline()) {
-        console.warn(`No internet connection, saving ${eventName} to localStorage`);
+        logDebug(`No internet connection, saving ${eventName} to localStorage`);
         saveToLocalStorage(eventName, eventParams);
         return false;
     }
     try {
         gtag('event', eventName, eventParams);
-        console.log(`gtag ${eventName} sent:`, eventParams);
+        logDebug(`gtag ${eventName} sent:`, eventParams);
         return true;
     } catch (error) {
         console.error(`gtag ${eventName} failed:`, error);
@@ -163,46 +183,44 @@ function saveToLocalStorage(eventName, params) {
     savedStats.push({
         eventName,
         params,
-        sessionId,
+        sessionId: window.sessionId,
         timestamp: Date.now()
     });
     localStorage.setItem(key, JSON.stringify(savedStats));
-    console.log(`Saved ${eventName} to localStorage:`, params);
+    logDebug(`Saved ${eventName} to localStorage:`, params);
 }
 
 function saveAttempts(gameMode) {
     const key = gameMode === 'intention' ? 'intentionAttempts' : 'visionAttempts';
     const attempts = gameMode === 'intention' ? intentionAttempts : visionAttempts;
     localStorage.setItem(key, JSON.stringify(attempts));
-    if (ENABLE_LOGGING) {
-        console.log(`Saved ${gameMode} attempts to localStorage:`, attempts);
-    }
+    logDebug(`Saved ${gameMode} attempts to localStorage:`, attempts);
 }
 
 function saveSubsessionSequence() {
     if (intentionGuessSequence.length > 0) {
         subsessionSequences.push({
-            subsessionId: subsessionId,
+            subsessionId: window.currentSubsessionId,
             sequence: [...intentionGuessSequence],
             attempts: intentionStats.attempts,
             successes: intentionStats.successes,
             failures: intentionStats.failures
         });
-        console.log(`Saved subsession sequence:`, subsessionSequences[subsessionSequences.length - 1]);
+        logDebug(`Saved subsession sequence:`, subsessionSequences[subsessionSequences.length - 1]);
     }
 }
 
 function sendSessionSummary() {
     if (!gameStartTime || currentGameMode === 'menu' || sessionSummarySent) {
-        console.log('sendSessionSummary skipped:', { gameStartTime, currentGameMode, sessionSummarySent });
+        logDebug('sendSessionSummary skipped:', { gameStartTime, currentGameMode, sessionSummarySent });
         return;
     }
     if (currentGameMode === 'vision' && visionStats.attempts === 0) {
-        console.log('No vision attempts, skipping sendSessionSummary');
+        logDebug('No vision attempts, skipping sendSessionSummary');
         return;
     }
     if (currentGameMode === 'intention' && intentionStats.attempts === 0) {
-        console.log('No intention attempts, skipping sendSessionSummary');
+        logDebug('No intention attempts, skipping sendSessionSummary');
         return;
     }
 
@@ -223,10 +241,10 @@ function sendSessionSummary() {
         session_duration_seconds: parseFloat(duration),
         session_start_time: Math.floor(gameStartTime),
         win_sequence: guessSequence.join(',') || 'none',
-        subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
+        subsession_id: window.currentSubsessionId
     };
 
-    console.log(`Sending ${eventName} with win_sequence: [${guessSequence.join(', ')}]`, eventParams);
+    logDebug(`Sending ${eventName} with win_sequence: [${guessSequence.join(', ')}]`, eventParams);
     const success = sendGtagEvent(eventName, eventParams);
     if (success) {
         sessionSummarySent = true;
@@ -235,7 +253,7 @@ function sendSessionSummary() {
         }
         saveAttempts(currentGameMode);
     } else {
-        console.warn('sendSessionSummary failed, saved to localStorage');
+        logDebug('sendSessionSummary failed, saved to localStorage');
     }
 }
 
@@ -243,27 +261,27 @@ function sendSavedStats() {
     ['visionStats', 'intentionStats'].forEach(key => {
         const savedStats = JSON.parse(localStorage.getItem(key) || '[]');
         if (savedStats.length === 0) return;
-        console.log(`Found ${savedStats.length} saved stats in ${key}`);
+        logDebug(`Found ${savedStats.length} saved stats in ${key}`);
         savedStats.forEach(stat => {
-            console.log(`Sending saved ${stat.eventName}:`, stat.params);
+            logDebug(`Sending saved ${stat.eventName}:`, stat.params);
             const success = sendGtagEvent(stat.eventName, stat.params);
             if (success) {
-                console.log(`Successfully sent saved ${stat.eventName}`);
+                logDebug(`Successfully sent saved ${stat.eventName}`);
             } else {
-                console.warn(`Failed to send saved ${stat.eventName}, keeping in localStorage`);
+                logDebug(`Failed to send saved ${stat.eventName}, keeping in localStorage`);
             }
         });
         if (savedStats.every(stat => sendGtagEvent(stat.eventName, stat.params))) {
             localStorage.removeItem(key);
-            console.log(`Cleared ${key} from localStorage`);
+            logDebug(`Cleared ${key} from localStorage`);
         } else {
-            console.log(`Retaining ${key} in localStorage due to failed sends`);
+            logDebug(`Retaining ${key} in localStorage due to failed sends`);
         }
     });
 }
 
 function showScreen(screenId) {
-    console.log('Showing screen:', screenId, 'current subsessionId:', subsessionId);
+    logDebug('Showing screen:', screenId, 'current subsessionId:', window.currentSubsessionId);
     const screens = document.querySelectorAll('.game-screen');
     screens.forEach(screen => screen.classList.add('hidden'));
 
@@ -281,9 +299,9 @@ function showScreen(screenId) {
         if (btnReadMore) btnReadMore.classList.remove('hidden');
         if (ENABLE_LOGGING && gameStartTime) {
             const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-            console.log(`Returning to menu, total game time: ${totalTime}s`);
-            console.log(`Intention subsession sequences:`, subsessionSequences);
-            console.log(`Vision guess sequence: [${visionGuessSequence.join(', ')}]`);
+            logDebug(`Returning to menu, total game time: ${totalTime}s`);
+            logDebug(`Intention subsession sequences:`, subsessionSequences);
+            logDebug(`Vision guess sequence: [${visionGuessSequence.join(', ')}]`);
         }
     } else if (screenId === 'game-intention') {
         if (gameIntention) gameIntention.classList.remove('hidden');
@@ -295,7 +313,7 @@ function showScreen(screenId) {
         if (intentionRandomizerInterval === null) {
             startIntentionGame('showScreen');
         } else {
-            console.log('Intention randomizer already active, skipping startIntentionGame');
+            logDebug('Intention randomizer already active, skipping startIntentionGame');
         }
     } else if (screenId === 'game-vision') {
         if (gameVision) gameVision.classList.remove('hidden');
@@ -311,12 +329,13 @@ function showScreen(screenId) {
         if (visionResultDisplay) visionResultDisplay.style.backgroundColor = 'transparent';
         visionCurrentResult = null;
         choiceButtonsEnabledTime = null;
+        generateSubsessionId(); // Generate new subsession_id for Vision
     }
 }
 
 function getRandomResult(mode) {
     const randomValue = Math.random();
-    console.log(`getRandomResult: mode=${mode}, randomValue=${randomValue}`);
+    logDebug(`getRandomResult: mode=${mode}, randomValue=${randomValue}`);
     if (mode === 'color') {
         return randomValue > 0.5 ? 'red' : 'blue';
     } else {
@@ -349,7 +368,7 @@ cachedElements.svgCircle = createSvgShape('circle');
 cachedElements.svgTriangle = createSvgShape('triangle');
 
 function resetIntentionGame() {
-    console.log(`Resetting Intention game, current subsessionId: ${subsessionId}`);
+    logDebug(`Resetting Intention game, current subsessionId: ${window.currentSubsessionId}`);
     if (intentionStats.attempts > 0 && !sessionSummarySent) {
         sendSessionSummary();
     }
@@ -360,8 +379,7 @@ function resetIntentionGame() {
     intentionAttempts.length = 0;
     intentionAttemptStartTime = null;
     intentionRandomizerCount = 0;
-    subsessionCounter++;
-    subsessionId = `${sessionId}_${subsessionCounter}`;
+    generateSubsessionId(); // Generate new subsession_id
     sentRandomizerStartEvents.clear();
     stopIntentionGame();
     startIntentionGame('resetIntentionGame');
@@ -370,13 +388,11 @@ function resetIntentionGame() {
     if (intentionNewGameBtn) intentionNewGameBtn.classList.add('hidden');
     if (intentionAttemptsModeDiv) intentionAttemptsModeDiv.classList.remove('hidden');
     sessionSummarySent = false;
-    if (ENABLE_LOGGING) {
-        console.log('Intention game reset, new subsession_id:', subsessionId);
-    }
+    logDebug('Intention game reset, new subsession_id:', window.currentSubsessionId);
 }
 
 function resetVisionGame() {
-    console.log('Resetting Vision game');
+    logDebug('Resetting Vision game');
     if (visionStats.attempts > 0 && !sessionSummarySent) {
         sendSessionSummary();
     }
@@ -386,6 +402,7 @@ function resetVisionGame() {
     visionGuessSequence = [];
     visionAttempts.length = 0;
     stopVisionGame();
+    generateSubsessionId(); // Generate new subsession_id
     updateVisionStatsDisplay();
     if (visionShuffleBtn) visionShuffleBtn.disabled = false;
     if (visionNewGameBtn) visionNewGameBtn.classList.add('hidden');
@@ -397,28 +414,21 @@ function resetVisionGame() {
     visionCurrentResult = null;
     choiceButtonsEnabledTime = null;
     sessionSummarySent = false;
-    if (ENABLE_LOGGING) {
-        console.log('Vision game reset, guess sequence cleared');
-    }
+    logDebug('Vision game reset, new subsession_id:', window.currentSubsessionId);
 }
 
 function startIntentionGame(caller = 'unknown') {
-    console.log(`startIntentionGame called by: ${caller}`);
+    logDebug(`startIntentionGame called by: ${caller}`);
     if (intentionRandomizerInterval !== null) {
-        console.log('Intention randomizer already running, skipping start');
+        logDebug('Intention randomizer already running, skipping start');
         return;
     }
-    if (!subsessionId || caller === 'resetIntentionGame' || caller === 'modeChange') {
-        subsessionCounter++;
-        subsessionId = `${sessionId}_${subsessionCounter}`;
-        console.log(`New subsession_id generated: ${subsessionId}`);
+    if (!window.currentSubsessionId || caller === 'resetIntentionGame' || caller === 'modeChange') {
+        generateSubsessionId();
     }
-    console.log(`Starting intention game, mode: ${intentionMode} attempt_start_time: ${Date.now()} subsession_id: ${subsessionId}`);
+    logDebug(`Starting intention game, mode: ${intentionMode} attempt_start_time: ${Date.now()} subsession_id: ${window.currentSubsessionId}`);
     intentionAttemptStartTime = Date.now();
     intentionRandomizerCount = 0;
-    if (ENABLE_LOGGING) {
-        console.log('Starting intention game, mode:', intentionMode, 'attempt_start_time:', intentionAttemptStartTime, 'subsession_id:', subsessionId);
-    }
 
     const INACTIVITY_TIMEOUT = 5 * 60 * 1000;
     let inactivityTimer = null;
@@ -427,12 +437,12 @@ function startIntentionGame(caller = 'unknown') {
         const randomInterval = INTENTION_RANDOMIZER_MIN_INTERVAL + Math.random() * (INTENTION_RANDOMIZER_MAX_INTERVAL - INTENTION_RANDOMIZER_MIN_INTERVAL);
         intentionRandomizerCount++;
         if (ENABLE_LOGGING && intentionRandomizerCount % 10 === 0) {
-            console.log(`Randomizer updated (count: ${intentionRandomizerCount}), next update in ${randomInterval.toFixed(2)}ms`);
+            logDebug(`Randomizer updated (count: ${intentionRandomizerCount}), next update in ${randomInterval.toFixed(2)}ms`);
         }
         intentionRandomizerInterval = setTimeout(updateRandomResult, randomInterval);
         if (inactivityTimer) clearTimeout(inactivityTimer);
         inactivityTimer = setTimeout(() => {
-            console.log('Inactivity timeout, stopping intention randomizer');
+            logDebug('Inactivity timeout, stopping intention randomizer');
             stopIntentionGame();
         }, INACTIVITY_TIMEOUT);
     }
@@ -443,10 +453,10 @@ function startIntentionGame(caller = 'unknown') {
         event_category: 'Game',
         event_label: 'Intention Randomizer',
         mode: intentionMode,
-        subsession_id: subsessionId
+        subsession_id: window.currentSubsessionId
     });
-    sentRandomizerStartEvents.add(subsessionId);
-    console.log(`randomizer_start event sent for subsession_id: ${subsessionId}`);
+    sentRandomizerStartEvents.add(window.currentSubsessionId);
+    logDebug(`randomizer_start event sent for subsession_id: ${window.currentSubsessionId}`);
 
     if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
     if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
@@ -459,13 +469,11 @@ function startIntentionGame(caller = 'unknown') {
 }
 
 function stopIntentionGame() {
-    console.log(`Stopping Intention game, current subsessionId: ${subsessionId}`);
+    logDebug(`Stopping Intention game, current subsessionId: ${window.currentSubsessionId}`);
     if (intentionRandomizerInterval !== null) {
         clearTimeout(intentionRandomizerInterval);
         intentionRandomizerInterval = null;
-        if (ENABLE_LOGGING) {
-            console.log('Intention randomizer stopped');
-        }
+        logDebug('Intention randomizer stopped');
     }
     if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
     if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
@@ -479,30 +487,24 @@ function showIntentionResult() {
     const now = Date.now();
     const timeSinceLast = now - lastShowIntentionTime;
     if (currentGameMode !== 'intention' || isProcessingIntention || timeSinceLast < SHOW_INTENTION_THROTTLE_MS) {
-        if (ENABLE_LOGGING) {
-            console.warn('showIntentionResult throttled or invalid state:', {
-                timeSinceLast,
-                gameMode: currentGameMode,
-                currentResult: intentionCurrentResult,
-                isProcessing: isProcessingIntention
-            });
-        }
+        logDebug('showIntentionResult throttled or invalid state:', {
+            timeSinceLast,
+            gameMode: currentGameMode,
+            currentResult: intentionCurrentResult,
+            isProcessing: isProcessingIntention
+        });
         return;
     }
     lastShowIntentionTime = now;
     isProcessingIntention = true;
     const randomDelay = INTENTION_FIXATION_DELAY_MIN + Math.random() * (INTENTION_FIXATION_DELAY_MAX - INTENTION_RANDOMIZER_MIN_INTERVAL);
-    if (ENABLE_LOGGING) {
-        console.log(`Fixation delay: ${randomDelay.toFixed(2)}ms`);
-    }
+    logDebug(`Fixation delay: ${randomDelay.toFixed(2)}ms`);
 
     setTimeout(() => {
         requestAnimationFrame(() => {
             intentionCurrentResult = getRandomResult(intentionMode);
-            if (ENABLE_LOGGING) {
-                console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult, 'subsession_id:', subsessionId);
-                console.log(`Intention result displayed at: ${Date.now()}`);
-            }
+            logDebug('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult, 'subsession_id:', window.currentSubsessionId);
+            logDebug(`Intention result displayed at: ${Date.now()}`);
             intentionStats.attempts++;
             if (intentionStats.attempts === 1 && intentionAttemptsModeDiv) {
                 intentionAttemptsModeDiv.classList.add('hidden');
@@ -513,7 +515,7 @@ function showIntentionResult() {
                 event_category: 'Game',
                 event_label: 'Intention Show',
                 mode: intentionMode,
-                subsession_id: subsessionId
+                subsession_id: window.currentSubsessionId
             });
 
             clearTimeout(intentionRandomizerInterval);
@@ -570,12 +572,10 @@ function showIntentionResult() {
                     mode: intentionMode,
                     result: intentionCurrentResult,
                     time_to_guess: timeToGuess,
-                    subsession_id: subsessionId
+                    subsession_id: window.currentSubsessionId
                 });
-                if (ENABLE_LOGGING) {
-                    console.log(`Intention attempt timed out, time_to_guess: ${timeToGuess}s, subsession_id: ${subsessionId}`);
-                    console.log('Intention attempts:', intentionAttempts);
-                }
+                logDebug(`Intention attempt timed out, time_to_guess: ${timeToGuess}s, subsession_id: ${window.currentSubsessionId}`);
+                logDebug('Intention attempts:', intentionAttempts);
                 cleanupAndRestart();
             }, 60000);
 
@@ -600,13 +600,11 @@ function showIntentionResult() {
                     result: intentionCurrentResult,
                     time_to_guess: timeToGuess,
                     attempt_id: intentionStats.attempts,
-                    subsession_id: subsessionId
+                    subsession_id: window.currentSubsessionId
                 });
-                if (ENABLE_LOGGING) {
-                    const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-                    console.log(`Intention guess: Success, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s, subsession_id: ${subsessionId}`);
-                    console.log('Intention attempts:', intentionAttempts);
-                }
+                const totalTime = gameStartTime ? ((Date.now() - gameStartTime) / 1000).toFixed(1) : 'N/A';
+                logDebug(`Intention guess: Success, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s, subsession_id: ${window.currentSubsessionId}`);
+                logDebug('Intention attempts:', intentionAttempts);
                 cleanupAndRestart();
             }
 
@@ -631,13 +629,11 @@ function showIntentionResult() {
                     result: intentionCurrentResult,
                     time_to_guess: timeToGuess,
                     attempt_id: intentionStats.attempts,
-                    subsession_id: subsessionId
+                    subsession_id: window.currentSubsessionId
                 });
-                if (ENABLE_LOGGING) {
-                    const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-                    console.log(`Intention guess: Failure, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s, subsession_id: ${subsessionId}`);
-                    console.log('Intention attempts:', intentionAttempts);
-                }
+                const totalTime = gameStartTime ? ((Date.now() - gameStartTime) / 1000).toFixed(1) : 'N/A';
+                logDebug(`Intention guess: Failure, result: ${intentionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${intentionGuessSequence.join(', ')}], total game time: ${totalTime}s, subsession_id: ${window.currentSubsessionId}`);
+                logDebug('Intention attempts:', intentionAttempts);
                 cleanupAndRestart();
             }
 
@@ -646,9 +642,9 @@ function showIntentionResult() {
                     clearTimeout(timeout);
                     if (feedbackButtons && feedbackButtons.parentNode) {
                         feedbackButtons.remove();
-                        console.log('Feedback buttons removed');
+                        logDebug('Feedback buttons removed');
                     } else {
-                        console.warn('Feedback buttons not found or already removed');
+                        logDebug('Feedback buttons not found or already removed');
                     }
                     if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
                     if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black';
@@ -661,16 +657,16 @@ function showIntentionResult() {
                             sendSessionSummary();
                         }
                         if (intentionNewGameBtn) {
-                            console.log('Showing New Game Button');
+                            logDebug('Showing New Game Button');
                             intentionNewGameBtn.classList.remove('hidden');
                         }
                     } else {
                         intentionCurrentResult = null;
                         if (intentionRandomizerInterval === null) {
-                            console.log('Restarting intention game from cleanupAndRestart');
+                            logDebug('Restarting intention game from cleanupAndRestart');
                             startIntentionGame('cleanupAndRestart');
                         } else {
-                            console.log('Randomizer already active, skipping restart');
+                            logDebug('Randomizer already active, skipping restart');
                         }
                     }
                 } catch (error) {
@@ -680,7 +676,7 @@ function showIntentionResult() {
                         event_label: 'Runtime Error',
                         error_message: error.message,
                         error_file: 'script.js',
-                        subsession_id: subsessionId
+                        subsession_id: window.currentSubsessionId
                     });
                 }
             }
@@ -700,13 +696,14 @@ function updateIntentionStatsDisplay() {
 }
 
 function startVisionShuffle() {
-    console.log('Starting Vision shuffle');
+    logDebug('Starting Vision shuffle');
     if (!visionShuffleBtn || visionShuffleBtn.disabled) return;
     shuffleStartTime = Date.now();
     sendGtagEvent('shuffle', {
         event_category: 'Game',
         event_label: 'Vision Shuffle',
-        mode: visionMode
+        mode: visionMode,
+        subsession_id: window.currentSubsessionId
     });
 
     visionShuffleBtn.disabled = true;
@@ -719,9 +716,7 @@ function startVisionShuffle() {
 
     visionRandomizerTimeout = setTimeout(() => {
         visionCurrentResult = getRandomResult(visionMode);
-        if (ENABLE_LOGGING) {
-            console.log(`Random result generated at ${randomTime.toFixed(2)}ms:`, visionCurrentResult);
-        }
+        logDebug(`Random result generated at ${randomTime.toFixed(2)}ms:`, visionCurrentResult);
     }, randomTime);
 
     setTimeout(() => {
@@ -732,9 +727,7 @@ function startVisionShuffle() {
             visionChoicesDiv.classList.add('active');
             setTimeout(() => visionChoicesDiv.classList.remove('active'), 1000);
         }
-        if (ENABLE_LOGGING) {
-            console.log(`Choice buttons enabled at: ${choiceButtonsEnabledTime}, mode: ${visionMode}`);
-        }
+        logDebug(`Choice buttons enabled at: ${choiceButtonsEnabledTime}, mode: ${visionMode}`);
     }, SHUFFLE_BUTTON_DISABLE_TIME);
 }
 
@@ -786,11 +779,9 @@ function handleVisionChoice(event) {
     visionAttempts.push({ time: timeToGuess, result: guessResult });
     saveAttempts('vision');
 
-    if (ENABLE_LOGGING) {
-        const totalTime = gameStartTime ? ((Date.now() - gameStartTime) / 1000).toFixed(1) : 'N/A';
-        console.log(`Vision guess: ${isCorrect ? 'Success' : 'Failure'}, choice: ${choice}, correct: ${visionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${visionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
-        console.log('Vision attempts:', visionAttempts);
-    }
+    const totalTime = gameStartTime ? ((Date.now() - gameStartTime) / 1000).toFixed(1) : 'N/A';
+    logDebug(`Vision guess: ${isCorrect ? 'Success' : 'Failure'}, choice: ${choice}, correct: ${visionCurrentResult}, time_to_guess: ${timeToGuess}s, sequence: [${visionGuessSequence.join(', ')}], total game time: ${totalTime}s`);
+    logDebug('Vision attempts:', visionAttempts);
 
     sendGtagEvent('guess', {
         event_category: 'Game',
@@ -801,7 +792,8 @@ function handleVisionChoice(event) {
         choice: choice,
         correct_answer: visionCurrentResult,
         time_to_guess: timeToGuess,
-        attempt_id: visionStats.attempts
+        attempt_id: visionStats.attempts,
+        subsession_id: window.currentSubsessionId
     });
 
     if (isCorrect) {
@@ -894,7 +886,7 @@ if (btnStartIntention) {
                 event_category: 'Game',
                 event_label: 'Intention',
                 game_mode: intentionMode,
-                subsession_id: subsessionId
+                subsession_id: window.currentSubsessionId
             });
         }, 0);
     });
@@ -910,7 +902,8 @@ if (btnStartVision) {
             sendGtagEvent('game_select', {
                 event_category: 'Game',
                 event_label: 'Vision',
-                game_mode: visionMode
+                game_mode: visionMode,
+                subsession_id: window.currentSubsessionId
             });
         }, 0);
     });
@@ -922,7 +915,8 @@ if (btnReadMore) {
         btnReadMore.classList.add('hidden');
         sendGtagEvent('read_more', {
             event_category: 'App',
-            event_label: 'Read More Clicked'
+            event_label: 'Read More Clicked',
+            subsession_id: window.currentSubsessionId
         });
     });
 }
@@ -944,7 +938,7 @@ if (backButtons) {
                     event_label: currentGameMode === 'intention' ? 'Intention' : 'Vision',
                     game_mode: currentGameMode === 'intention' ? intentionMode : visionMode,
                     session_duration_seconds: parseFloat(duration),
-                    subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
+                    subsession_id: window.currentSubsessionId
                 });
                 sendSessionSummary();
             }
@@ -960,15 +954,15 @@ if (intentionShowBtn) {
 if (intentionDisplay) {
     intentionDisplay.addEventListener('click', () => {
         if (intentionShowBtn && !intentionShowBtn.classList.contains('hidden') && !intentionShowBtn.disabled && currentGameMode === 'intention' && !isProcessingIntention) {
-            console.log('Intention display clicked, triggering show result');
+            logDebug('Intention display clicked, triggering show result');
             sendGtagEvent('display_click', {
                 event_category: 'Game',
                 event_label: 'Intention Display',
-                subsession_id: subsessionId
+                subsession_id: window.currentSubsessionId
             });
             intentionShowBtn.click();
         } else {
-            console.log('Intention display click ignored:', {
+            logDebug('Intention display click ignored:', {
                 showBtnHidden: intentionShowBtn.classList.contains('hidden'),
                 showBtnDisabled: intentionShowBtn.disabled,
                 gameMode: currentGameMode,
@@ -987,18 +981,11 @@ if (!intentionModeRadios.length) {
                 sendSessionSummary();
             }
             intentionMode = event.target.value;
-            if (!subsessionId) {
-                console.warn(`subsessionId is undefined in mode_change, generating new subsessionId`);
-                subsessionCounter = subsessionCounter || 0;
-                subsessionCounter++;
-                subsessionId = `${sessionId}_${subsessionCounter}`;
-            }
-            console.log(`Sending mode_change with subsession_id: ${subsessionId}`);
             sendGtagEvent('mode_change', {
                 event_category: 'Game',
                 event_label: 'Intention Mode',
                 value: intentionMode,
-                subsession_id: subsessionId
+                subsession_id: window.currentSubsessionId
             });
             stopIntentionGame();
             startIntentionGame('modeChange');
@@ -1021,7 +1008,7 @@ if (intentionAttemptsModeRadios) {
 
 if (intentionNewGameBtn) {
     intentionNewGameBtn.addEventListener('click', () => {
-        console.log('New Game Button Clicked');
+        logDebug('New Game Button Clicked');
         resetIntentionGame();
     });
 }
@@ -1035,7 +1022,8 @@ if (visionDisplay) {
         if (visionShuffleBtn && !visionShuffleBtn.disabled && currentGameMode === 'vision') {
             sendGtagEvent('display_click', {
                 event_category: 'Game',
-                event_label: 'Vision Display'
+                event_label: 'Vision Display',
+                subsession_id: window.currentSubsessionId
             });
             visionShuffleBtn.click();
         }
@@ -1053,10 +1041,12 @@ if (visionModeRadios) {
                 sendSessionSummary();
             }
             visionMode = event.target.value;
+            generateSubsessionId(); // Generate new subsession_id for mode change
             sendGtagEvent('mode_change', {
                 event_category: 'Game',
                 event_label: 'Vision Mode',
-                value: visionMode
+                value: visionMode,
+                subsession_id: window.currentSubsessionId
             });
             updateVisionChoicesDisplay();
             setVisionChoiceButtonsEnabled(false);
@@ -1094,7 +1084,7 @@ window.addEventListener('error', (error) => {
         event_label: 'Runtime Error',
         error_message: error.message,
         error_file: error.filename,
-        subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
+        subsession_id: window.currentSubsessionId
     });
 });
 
@@ -1106,38 +1096,38 @@ window.addEventListener('beforeunload', () => {
             event_category: 'App',
             event_label: 'App Closed',
             session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
-            subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
+            subsession_id: window.currentSubsessionId
         });
     }
 });
 
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden' && gameStartTime && !sessionSummarySent) {
-        console.log('App hidden, sending session summary');
+        logDebug('App hidden, sending session summary');
         sendSessionSummary();
         sendGtagEvent('app_background', {
             event_category: 'App',
             event_label: 'App Minimized',
             session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
-            subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
+            subsession_id: window.currentSubsessionId
         });
     }
 });
 
 window.addEventListener('online', () => {
-    console.log('Internet connection restored, sending saved stats');
+    logDebug('Internet connection restored, sending saved stats');
     sendSavedStats();
 });
 
 Telegram.WebApp.MainButton.onClick(() => {
     if (gameStartTime && !sessionSummarySent) {
-        console.log('MainButton clicked, sending session summary');
+        logDebug('MainButton clicked, sending session summary');
         sendSessionSummary();
         sendGtagEvent('app_close', {
             event_category: 'App',
             event_label: 'MainButton Close',
             session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
-            subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
+            subsession_id: window.currentSubsessionId
         });
     }
     Telegram.WebApp.close();
@@ -1148,43 +1138,47 @@ try {
     Telegram.WebApp.expand();
     if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
         telegramUser = Telegram.WebApp.initDataUnsafe.user;
+        window.userId = telegramUser.id;
         if (userNameSpan) userNameSpan.textContent = telegramUser.first_name || 'Игрок';
-        console.log('Telegram User:', { id: telegramUser.id, first_name: telegramUser.first_name });
+        logDebug('Telegram User:', { id: telegramUser.id, first_name: telegramUser.first_name });
         gtag('set', 'user_properties', { custom_user_id: telegramUser.id });
         sendGtagEvent('app_launch', {
             event_category: 'App',
             event_label: 'Mini App Started',
-            start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none'
+            start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none',
+            subsession_id: window.currentSubsessionId
         });
     } else {
-        telegramUser = { id: 'anonymous_' + Math.random().toString(36).substr(2, 9), first_name: 'Игрок' };
+        telegramUser = { id: window.userId, first_name: 'Игрок' };
         if (userNameSpan) userNameSpan.textContent = telegramUser.first_name;
-        console.log('Anonymous User:', { id: telegramUser.id });
-        gtag('set', 'user_properties', { custom_user_id: telegramUser.id });
+        logDebug('Anonymous User:', { id: window.userId });
+        gtag('set', 'user_properties', { custom_user_id: window.userId });
         sendGtagEvent('app_launch', {
             event_category: 'App',
             event_label: 'Mini App Started (No User)',
-            start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none'
+            start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none',
+            subsession_id: window.currentSubsessionId
         });
     }
 } catch (e) {
     console.warn('Telegram WebApp not available, using anonymous user');
-    telegramUser = { id: 'anonymous_' + Math.random().toString(36).substr(2, 9), first_name: 'Игрок' };
+    telegramUser = { id: window.userId, first_name: 'Игрок' };
     if (userNameSpan) userNameSpan.textContent = telegramUser.first_name;
 }
-console.log('Initialization completed, calling sendSavedStats and showScreen');
+
+logDebug('Initialization completed, calling sendSavedStats and showScreen');
 sendSavedStats();
 showScreen('menu-screen');
 
 Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
     if (!isStateStable && !Telegram.WebApp.isExpanded() && gameStartTime && !sessionSummarySent) {
-        console.log('Viewport changed, sending session summary');
+        logDebug('Viewport changed, sending session summary');
         sendSessionSummary();
         sendGtagEvent('app_background', {
             event_category: 'App',
             event_label: 'Viewport Minimized',
             session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
-            subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
+            subsession_id: window.currentSubsessionId
         });
     }
 });
@@ -1192,5 +1186,5 @@ Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
 window.dataLayer = window.dataLayer || [];
 function gtag() {
     window.dataLayer.push(arguments);
-    console.log('gtag call:', arguments);
+    logDebug('gtag call:', arguments);
 }
