@@ -14,11 +14,11 @@ const INTENTION_FIXATION_DELAY_MAX = 500;
 const SHOW_INTENTION_THROTTLE_MS = 500;
 
 // Инициализация переменных
+
 let subsessionId = `${sessionId}_${subsessionCounter + 1}`;
-let intentionStats = { attempts: 0, successes: 0, failures: 0 };
-let intentionAttempts = [];
 let intentionAttemptStarts = []; // Для отслеживания начатых попыток
 let isStartingIntentionGame = false; // Флаг для предотвращения дублирования
+
 
 
 let telegramUser = null;
@@ -32,7 +32,7 @@ const sessionStartTime = Date.now();
 let sessionSummarySent = false;
 let lastShowIntentionTime = 0;
 let subsessionCounter = 0; // Счётчик подгрупп
-let subsessionId = null; // Идентификатор текущей подгруппы
+//let subsessionId = null; // Идентификатор текущей подгруппы
 let subsessionSequences = []; // Добавлено: массив для хранения Win Sequence каждой подгруппы
 
 let intentionRandomizerInterval = null;
