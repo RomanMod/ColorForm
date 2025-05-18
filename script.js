@@ -967,10 +967,18 @@ if (intentionDisplay) {
     });
 }
 
+
+
 if (intentionModeRadios) {
     intentionModeRadios.forEach(radio => {
         radio.addEventListener('change', (event) => {
             intentionMode = event.target.value;
+            // Проверяем, существует ли subsessionId
+            if (!subsessionId) {
+                console.warn('subsessionId is undefined in mode_change, generating new subsessionId');
+                subsessionCounter++;
+                subsessionId = `${sessionId}_${subsessionCounter}`;
+            }
             sendGtagEvent('mode_change', {
                 event_category: 'Game',
                 event_label: 'Intention Mode',
@@ -982,6 +990,8 @@ if (intentionModeRadios) {
         });
     });
 }
+
+
 
 if (intentionAttemptsModeRadios) {
     intentionAttemptsModeRadios.forEach(radio => {
