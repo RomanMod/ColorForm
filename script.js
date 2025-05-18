@@ -15,7 +15,6 @@ const SHOW_INTENTION_THROTTLE_MS = 500;
 
 // Инициализация переменных
 
-let subsessionId = `${sessionId}_${subsessionCounter + 1}`;
 let intentionAttemptStarts = []; // Для отслеживания начатых попыток
 let isStartingIntentionGame = false; // Флаг для предотвращения дублирования
 
