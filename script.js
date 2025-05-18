@@ -278,11 +278,11 @@ function showScreen(screenId) {
     } else if (screenId === 'game-intention') {
         if (gameIntention) gameIntention.classList.remove('hidden');
         currentGameMode = 'intention';
-        startIntentionGame();
         updateIntentionStatsDisplay();
         if (intentionNewGameBtn) intentionNewGameBtn.classList.add('hidden');
         if (intentionAttemptsModeDiv) intentionAttemptsModeDiv.classList.remove('hidden');
         Telegram.WebApp.MainButton.hide();
+        startIntentionGame();
     } else if (screenId === 'game-vision') {
         if (gameVision) gameVision.classList.remove('hidden');
         currentGameMode = 'vision';
@@ -385,14 +385,22 @@ function resetVisionGame() {
     }
 }
 
+let isStartingIntentionGame = false;
+
 function startIntentionGame() {
-    console.log('Starting Intention game');
-    intentionCurrentResult = getRandomResult(intentionMode);
-    intentionAttemptStartTime = Date.now();
-    intentionRandomizerCount = 0;
-    if (ENABLE_LOGGING) {
-        console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult, 'attempt_start_time:', intentionAttemptStartTime, 'subsession_id:', subsessionId);
+    if (isStartingIntentionGame) {
+        console.log('startIntentionGame skipped: already in progress');
+        return;
     }
+    isStartingIntentionGame = true;
+    console.log('Starting Intention game');
+    const attemptStartTime = Date.now();
+    intentionAttemptStarts.push({
+        startTime: attemptStartTime,
+        subsessionId: subsessionId
+    });
+    console.log(`Starting intention game, mode: ${intentionMode} result: ${intentionResult} attempt_start_time: ${attemptStartTime} subsession_id: ${subsessionId}`);
+    intentionStats.attempts++;
 
     function updateRandomResult() {
         intentionCurrentResult = getRandomResult(intentionMode);
@@ -419,6 +427,8 @@ function startIntentionGame() {
         event_label: 'Intention Randomizer',
         mode: intentionMode
     });
+    
+    isStartingIntentionGame = false;
 }
 
 function stopIntentionGame() {
