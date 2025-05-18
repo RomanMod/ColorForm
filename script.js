@@ -13,6 +13,11 @@ const INTENTION_FIXATION_DELAY_MIN = 0;
 const INTENTION_FIXATION_DELAY_MAX = 500;
 const SHOW_INTENTION_THROTTLE_MS = 500;
 
+// Инициализация sessionId и subsessionId
+const sessionId = `${Date.now()}${Math.random().toString(36).slice(2)}`;
+let subsessionCounter = 0;
+let subsessionId = `${sessionId}_${subsessionCounter}`;
+
 // Инициализация переменных
 let telegramUser = null;
 let currentGameMode = 'menu';
@@ -20,12 +25,8 @@ let gameStartTime = null;
 let shuffleStartTime = null;
 let intentionAttemptStartTime = null;
 let choiceButtonsEnabledTime = null;
-const sessionId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
-const sessionStartTime = Date.now();
 let sessionSummarySent = false;
 let lastShowIntentionTime = 0;
-let subsessionCounter = 0;
-let subsessionId = null;
 let subsessionSequences = [];
 const sentRandomizerStartEvents = new Set();
 
@@ -127,16 +128,19 @@ function isOnline() {
 }
 
 function sendGtagEvent(eventName, params) {
-    const eventParams = {
-        ...params,
-        session_id: sessionId,
-        custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
-        subsession_id: (eventName.includes('intention') || eventName === 'randomizer_start' || eventName === 'display_click' || eventName === 'game_select' || eventName === 'show_result' || eventName === 'game_exit') ? subsessionId : undefined
-    };
     if (!eventName || !params) {
         console.error('Invalid eventName or params:', { eventName, params });
         return false;
     }
+    if (!params.subsession_id && (eventName.includes('intention') || eventName === 'randomizer_start' || eventName === 'mode_change' || eventName === 'display_click' || eventName === 'game_select' || eventName === 'show_result' || eventName === 'game_exit')) {
+        console.warn(`subsession_id is undefined for ${eventName}, using default: ${subsessionId}`);
+        params.subsession_id = subsessionId || `${sessionId}_${subsessionCounter || 0}`;
+    }
+    const eventParams = {
+        ...params,
+        session_id: sessionId,
+        custom_user_id: telegramUser ? telegramUser.id : 'anonymous'
+    };
     if (!isOnline()) {
         console.warn(`No internet connection, saving ${eventName} to localStorage`);
         saveToLocalStorage(eventName, eventParams);
@@ -217,7 +221,7 @@ function sendSessionSummary() {
         failures: stats.failures,
         mode: mode,
         session_duration_seconds: parseFloat(duration),
-        session_start_time: Math.floor(sessionStartTime),
+        session_start_time: Math.floor(gameStartTime),
         win_sequence: guessSequence.join(','),
         subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
     };
@@ -333,7 +337,7 @@ cachedElements.svgCircle = createSvgShape('circle');
 cachedElements.svgTriangle = createSvgShape('triangle');
 
 function resetIntentionGame() {
-    console.log('Resetting Intention game, current subsessionId:', subsessionId);
+    console.log(`Resetting Intention game, current subsessionId: ${subsessionId}`);
     if (intentionStats.attempts > 0 && !sessionSummarySent) {
         sendSessionSummary();
     }
@@ -392,18 +396,12 @@ function startIntentionGame(caller = 'unknown') {
         console.log('Intention randomizer already running, skipping start');
         return;
     }
-
-    if (!subsessionId) {
-        console.error('subsessionId is not defined, cannot start intention game');
-        return;
+    if (!subsessionId || caller === 'resetIntentionGame' || caller === 'modeChange') {
+        subsessionCounter++;
+        subsessionId = `${sessionId}_${subsessionCounter}`;
+        console.log(`New subsession_id generated: ${subsessionId}`);
     }
-
-    if (sentRandomizerStartEvents.has(subsessionId)) {
-        console.log(`randomizer_start event skipped for subsession_id: ${subsessionId}, already sent`);
-        return;
-    }
-
-    console.log('Starting Intention game');
+    console.log(`Starting intention game, mode: ${intentionMode} attempt_start_time: ${Date.now()} subsession_id: ${subsessionId}`);
     intentionAttemptStartTime = Date.now();
     intentionRandomizerCount = 0;
     if (ENABLE_LOGGING) {
@@ -449,6 +447,7 @@ function startIntentionGame(caller = 'unknown') {
 }
 
 function stopIntentionGame() {
+    console.log(`Stopping Intention game, current subsessionId: ${subsessionId}`);
     if (intentionRandomizerInterval !== null) {
         clearTimeout(intentionRandomizerInterval);
         intentionRandomizerInterval = null;
@@ -967,18 +966,19 @@ if (intentionDisplay) {
     });
 }
 
-
-
-if (intentionModeRadios) {
+if (!intentionModeRadios.length) {
+    console.error('No radio buttons found for intention-mode');
+} else {
     intentionModeRadios.forEach(radio => {
         radio.addEventListener('change', (event) => {
             intentionMode = event.target.value;
-            // Проверяем, существует ли subsessionId
             if (!subsessionId) {
-                console.warn('subsessionId is undefined in mode_change, generating new subsessionId');
+                console.warn(`subsessionId is undefined in mode_change, generating new subsessionId`);
+                subsessionCounter = subsessionCounter || 0;
                 subsessionCounter++;
                 subsessionId = `${sessionId}_${subsessionCounter}`;
             }
+            console.log(`Sending mode_change with subsession_id: ${subsessionId}`);
             sendGtagEvent('mode_change', {
                 event_category: 'Game',
                 event_label: 'Intention Mode',
@@ -990,8 +990,6 @@ if (intentionModeRadios) {
         });
     });
 }
-
-
 
 if (intentionAttemptsModeRadios) {
     intentionAttemptsModeRadios.forEach(radio => {
@@ -1089,7 +1087,7 @@ window.addEventListener('beforeunload', () => {
     sendGtagEvent('session_end', {
         event_category: 'App',
         event_label: 'App Closed',
-        session_duration_seconds: parseFloat(((Date.now() - sessionStartTime) / 1000).toFixed(1)),
+        session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
         subsession_id: currentGameMode === 'intention' ? subsessionId : undefined
     });
 });
@@ -1128,6 +1126,7 @@ Telegram.WebApp.MainButton.onClick(() => {
 
 try {
     Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
     if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
         telegramUser = Telegram.WebApp.initDataUnsafe.user;
         if (userNameSpan) userNameSpan.textContent = telegramUser.first_name || 'Игрок';
@@ -1156,7 +1155,6 @@ try {
 }
 console.log('Initialization completed, calling sendSavedStats and showScreen');
 sendSavedStats();
-Telegram.WebApp.expand();
 showScreen('menu-screen');
 
 Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
