@@ -30,6 +30,7 @@ body {
 #app {
     width: 100%;
     max-width: 600px;
+    margin: 0 auto;
     text-align: center;
     padding: 3px;
     background-color: var(--bg-color);
@@ -38,6 +39,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    box-sizing: border-box;
 }
 
 #user-greeting {
@@ -114,6 +116,7 @@ button:focus-visible {
 
 .display {
     width: 100%;
+    max-width: 100%;
     aspect-ratio: 16 / 9;
     background-color: var(--display-bg-color);
     border-radius: 8px;
@@ -122,6 +125,7 @@ button:focus-visible {
     align-items: center;
     position: relative;
     overflow: hidden;
+    margin: 0 auto;
 }
 
 .result-display {
@@ -367,20 +371,51 @@ button:focus-visible {
     margin-top: 15px;
 }
 
+/* Для старых WebKit */
+@supports not (display: flex) {
+    #app {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .display {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+/* Переопределение стилей Telegram */
+body > #app {
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 600px !important;
+}
+
+body > #app .display {
+    margin: 0 auto !important;
+    width: 100% !important;
+}
+
 /* Адаптивность для маленьких экранов */
 @media screen and (max-width: 480px) {
     body {
-        padding: 10px;
+        padding: 5px;
+        margin: 0;
     }
 
     #app {
-        padding: 2px;
-        gap: 15px;
+        padding: 5px;
+        gap: 10px;
+        margin: 0 auto;
+        width: 100%;
+        max-width: 100%;
     }
 
     .display {
         aspect-ratio: 4 / 3;
         max-height: 200px;
+        margin: 0 auto;
     }
 
     #vision-choices {
