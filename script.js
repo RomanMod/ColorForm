@@ -20,7 +20,6 @@ let intentionStats = { attempts: 0, successes: 0, failures: 0 };
 let intentionAttempts = [];
 let intentionAttemptStarts = []; // Для отслеживания начатых попыток
 let isStartingIntentionGame = false; // Флаг для предотвращения дублирования
-let ENABLE_LOGGING = true;
 
 
 let telegramUser = null;
