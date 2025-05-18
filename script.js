@@ -15,11 +15,13 @@ const SHOW_INTENTION_THROTTLE_MS = 500;
 
 // Инициализация переменных
 let sessionId = Date.now() + Math.random().toString(36).slice(2);
-let subsessionId = sessionId + '_1';
+let subsessionId = `${sessionId}_${subsessionCounter + 1}`;
 let intentionStats = { attempts: 0, successes: 0, failures: 0 };
-let intentionGuessSequence = [];
+let intentionAttempts = [];
 let intentionAttemptStarts = []; // Для отслеживания начатых попыток
 let isStartingIntentionGame = false; // Флаг для предотвращения дублирования
+let ENABLE_LOGGING = true;
+
 
 let telegramUser = null;
 let currentGameMode = 'menu';
@@ -229,6 +231,7 @@ function sendSessionSummary() {
     if (success) {
         sessionSummarySent = true;
         saveSubsessionSequence(adjustedSequence); // Сохраняем дополненную последовательность
+        intentionAttemptStarts = intentionAttemptStarts.filter(a => a.subsessionId !== subsessionId);
     } else {
         console.warn('sendSessionSummary failed, saved to localStorage');
     }
@@ -262,29 +265,19 @@ function sendSavedStats() {
 }
 
 
-
-
 function showScreen(screenId) {
     console.log('Showing screen:', screenId);
-    const screens = document.querySelectorAll('.game-screen');
-    screens.forEach(screen => screen.classList.add('hidden'));
-
-    stopIntentionGame();
-    stopVisionGame();
+    document.querySelectorAll('.screen').forEach(screen => screen.classList.add('hidden'));
+    const targetScreen = document.getElementById(screenId);
+    if (targetScreen) targetScreen.classList.remove('hidden');
 
     if (screenId === 'menu-screen') {
-        sendSessionSummary();
-        if (menuScreen) menuScreen.classList.remove('hidden');
         currentGameMode = 'menu';
         Telegram.WebApp.MainButton.hide();
-        if (readMoreArea) readMoreArea.classList.add('hidden');
-        if (btnReadMore) btnReadMore.classList.remove('hidden');
-        if (ENABLE_LOGGING && gameStartTime) {
-            const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-            console.log(`Returning to menu, total game time: ${totalTime}s`);
-            console.log(`Intention subsession sequences:`, subsessionSequences); // Изменено: логируем все подгруппы
-            console.log(`Vision guess sequence: [${visionGuessSequence.join(', ')}]`);
-        }
+        sendSessionSummary();
+        console.log('Returning to menu, total game time:', ((Date.now() - gameStartTime) / 1000).toFixed(1) + 's');
+        console.log('Intention subsession sequences:', subsessionSequences);
+        console.log('Vision guess sequence:', visionGuessSequence);
     } else if (screenId === 'game-intention') {
         if (gameIntention) gameIntention.classList.remove('hidden');
         currentGameMode = 'intention';
@@ -293,24 +286,29 @@ function showScreen(screenId) {
         if (intentionAttemptsModeDiv) intentionAttemptsModeDiv.classList.remove('hidden');
         Telegram.WebApp.MainButton.hide();
         startIntentionGame();
+        sendGtagEvent('game_select', {
+            event_category: 'Game',
+            event_label: 'Intention',
+            game_mode: intentionMode,
+            session_id: sessionId,
+            custom_user_id: userId,
+            subsession_id: subsessionId
+        });
     } else if (screenId === 'game-vision') {
         if (gameVision) gameVision.classList.remove('hidden');
         currentGameMode = 'vision';
-        updateVisionChoicesDisplay();
         updateVisionStatsDisplay();
-        if (visionShuffleBtn) visionShuffleBtn.disabled = false;
-        if (visionNewGameBtn) visionNewGameBtn.classList.add('hidden');
-        if (visionAttemptsModeDiv) visionAttemptsModeDiv.classList.remove('hidden');
-        setVisionChoiceButtonsEnabled(false);
-        if (visionResultDisplay) visionResultDisplay.classList.add('hidden');
-        if (visionDisplay) visionDisplay.style.backgroundColor = 'black';
-        if (visionResultDisplay) visionResultDisplay.style.backgroundColor = 'transparent';
-        visionCurrentResult = null;
-        choiceButtonsEnabledTime = null;
+        Telegram.WebApp.MainButton.hide();
+        sendGtagEvent('game_select', {
+            event_category: 'Game',
+            event_label: 'Vision',
+            game_mode: visionMode,
+            session_id: sessionId,
+            custom_user_id: userId,
+            subsession_id: subsessionId
+        });
     }
 }
-
-
 
 
 
@@ -346,6 +344,7 @@ function createSvgShape(type) {
 cachedElements.svgCircle = createSvgShape('circle');
 cachedElements.svgTriangle = createSvgShape('triangle');
 
+
 function resetIntentionGame() {
     console.log('Resetting Intention game');
     if (intentionStats.attempts > 0 && !sessionSummarySent) {
@@ -358,8 +357,8 @@ function resetIntentionGame() {
     intentionAttempts.length = 0;
     intentionAttemptStartTime = null;
     intentionRandomizerCount = 0;
-    subsessionCounter++; // Изменено: увеличиваем счётчик только при сбросе
-    subsessionId = `${sessionId}_${subsessionCounter}`; // Изменено: новый subsession_id
+    subsessionCounter++;
+    subsessionId = `${sessionId}_${subsessionCounter}`;
     stopIntentionGame();
     startIntentionGame();
     updateIntentionStatsDisplay();
@@ -371,6 +370,7 @@ function resetIntentionGame() {
         console.log('Intention game reset, new subsession_id:', subsessionId);
     }
 }
+
 
 function resetVisionGame() {
     console.log('Resetting Vision game');
@@ -412,17 +412,17 @@ function startIntentionGame() {
         startTime: attemptStartTime,
         subsessionId: subsessionId
     });
+    intentionAttemptStartTime = attemptStartTime;
     console.log(`Starting intention game, mode: ${intentionMode} result: ${intentionResult} attempt_start_time: ${attemptStartTime} subsession_id: ${subsessionId}`);
-    intentionStats.attempts++;
     
     // Инициализация рандомизатора
     intentionResult = ['red', 'blue'][Math.floor(Math.random() * 2)];
     if (randomizerInterval) clearInterval(randomizerInterval);
-    randomizerCount = 0;
+    intentionRandomizerCount = 0;
     randomizerInterval = setInterval(() => {
-        randomizerCount++;
+        intentionRandomizerCount++;
         intentionResult = ['red', 'blue'][Math.floor(Math.random() * 2)];
-        console.log(`Randomizer updated (count: ${randomizerCount}), result: ${intentionResult}, next update in ${Math.random() * 100}ms`);
+        console.log(`Randomizer updated (count: ${intentionRandomizerCount}), result: ${intentionResult}, next update in ${Math.random() * 100}ms`);
     }, Math.random() * 100);
 
     // Отправка события randomizer_start
@@ -438,6 +438,7 @@ function startIntentionGame() {
 
     isStartingIntentionGame = false;
 }
+
 
 
 function stopIntentionGame() {
