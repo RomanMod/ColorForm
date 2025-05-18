@@ -55,6 +55,7 @@ const visionStats = {
 };
 let visionGuessSequence = [];
 const visionAttempts = []; // Массив для хранения попыток
+let isStartingIntentionGame = false;
 
 const appDiv = document.getElementById('app');
 const userNameSpan = document.getElementById('telegram-user-name');
@@ -254,6 +255,9 @@ function sendSavedStats() {
     });
 }
 
+
+
+
 function showScreen(screenId) {
     console.log('Showing screen:', screenId);
     const screens = document.querySelectorAll('.game-screen');
@@ -299,6 +303,10 @@ function showScreen(screenId) {
         choiceButtonsEnabledTime = null;
     }
 }
+
+
+
+
 
 function getRandomResult(mode) {
     if (mode === 'color') {
@@ -385,7 +393,8 @@ function resetVisionGame() {
     }
 }
 
-let isStartingIntentionGame = false;
+
+
 
 function startIntentionGame() {
     if (isStartingIntentionGame) {
@@ -401,35 +410,31 @@ function startIntentionGame() {
     });
     console.log(`Starting intention game, mode: ${intentionMode} result: ${intentionResult} attempt_start_time: ${attemptStartTime} subsession_id: ${subsessionId}`);
     intentionStats.attempts++;
+    
+    intentionResult = ['red', 'blue'][Math.floor(Math.random() * 2)];
+    if (randomizerInterval) clearInterval(randomizerInterval);
+    randomizerCount = 0;
+    randomizerInterval = setInterval(() => {
+        randomizerCount++;
+        intentionResult = ['red', 'blue'][Math.floor(Math.random() * 2)];
+        console.log(`Randomizer updated (count: ${randomizerCount}), result: ${intentionResult}, next update in ${Math.random() * 100}ms`);
+    }, Math.random() * 100);
 
-    function updateRandomResult() {
-        intentionCurrentResult = getRandomResult(intentionMode);
-        const randomInterval = INTENTION_RANDOMIZER_MIN_INTERVAL + Math.random() * (INTENTION_RANDOMIZER_MAX_INTERVAL - INTENTION_RANDOMIZER_MIN_INTERVAL);
-        intentionRandomizerCount++;
-        if (ENABLE_LOGGING && intentionRandomizerCount % 10 === 0) {
-            console.log(`Randomizer updated (count: ${intentionRandomizerCount}), result: ${intentionCurrentResult}, next update in ${randomInterval.toFixed(2)}ms`);
-        }
-        intentionRandomizerInterval = setTimeout(updateRandomResult, randomInterval);
-    }
-
-    updateRandomResult();
-
-    if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
-    if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
-    if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black';
-    if (intentionResultDisplay) {
-        intentionResultDisplay.style.backgroundColor = 'white';
-        intentionResultDisplay.style.display = 'flex';
-        intentionResultDisplay.style.zIndex = '10';
-    }
     sendGtagEvent('randomizer_start', {
         event_category: 'Game',
         event_label: 'Intention Randomizer',
-        mode: intentionMode
+        mode: intentionMode,
+        session_id: sessionId,
+        custom_user_id: userId,
+        attempt_start_time: attemptStartTime,
+        subsession_id: subsessionId
     });
-    
+
     isStartingIntentionGame = false;
 }
+
+
+
 
 function stopIntentionGame() {
     if (intentionRandomizerInterval !== null) {
