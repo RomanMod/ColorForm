@@ -404,22 +404,20 @@ function startIntentionGame(caller = 'unknown') {
     }
 
     console.log('Starting Intention game');
-    intentionCurrentResult = getRandomResult(intentionMode);
     intentionAttemptStartTime = Date.now();
     intentionRandomizerCount = 0;
     if (ENABLE_LOGGING) {
-        console.log('Starting intention game, mode:', intentionMode, 'result:', intentionCurrentResult, 'attempt_start_time:', intentionAttemptStartTime, 'subsession_id:', subsessionId);
+        console.log('Starting intention game, mode:', intentionMode, 'attempt_start_time:', intentionAttemptStartTime, 'subsession_id:', subsessionId);
     }
 
     const INACTIVITY_TIMEOUT = 5 * 60 * 1000;
     let inactivityTimer = null;
 
     function updateRandomResult() {
-        intentionCurrentResult = getRandomResult(intentionMode);
         const randomInterval = INTENTION_RANDOMIZER_MIN_INTERVAL + Math.random() * (INTENTION_RANDOMIZER_MAX_INTERVAL - INTENTION_RANDOMIZER_MIN_INTERVAL);
         intentionRandomizerCount++;
         if (ENABLE_LOGGING && intentionRandomizerCount % 10 === 0) {
-            console.log(`Randomizer updated (count: ${intentionRandomizerCount}), result: ${intentionCurrentResult}, next update in ${randomInterval.toFixed(2)}ms`);
+            console.log(`Randomizer updated (count: ${intentionRandomizerCount}), next update in ${randomInterval.toFixed(2)}ms`);
         }
         intentionRandomizerInterval = setTimeout(updateRandomResult, randomInterval);
         if (inactivityTimer) clearTimeout(inactivityTimer);
@@ -469,7 +467,7 @@ function stopIntentionGame() {
 function showIntentionResult() {
     const now = Date.now();
     const timeSinceLast = now - lastShowIntentionTime;
-    if (currentGameMode !== 'intention' || intentionCurrentResult === null || isProcessingIntention || timeSinceLast < SHOW_INTENTION_THROTTLE_MS) {
+    if (currentGameMode !== 'intention' || isProcessingIntention || timeSinceLast < SHOW_INTENTION_THROTTLE_MS) {
         if (ENABLE_LOGGING) {
             console.warn('showIntentionResult throttled or invalid state:', {
                 timeSinceLast,
@@ -487,11 +485,9 @@ function showIntentionResult() {
         console.log(`Fixation delay: ${randomDelay.toFixed(2)}ms`);
     }
 
-    if (intentionShowBtn) intentionShowBtn.classList.add('processing');
-    if (intentionDisplay) intentionDisplay.classList.add('processing');
-
     setTimeout(() => {
         requestAnimationFrame(() => {
+            intentionCurrentResult = getRandomResult(intentionMode);
             if (ENABLE_LOGGING) {
                 console.log('Showing intention result, mode:', intentionMode, 'result:', intentionCurrentResult, 'subsession_id:', subsessionId);
                 console.log(`Intention result displayed at: ${Date.now()}`);
@@ -586,7 +582,6 @@ function showIntentionResult() {
                 updateIntentionStatsDisplay();
                 sendGtagEvent('intention_guess', {
                     event_category: 'Game',
-                    event_labelme: true,
                     event_label: 'Intention Guess',
                     value: 'success',
                     guess_result: 1,
@@ -659,6 +654,7 @@ function showIntentionResult() {
                             intentionNewGameBtn.classList.remove('hidden');
                         }
                     } else {
+                        intentionCurrentResult = null;
                         if (intentionRandomizerInterval === null) {
                             console.log('Restarting intention game from cleanupAndRestart');
                             startIntentionGame('cleanupAndRestart');
@@ -952,7 +948,7 @@ if (intentionShowBtn) {
 
 if (intentionDisplay) {
     intentionDisplay.addEventListener('click', () => {
-        if (intentionShowBtn && !intentionShowBtn.classList.contains('hidden') && !intentionShowBtn.disabled && currentGameMode === 'intention' && !isProcessingIntention && intentionCurrentResult !== null) {
+        if (intentionShowBtn && !intentionShowBtn.classList.contains('hidden') && !intentionShowBtn.disabled && currentGameMode === 'intention' && !isProcessingIntention) {
             console.log('Intention display clicked, triggering show result');
             sendGtagEvent('display_click', {
                 event_category: 'Game',
@@ -965,8 +961,7 @@ if (intentionDisplay) {
                 showBtnHidden: intentionShowBtn.classList.contains('hidden'),
                 showBtnDisabled: intentionShowBtn.disabled,
                 gameMode: currentGameMode,
-                isProcessing: isProcessingIntention,
-                currentResult: intentionCurrentResult
+                isProcessing: isProcessingIntention
             });
         }
     });
