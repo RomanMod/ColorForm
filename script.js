@@ -14,7 +14,6 @@ const INTENTION_FIXATION_DELAY_MAX = 500;
 const SHOW_INTENTION_THROTTLE_MS = 500;
 
 // Инициализация переменных
-let sessionId = Date.now() + Math.random().toString(36).slice(2);
 let subsessionId = `${sessionId}_${subsessionCounter + 1}`;
 let intentionStats = { attempts: 0, successes: 0, failures: 0 };
 let intentionAttempts = [];
