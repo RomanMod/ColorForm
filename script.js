@@ -131,7 +131,7 @@ function sendGtagEvent(eventName, params) {
         ...params,
         session_id: sessionId,
         custom_user_id: telegramUser ? telegramUser.id : 'anonymous',
-        subsession_id: (eventName.includes('intention') || eventName === 'randomizer_start' || eventName === 'display_click' || eventName === 'game_select' || eventName === 'show_result') ? subsessionId : undefined
+        subsession_id: (eventName.includes('intention') || eventName === 'randomizer_start' || eventName === 'display_click' || eventName === 'game_select' || eventName === 'show_result' || eventName === 'game_exit') ? subsessionId : undefined
     };
     if (!eventName || !params) {
         console.error('Invalid eventName or params:', { eventName, params });
@@ -299,10 +299,12 @@ function showScreen(screenId) {
 }
 
 function getRandomResult(mode) {
+    const randomValue = Math.random();
+    console.log(`getRandomResult: mode=${mode}, randomValue=${randomValue}`);
     if (mode === 'color') {
-        return Math.random() > 0.5 ? 'red' : 'blue';
+        return randomValue > 0.5 ? 'red' : 'blue';
     } else {
-        return Math.random() > 0.5 ? 'circle' : 'triangle';
+        return randomValue > 0.5 ? 'circle' : 'triangle';
     }
 }
 
@@ -1023,12 +1025,12 @@ if (visionDisplay) {
 }
 
 if (visionChoicesDiv) {
-    visionChoicesDiv.addEventListener('click', handleVisionChoice);
+    vision autochthonousDiv.addEventListener('click', handleVisionChoice);
 }
 
 if (visionModeRadios) {
     visionModeRadios.forEach(radio => {
-        radio.addEventListener('change', (event) => {
+        radio.addEventListener('click', (event) => {
             visionMode = event.target.value;
             sendGtagEvent('mode_change', {
                 event_category: 'Game',
