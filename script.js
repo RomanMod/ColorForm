@@ -26,7 +26,8 @@ let sessionSummarySent = false;
 let lastShowIntentionTime = 0;
 let subsessionCounter = 0; // Счётчик подгрупп
 let subsessionId = null; // Идентификатор текущей подгруппы
-let subsessionSequences = []; // Добавлено: массив для хранения Win Sequence каждой подгруппы
+let subsessionSequences = []; // Массив для хранения Win Sequence каждой подгруппы
+let isRandomizerStarted = false; // Флаг для отслеживания отправки randomizer_start
 
 let intentionRandomizerInterval = null;
 let intentionCurrentResult = null;
@@ -164,18 +165,17 @@ function saveAttempts(gameMode) {
     }
 }
 
-// Изменено: добавляем сохранение Win Sequence для подгруппы
-function saveSubsessionSequence() {
-    if (intentionGuessSequence.length > 0) {
-        subsessionSequences.push({
-            subsessionId: subsessionId,
-            sequence: [...intentionGuessSequence],
-            attempts: intentionStats.attempts,
-            successes: intentionStats.successes,
-            failures: intentionStats.failures
-        });
-        console.log(`Saved subsession sequence:`, subsessionSequences[subsessionSequences.length - 1]);
-    }
+// Сохранение Win Sequence для подгруппы
+function saveSubsessionSequence(sequence) {
+    const subsessionData = {
+        subsessionId: subsessionId,
+        sequence: sequence || intentionGuessSequence,
+        attempts: intentionStats.attempts,
+        successes: intentionStats.successes,
+        failures: intentionStats.failures
+    };
+    subsessionSequences.push(subsessionData);
+    console.log('Saved subsession sequence:', subsessionData);
 }
 
 function sendSessionSummary() {
@@ -213,7 +213,7 @@ function sendSessionSummary() {
         mode: mode,
         session_duration_seconds: parseFloat(duration),
         session_start_time: Math.floor(sessionStartTime),
-        win_sequence: adjustedSequence.join(','), // Используем дополненную последовательность
+        win_sequence: adjustedSequence.join(','),
         subsession_id: subsessionId
     };
 
@@ -221,23 +221,12 @@ function sendSessionSummary() {
     const success = sendGtagEvent(eventName, eventParams);
     if (success) {
         sessionSummarySent = true;
-        saveSubsessionSequence(adjustedSequence); // Сохраняем дополненную последовательность
+        if (currentGameMode === 'intention') {
+            saveSubsessionSequence(adjustedSequence);
+        }
     } else {
         console.warn('sendSessionSummary failed, saved to localStorage');
     }
-}
-
-// Обновляем saveSubsessionSequence для поддержки adjustedSequence
-function saveSubsessionSequence(sequence) {
-    const subsessionData = {
-        subsessionId: subsessionId,
-        sequence: sequence || intentionGuessSequence,
-        attempts: intentionStats.attempts,
-        successes: intentionStats.successes,
-        failures: intentionStats.failures
-    };
-    subsessionSequences.push(subsessionData);
-    console.log('Saved subsession sequence:', subsessionData);
 }
 
 function sendSavedStats() {
@@ -272,13 +261,12 @@ function showScreen(screenId) {
         if (ENABLE_LOGGING && gameStartTime) {
             const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
             console.log(`Returning to menu, total game time: ${totalTime}s`);
-            console.log(`Intention subsession sequences:`, subsessionSequences); // Изменено: логируем все подгруппы
+            console.log(`Intention subsession sequences:`, subsessionSequences);
             console.log(`Vision guess sequence: [${visionGuessSequence.join(', ')}]`);
         }
     } else if (screenId === 'game-intention') {
         if (gameIntention) gameIntention.classList.remove('hidden');
         currentGameMode = 'intention';
-        //startIntentionGame();
         updateIntentionStatsDisplay();
         if (intentionNewGameBtn) intentionNewGameBtn.classList.add('hidden');
         if (intentionAttemptsModeDiv) intentionAttemptsModeDiv.classList.remove('hidden');
@@ -344,8 +332,9 @@ function resetIntentionGame() {
     intentionAttempts.length = 0;
     intentionAttemptStartTime = null;
     intentionRandomizerCount = 0;
-    subsessionCounter++; // Изменено: увеличиваем счётчик только при сбросе
-    subsessionId = `${sessionId}_${subsessionCounter}`; // Изменено: новый subsession_id
+    subsessionCounter++; // Увеличиваем счётчик подгрупп
+    subsessionId = `${sessionId}_${subsessionCounter}`; // Новый subsession_id
+    isRandomizerStarted = false; // Сбрасываем флаг для новой подгруппы
     stopIntentionGame();
     startIntentionGame();
     updateIntentionStatsDisplay();
@@ -414,11 +403,17 @@ function startIntentionGame() {
         intentionResultDisplay.style.display = 'flex';
         intentionResultDisplay.style.zIndex = '10';
     }
-    sendGtagEvent('randomizer_start', {
-        event_category: 'Game',
-        event_label: 'Intention Randomizer',
-        mode: intentionMode
-    });
+
+    // Отправляем событие randomizer_start только если оно ещё не было отправлено в этой подгруппе
+    if (!isRandomizerStarted) {
+        sendGtagEvent('randomizer_start', {
+            event_category: 'Game',
+            event_label: 'Intention Randomizer',
+            mode: intentionMode,
+            subsession_id: subsessionId
+        });
+        isRandomizerStarted = true;
+    }
 }
 
 function stopIntentionGame() {
@@ -630,7 +625,7 @@ function showIntentionResult() {
                     intentionNewGameBtn.classList.remove('hidden');
                 }
             } else {
-                startIntentionGame(); // Изменено: продолжаем использовать тот же subsession_id
+                startIntentionGame(); // Продолжаем использовать тот же subsession_id
             }
         }
     }, randomDelay);
@@ -649,7 +644,7 @@ function updateIntentionStatsDisplay() {
 
 function startVisionShuffle() {
     console.log('Starting Vision shuffle');
-    if (!visionShuffleBtn || visionShuffleBtn.disabled) return;
+    if (!visionShuffle AparBtn || visionShuffleBtn.disabled) return;
     shuffleStartTime = Date.now();
     sendGtagEvent('shuffle', {
         event_category: 'Game',
