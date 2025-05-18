@@ -27,7 +27,6 @@ let lastShowIntentionTime = 0;
 let subsessionCounter = 0; // Счётчик подгрупп
 let subsessionId = null; // Идентификатор текущей подгруппы
 let subsessionSequences = []; // Массив для хранения Win Sequence каждой подгруппы
-let isRandomizerStarted = false; // Флаг для отслеживания отправки randomizer_start
 
 let intentionRandomizerInterval = null;
 let intentionCurrentResult = null;
@@ -166,16 +165,17 @@ function saveAttempts(gameMode) {
 }
 
 // Сохранение Win Sequence для подгруппы
-function saveSubsessionSequence(sequence) {
-    const subsessionData = {
-        subsessionId: subsessionId,
-        sequence: sequence || intentionGuessSequence,
-        attempts: intentionStats.attempts,
-        successes: intentionStats.successes,
-        failures: intentionStats.failures
-    };
-    subsessionSequences.push(subsessionData);
-    console.log('Saved subsession sequence:', subsessionData);
+function saveSubsessionSequence() {
+    if (intentionGuessSequence.length > 0) {
+        subsessionSequences.push({
+            subsessionId: subsessionId,
+            sequence: [...intentionGuessSequence],
+            attempts: intentionStats.attempts,
+            successes: intentionStats.successes,
+            failures: intentionStats.failures
+        });
+        console.log(`Saved subsession sequence:`, subsessionSequences[subsessionSequences.length - 1]);
+    }
 }
 
 function sendSessionSummary() {
@@ -187,6 +187,10 @@ function sendSessionSummary() {
         console.log('No vision attempts, skipping sendSessionSummary');
         return;
     }
+    if (currentGameMode === 'intention' && intentionStats.attempts === 0) {
+        console.log('No intention attempts, skipping sendSessionSummary');
+        return;
+    }
 
     const duration = ((Date.now() - gameStartTime) / 1000).toFixed(1);
     const eventName = currentGameMode === 'vision' ? 'game_session_summary' : 'intention_session_summary';
@@ -194,15 +198,6 @@ function sendSessionSummary() {
     const stats = currentGameMode === 'vision' ? visionStats : intentionStats;
     const mode = currentGameMode === 'vision' ? visionMode : intentionMode;
     const guessSequence = currentGameMode === 'vision' ? visionGuessSequence : intentionGuessSequence;
-
-    // Дополняем win_sequence звёздочками для незавершённых попыток
-    const adjustedSequence = [...guessSequence];
-    if (adjustedSequence.length < stats.attempts) {
-        console.log(`Adjusting win_sequence: ${adjustedSequence.length} < ${stats.attempts} attempts for subsession_id: ${subsessionId}`);
-        while (adjustedSequence.length < stats.attempts) {
-            adjustedSequence.push('*'); // Пометка для незавершённых попыток
-        }
-    }
 
     const eventParams = {
         event_category: 'Game',
@@ -213,17 +208,14 @@ function sendSessionSummary() {
         mode: mode,
         session_duration_seconds: parseFloat(duration),
         session_start_time: Math.floor(sessionStartTime),
-        win_sequence: adjustedSequence.join(','),
-        subsession_id: subsessionId
+        win_sequence: guessSequence.join(',')
     };
 
     console.log(`Sending ${eventName}:`, eventParams);
     const success = sendGtagEvent(eventName, eventParams);
     if (success) {
         sessionSummarySent = true;
-        if (currentGameMode === 'intention') {
-            saveSubsessionSequence(adjustedSequence);
-        }
+        saveSubsessionSequence();
     } else {
         console.warn('sendSessionSummary failed, saved to localStorage');
     }
@@ -271,6 +263,10 @@ function showScreen(screenId) {
         if (intentionNewGameBtn) intentionNewGameBtn.classList.add('hidden');
         if (intentionAttemptsModeDiv) intentionAttemptsModeDiv.classList.remove('hidden');
         Telegram.WebApp.MainButton.hide();
+        // Запускаем игру только если рандомизатор не активен
+        if (intentionRandomizerInterval === null) {
+            startIntentionGame();
+        }
     } else if (screenId === 'game-vision') {
         if (gameVision) gameVision.classList.remove('hidden');
         currentGameMode = 'vision';
@@ -332,9 +328,8 @@ function resetIntentionGame() {
     intentionAttempts.length = 0;
     intentionAttemptStartTime = null;
     intentionRandomizerCount = 0;
-    subsessionCounter++; // Увеличиваем счётчик подгрупп
-    subsessionId = `${sessionId}_${subsessionCounter}`; // Новый subsession_id
-    isRandomizerStarted = false; // Сбрасываем флаг для новой подгруппы
+    subsessionCounter++;
+    subsessionId = `${sessionId}_${subsessionCounter}`;
     stopIntentionGame();
     startIntentionGame();
     updateIntentionStatsDisplay();
@@ -375,6 +370,12 @@ function resetVisionGame() {
 }
 
 function startIntentionGame() {
+    // Проверяем, активен ли уже рандомизатор
+    if (intentionRandomizerInterval !== null) {
+        console.log('Intention randomizer already running, skipping start');
+        return;
+    }
+
     console.log('Starting Intention game');
     intentionCurrentResult = getRandomResult(intentionMode);
     intentionAttemptStartTime = Date.now();
@@ -404,28 +405,29 @@ function startIntentionGame() {
         intentionResultDisplay.style.zIndex = '10';
     }
 
-    // Отправляем событие randomizer_start только если оно ещё не было отправлено в этой подгруппе
-    if (!isRandomizerStarted) {
-        sendGtagEvent('randomizer_start', {
-            event_category: 'Game',
-            event_label: 'Intention Randomizer',
-            mode: intentionMode,
-            subsession_id: subsessionId
-        });
-        isRandomizerStarted = true;
-    }
+    // Отправляем событие randomizer_start только при первом запуске в новой подгруппе
+    sendGtagEvent('randomizer_start', {
+        event_category: 'Game',
+        event_label: 'Intention Randomizer',
+        mode: intentionMode,
+        subsession_id: subsessionId
+    });
 }
 
 function stopIntentionGame() {
     if (intentionRandomizerInterval !== null) {
         clearTimeout(intentionRandomizerInterval);
         intentionRandomizerInterval = null;
+        if (ENABLE_LOGGING) {
+            console.log('Intention randomizer stopped');
+        }
     }
     if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
     if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
     if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black';
     if (intentionResultDisplay) intentionResultDisplay.style.backgroundColor = 'white';
     intentionAttemptStartTime = null;
+    intentionCurrentResult = null;
 }
 
 function showIntentionResult() {
@@ -538,6 +540,7 @@ function showIntentionResult() {
             updateIntentionStatsDisplay();
             sendGtagEvent('intention_guess', {
                 event_category: 'Game',
+                event_labelme: true,
                 event_label: 'Intention Guess',
                 value: 'success',
                 guess_result: 1,
@@ -625,7 +628,10 @@ function showIntentionResult() {
                     intentionNewGameBtn.classList.remove('hidden');
                 }
             } else {
-                startIntentionGame(); // Продолжаем использовать тот же subsession_id
+                // Запускаем игру только если рандомизатор не активен
+                if (intentionRandomizerInterval === null) {
+                    startIntentionGame();
+                }
             }
         }
     }, randomDelay);
@@ -644,7 +650,7 @@ function updateIntentionStatsDisplay() {
 
 function startVisionShuffle() {
     console.log('Starting Vision shuffle');
-    if (!visionShuffle AparBtn || visionShuffleBtn.disabled) return;
+    if (!visionShuffleBtn || visionShuffleBtn.disabled) return;
     shuffleStartTime = Date.now();
     sendGtagEvent('shuffle', {
         event_category: 'Game',
@@ -877,7 +883,7 @@ if (backButtons) {
         button.addEventListener('click', () => {
             if (gameStartTime && !sessionSummarySent) {
                 const duration = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-                sendGtagEvent('game_exit', {
+                send优良的除去sendGtagEvent('game_exit', {
                     event_category: 'Game',
                     event_label: currentGameMode === 'intention' ? 'Intention' : 'Vision',
                     game_mode: currentGameMode === 'intention' ? intentionMode : visionMode,
