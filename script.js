@@ -1025,7 +1025,7 @@ if (visionDisplay) {
 }
 
 if (visionChoicesDiv) {
-    vision autochthonousDiv.addEventListener('click', handleVisionChoice);
+    visionChoicesDiv.addEventListener('click', handleVisionChoice);
 }
 
 if (visionModeRadios) {
