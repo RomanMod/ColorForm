@@ -14,6 +14,13 @@ const INTENTION_FIXATION_DELAY_MAX = 500;
 const SHOW_INTENTION_THROTTLE_MS = 500;
 
 // Инициализация переменных
+let sessionId = Date.now() + Math.random().toString(36).slice(2);
+let subsessionId = sessionId + '_1';
+let intentionStats = { attempts: 0, successes: 0, failures: 0 };
+let intentionGuessSequence = [];
+let intentionAttemptStarts = []; // Для отслеживания начатых попыток
+let isStartingIntentionGame = false; // Флаг для предотвращения дублирования
+
 let telegramUser = null;
 let currentGameMode = 'menu';
 let gameStartTime = null;
@@ -55,7 +62,6 @@ const visionStats = {
 };
 let visionGuessSequence = [];
 const visionAttempts = []; // Массив для хранения попыток
-let isStartingIntentionGame = false;
 
 const appDiv = document.getElementById('app');
 const userNameSpan = document.getElementById('telegram-user-name');
@@ -394,8 +400,6 @@ function resetVisionGame() {
 }
 
 
-
-
 function startIntentionGame() {
     if (isStartingIntentionGame) {
         console.log('startIntentionGame skipped: already in progress');
@@ -411,6 +415,7 @@ function startIntentionGame() {
     console.log(`Starting intention game, mode: ${intentionMode} result: ${intentionResult} attempt_start_time: ${attemptStartTime} subsession_id: ${subsessionId}`);
     intentionStats.attempts++;
     
+    // Инициализация рандомизатора
     intentionResult = ['red', 'blue'][Math.floor(Math.random() * 2)];
     if (randomizerInterval) clearInterval(randomizerInterval);
     randomizerCount = 0;
@@ -420,6 +425,7 @@ function startIntentionGame() {
         console.log(`Randomizer updated (count: ${randomizerCount}), result: ${intentionResult}, next update in ${Math.random() * 100}ms`);
     }, Math.random() * 100);
 
+    // Отправка события randomizer_start
     sendGtagEvent('randomizer_start', {
         event_category: 'Game',
         event_label: 'Intention Randomizer',
@@ -432,8 +438,6 @@ function startIntentionGame() {
 
     isStartingIntentionGame = false;
 }
-
-
 
 
 function stopIntentionGame() {
