@@ -156,7 +156,8 @@ function sendGtagEvent(eventName, params) {
         ...params,
         subsession_id: params.subsession_id || currentSubsessionId,
         session_id: window.sessionId,
-        custom_user_id: telegramUser ? telegramUser.id : window.userId
+        custom_user_id: telegramUser ? telegramUser.id : window.userId,
+        event_timestamp_ms: params.event_timestamp_ms || Date.now() // Добавляем event_timestamp_ms
     };
     if (!params.subsession_id && (eventName.includes('intention') || eventName === 'randomizer_start' || eventName === 'mode_change' || eventName === 'display_click' || eventName === 'game_select' || eventName === 'show_result' || eventName === 'game_exit')) {
         logDebug(`subsession_id was undefined for ${eventName}, used: ${eventParams.subsession_id}`);
@@ -886,7 +887,8 @@ if (btnStartIntention) {
                 event_category: 'Game',
                 event_label: 'Intention',
                 game_mode: intentionMode,
-                subsession_id: window.currentSubsessionId
+                subsession_id: window.currentSubsessionId,
+                event_timestamp_ms: gameStartTime // Отправляем время начала игры
             });
         }, 0);
     });
@@ -903,7 +905,8 @@ if (btnStartVision) {
                 event_category: 'Game',
                 event_label: 'Vision',
                 game_mode: visionMode,
-                subsession_id: window.currentSubsessionId
+                subsession_id: window.currentSubsessionId,
+                event_timestamp_ms: gameStartTime // Отправляем время начала игры
             });
         }, 0);
     });
