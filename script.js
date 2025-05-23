@@ -156,8 +156,7 @@ function sendGtagEvent(eventName, params) {
         ...params,
         subsession_id: params.subsession_id || currentSubsessionId,
         session_id: window.sessionId,
-        custom_user_id: telegramUser ? telegramUser.id : window.userId,
-        event_timestamp_ms: params.event_timestamp_ms || Date.now() // Добавляем event_timestamp_ms
+        custom_user_id: telegramUser ? telegramUser.id : window.userId
     };
     if (!params.subsession_id && (eventName.includes('intention') || eventName === 'randomizer_start' || eventName === 'mode_change' || eventName === 'display_click' || eventName === 'game_select' || eventName === 'show_result' || eventName === 'game_exit')) {
         logDebug(`subsession_id was undefined for ${eventName}, used: ${eventParams.subsession_id}`);
@@ -295,12 +294,12 @@ function showScreen(screenId) {
         sendSessionSummary();
         if (menuScreen) menuScreen.classList.remove('hidden');
         currentGameMode = 'menu';
+        gameStartTime = null; // Сбрасываем gameStartTime
         Telegram.WebApp.MainButton.hide();
         if (readMoreArea) readMoreArea.classList.add('hidden');
         if (btnReadMore) btnReadMore.classList.remove('hidden');
-        if (ENABLE_LOGGING && gameStartTime) {
-            const totalTime = ((Date.now() - gameStartTime) / 1000).toFixed(1);
-            logDebug(`Returning to menu, total game time: ${totalTime}s`);
+        if (ENABLE_LOGGING) {
+            logDebug('Returned to menu');
             logDebug(`Intention subsession sequences:`, subsessionSequences);
             logDebug(`Vision guess sequence: [${visionGuessSequence.join(', ')}]`);
         }
@@ -380,6 +379,7 @@ function resetIntentionGame() {
     intentionAttempts.length = 0;
     intentionAttemptStartTime = null;
     intentionRandomizerCount = 0;
+    gameStartTime = null; // Сбрасываем gameStartTime
     generateSubsessionId(); // Generate new subsession_id
     sentRandomizerStartEvents.clear();
     stopIntentionGame();
@@ -887,8 +887,7 @@ if (btnStartIntention) {
                 event_category: 'Game',
                 event_label: 'Intention',
                 game_mode: intentionMode,
-                subsession_id: window.currentSubsessionId,
-                event_timestamp_ms: gameStartTime // Отправляем время начала игры
+                subsession_id: window.currentSubsessionId
             });
         }, 0);
     });
@@ -905,8 +904,7 @@ if (btnStartVision) {
                 event_category: 'Game',
                 event_label: 'Vision',
                 game_mode: visionMode,
-                subsession_id: window.currentSubsessionId,
-                event_timestamp_ms: gameStartTime // Отправляем время начала игры
+                subsession_id: window.currentSubsessionId
             });
         }, 0);
     });
@@ -1014,6 +1012,7 @@ if (intentionNewGameBtn) {
         logDebug('New Game Button Clicked');
         resetIntentionGame();
     });
+ closer);
 }
 
 if (visionShuffleBtn) {
