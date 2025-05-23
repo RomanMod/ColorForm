@@ -1012,7 +1012,6 @@ if (intentionNewGameBtn) {
         logDebug('New Game Button Clicked');
         resetIntentionGame();
     });
- closer);
 }
 
 if (visionShuffleBtn) {
