@@ -349,7 +349,9 @@ const visionModeRadios = document.querySelectorAll('input[name="vision-mode"]');
 const visionAttemptsModeRadios = document.querySelectorAll('input[name="vision-attempts-mode"]');
 const backButtons = document.querySelectorAll('.back-btn');
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
-const languageSelect = document.getElementById('language-select');
+const languageSelectCustom = document.getElementById('language-select-custom');
+const selectedLanguage = document.getElementById('selected-language');
+const languageOptions = document.getElementById('language-options');
 
 // Check critical DOM elements
 if (!appDiv || !menuScreen || !gameIntention || !gameVision) {
@@ -1140,21 +1142,50 @@ function toggleTheme() {
     });
 }
 
+// Функция для обновления отображаемого языка
+function updateSelectedLanguage() {
+    const selectedOption = translations[currentLanguage] ? translations[currentLanguage].title : 'Українська';
+    if (selectedLanguage) selectedLanguage.textContent = selectedOption;
+}
+
+// Инициализация выбранного языка
+updateSelectedLanguage();
+
 // Event listeners
 if (themeToggleBtn) {
     themeToggleBtn.addEventListener('click', toggleTheme);
 }
 
-if (languageSelect) {
-    languageSelect.addEventListener('change', (event) => {
-        currentLanguage = event.target.value;
-        updateLanguage();
-        sendGtagEvent('language_change', {
-            event_category: 'App',
-            event_label: 'Language Change',
-            value: currentLanguage,
-            subsession_id: window.currentSubsessionId
-        });
+if (languageSelectCustom && languageOptions) {
+    languageSelectCustom.addEventListener('click', (event) => {
+        event.stopPropagation(); // Предотвращаем всплытие события
+        languageOptions.classList.toggle('hidden');
+    });
+
+    // Обработка выбора языка
+    languageOptions.addEventListener('click', (event) => {
+        const target = event.target.closest('li');
+        if (!target) return;
+        const newLanguage = target.dataset.value;
+        if (newLanguage && translations[newLanguage]) {
+            currentLanguage = newLanguage;
+            updateLanguage();
+            updateSelectedLanguage();
+            languageOptions.classList.add('hidden');
+            sendGtagEvent('language_change', {
+                event_category: 'App',
+                event_label: 'Language Change',
+                value: currentLanguage,
+                subsession_id: window.currentSubsessionId
+            });
+        }
+    });
+
+    // Закрытие списка при клике вне его
+    document.addEventListener('click', (event) => {
+        if (!languageSelectCustom.contains(event.target)) {
+            languageOptions.classList.add('hidden');
+        }
     });
 }
 
