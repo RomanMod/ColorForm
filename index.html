@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Cache-Control" content="no-store, must-revalidate">
-    <title>Намеренье или Виденье</title>
+    <title>Намір чи Бачення</title>
     <link rel="shortcut icon" type="image/x-icon" href="/ColorForm/favicon.ico">
     <link rel="stylesheet" href="style.css">
     <script async src="https://www.googletagmanager.com/gtag/js"></script>
@@ -31,92 +31,105 @@
         <div id="user-greeting">Порепетируем, <span id="telegram-user-name">Игрок</span>👁</div>
 
         <div id="menu-screen" class="game-screen">
-            <h1>Намеренье или Виденье</h1>
+            <h1>Намір чи Бачення</h1>
             <div class="menu-buttons">
-                <button id="btn-start-intention" class="large-btn" aria-label="Начать игру Намеренье">Играть в Намеренье</button>
-                <button id="btn-start-vision" class="large-btn" aria-label="Начать игру Виденье">Играть в Виденье</button>
+                <button id="btn-start-intention" class="large-btn" aria-label="Грати в Намір">Грати в Намір</button>
+                <button id="btn-start-vision" class="large-btn" aria-label="Грати в Бачення">Грати в Бачення</button>
             </div>
-            <div class="read-more-container">
-                <button id="btn-read-more" class="small-btn" aria-label="Прочитать описание игр">Прочти</button>
+            <div class="menu-controls">
+                <button id="theme-toggle-btn" class="small-btn" aria-label="Переключити тему">
+                    <span id="theme-icon">🌙</span> День/Ніч
+                </button>
+                <div class="language-select-container">
+                    <label for="language-select" class="hidden">Оберіть мову</label>
+                    <select id="language-select" aria-label="Оберіть мову">
+                        <option value="ru">Русский</option>
+                        <option value="uk" selected>Українська</option>
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="alien">👽</option>
+                    </select>
+                </div>
+                <button id="btn-read-more" class="small-btn" aria-label="Прочитати опис ігор">Прочитай</button>
             </div>
             <div id="read-more-area" class="hidden">
-                <h3>Отличие Намеренья и Виденья</h3>
-                <p>В игре «Виденье» за черным экраном находится объект. Сначала перемешайте объекты, нажав на черный экран. Через три секунды перемешивание останавливается. Задача — в воображении увидеть, что скрыто за ширмой, и нажать соответствующую кнопку. Перед выбором обязательно перемешивайте объекты.</p>
-                <p>В игре «Намеренье» за черным экраном происходит циклический перебор объектов. Задача — в воображении зафиксировать объект и нажать на черный экран или кнопку «Показать». В этот момент цикл останавливается. Показанный объект может совпасть с вашим внутренним взором.</p>
-                <button id="btn-close-read-more" class="small-btn" aria-label="Закрыть описание">Закрыть</button>
+                <h3>Відмінність Наміру та Бачення</h3>
+                <p>У грі «Бачення» за чорним екраном знаходиться об’єкт. Спочатку перемішайте об’єкти, натиснувши на чорний екран. Через три секунди перемішування зупиняється. Завдання — уявити, що приховано за ширмою, і натиснути відповідну кнопку. Перед вибором обов’язково перемішуйте об’єкти.</p>
+                <p>У грі «Намір» за чорним екраном відбувається циклічний перегляд об’єктів. Завдання — уявити об’єкт і натиснути на чорний екран або кнопку «Показати». У цей момент цикл зупиняється. Показаний об’єкт може збігтися з вашим внутрішнім баченням.</p>
+                <button id="btn-close-read-more" class="small-btn" aria-label="Закрити опис">Закрити</button>
             </div>
         </div>
 
         <div id="game-intention" class="game-screen hidden">
-            <h2>Намеренье</h2>
-            <button id="intention-new-game-btn" class="new-game-btn hidden" aria-label="Начать новую игру Намеренье">Новая игра</button>
+            <h2>Намір</h2>
+            <button id="intention-new-game-btn" class="new-game-btn hidden" aria-label="Нова гра Намір">Нова гра</button>
             <div class="controls">
                 <div class="mode-select">
-                    <label for="intention-mode-color"><input type="radio" id="intention-mode-color" name="intention-mode" value="color" checked> Цвет</label>
-                    <label for="intention-mode-shape"><input type="radio" id="intention-mode-shape" name="intention-mode" value="shape"> Фигура</label>
+                    <label for="intention-mode-color"><input type="radio" id="intention-mode-color" name="intention-mode" value="color" checked> Колір</label>
+                    <label for="intention-mode-shape"><input type="radio" id="intention-mode-shape" name="intention-mode" value="shape"> Фігура</label>
                 </div>
                 <div class="attempts-mode" id="intention-attempts-mode">
-                    <label for="intention-attempts-limited"><input type="radio" id="intention-attempts-limited" name="intention-attempts-mode" value="limited" checked> 10 попыток</label>
-                    <label for="intention-attempts-unlimited"><input type="radio" id="intention-attempts-unlimited" name="intention-attempts-mode" value="unlimited"> Безлимит</label>
+                    <label for="intention-attempts-limited"><input type="radio" id="intention-attempts-limited" name="intention-attempts-mode" value="limited" checked> 10 спроб</label>
+                    <label for="intention-attempts-unlimited"><input type="radio" id="intention-attempts-unlimited" name="intention-attempts-mode" value="unlimited"> Безліміт</label>
                 </div>
             </div>
             <div class="display" id="intention-display">
                 <div class="result-display" id="intention-result"></div>
             </div>
             <div class="action-btn">
-                <button id="intention-show-btn" class="small-btn" aria-label="Показать результат">Показать</button>
+                <button id="intention-show-btn" class="small-btn" aria-label="Показати результат">Показати</button>
             </div>
             <div id="intention-stats">
-                <p>Попытки: <span id="intention-stats-attempts">0</span>/<span id="intention-stats-max-attempts">10</span></p>
-                <p>Успехи: <span id="intention-stats-successes">0</span></p>
-                <p>Неудачи: <span id="intention-stats-failures">0</span></p>
-                <p>Процент успеха: <span id="intention-stats-success-rate">0%</span></p>
-                <p>Среднее время: <span id="intention-stats-avg-time">0с</span></p>
+                <p>Спроби: <span id="intention-stats-attempts">0</span>/<span id="intention-stats-max-attempts">10</span></p>
+                <p>Успіхи: <span id="intention-stats-successes">0</span></p>
+                <p>Невдачі: <span id="intention-stats-failures">0</span></p>
+                <p>Відсоток успіху: <span id="intention-stats-success-rate">0%</span></p>
+                <p>Середній час: <span id="intention-stats-avg-time">0с</span></p>
             </div>
-            <button class="back-btn" aria-label="Вернуться в меню">На сейчас достаточно</button>
+            <button class="back-btn" aria-label="Повернутися в меню">Наразі досить</button>
         </div>
 
         <div id="game-vision" class="game-screen hidden">
-            <h2>Виденье</h2>
-            <button id="vision-new-game-btn" class="new-game-btn hidden" aria-label="Начать новую игру Виденье">Новая игра</button>
+            <h2>Бачення</h2>
+            <button id="vision-new-game-btn" class="new-game-btn hidden" aria-label="Нова гра Бачення">Нова гра</button>
             <div class="controls">
                 <div class="mode-select">
-                    <label for="vision-mode-color"><input type="radio" id="vision-mode-color" name="vision-mode" value="color" checked> Цвет</label>
-                    <label for="vision-mode-shape"><input type="radio" id="vision-mode-shape" name="vision-mode" value="shape"> Фигура</label>
+                    <label for="vision-mode-color"><input type="radio" id="vision-mode-color" name="vision-mode" value="color" checked> Колір</label>
+                    <label for="vision-mode-shape"><input type="radio" id="vision-mode-shape" name="vision-mode" value="shape"> Фігура</label>
                 </div>
                 <div class="attempts-mode" id="vision-attempts-mode">
-                    <label for="vision-attempts-limited"><input type="radio" id="vision-attempts-limited" name="vision-attempts-mode" value="limited" checked> 10 попыток</label>
-                    <label for="vision-attempts-unlimited"><input type="radio" id="vision-attempts-unlimited" name="vision-attempts-mode" value="unlimited"> Безлимит</label>
+                    <label for="vision-attempts-limited"><input type="radio" id="vision-attempts-limited" name="vision-attempts-mode" value="limited" checked> 10 спроб</label>
+                    <label for="vision-attempts-unlimited"><input type="radio" id="vision-attempts-unlimited" name="vision-attempts-mode" value="unlimited"> Безліміт</label>
                 </div>
             </div>
             <div class="display" id="vision-display">
                 <div class="result-display" id="vision-result"></div>
             </div>
             <div class="action-btn">
-                <button id="vision-shuffle-btn" class="small-btn" aria-label="Перемешать объекты">Перемешать</button>
+                <button id="vision-shuffle-btn" class="small-btn" aria-label="Перемішати об’єкти">Перемішати</button>
             </div>
             <div id="vision-choices">
-                <button class="choice-btn color-btn" data-choice="red" aria-label="Выбрать красный цвет"></button>
-                <button class="choice-btn color-btn" data-choice="blue" aria-label="Выбрать синий цвет"></button>
-                <button class="choice-btn shape-btn hidden" data-choice="circle" aria-label="Выбрать круг">
+                <button class="choice-btn color-btn" data-choice="red" aria-label="Обрати червоний колір"></button>
+                <button class="choice-btn color-btn" data-choice="blue" aria-label="Обрати синій колір"></button>
+                <button class="choice-btn shape-btn hidden" data-choice="circle" aria-label="Обрати коло">
                     <svg width="100" height="100" viewBox="0 0 100 100">
                         <circle cx="50" cy="50" r="40"></circle>
                     </svg>
                 </button>
-                <button class="choice-btn shape-btn hidden" data-choice="triangle" aria-label="Выбрать треугольник">
+                <button class="choice-btn shape-btn hidden" data-choice="triangle" aria-label="Обрати трикутник">
                     <svg width="100" height="100" viewBox="0 0 100 100">
                         <polygon points="50,10 90,90 10,90"></polygon>
                     </svg>
                 </button>
             </div>
             <div id="vision-stats">
-                <p>Попытки: <span id="stats-attempts">0</span>/<span id="stats-max-attempts">10</span></p>
-                <p>Успехи: <span id="stats-successes">0</span></p>
-                <p>Неудачи: <span id="stats-failures">0</span></p>
-                <p>Процент успеха: <span id="stats-success-rate">0%</span></p>
-                <p>Среднее время: <span id="stats-avg-time">0с</span></p>
+                <p>Спроби: <span id="stats-attempts">0</span>/<span id="stats-max-attempts">10</span></p>
+                <p>Успіхи: <span id="stats-successes">0</span></p>
+                <p>Невдачі: <span id="stats-failures">0</span></p>
+                <p>Відсоток успіху: <span id="stats-success-rate">0%</span></p>
+                <p>Середній час: <span id="stats-avg-time">0с</span></p>
             </div>
-            <button class="back-btn" aria-label="Вернуться в меню">На сейчас достаточно</button>
+            <button class="back-btn" aria-label="Повернутися в меню">Наразі досить</button>
         </div>
     </div>
     <script src="script.js" defer></script>
