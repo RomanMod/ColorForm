@@ -265,11 +265,23 @@ button:focus-visible {
 
 .menu-controls {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
     margin-top: 15px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#theme-toggle-btn {
+    margin-right: auto; /* Прижимает кнопку "День/Ночь" к левому краю */
+}
+
+.language-select-container {
+    margin: 0 auto; /* Центрирует выбор языка */
+}
+
+#btn-read-more {
+    margin-left: auto; /* Прижимает кнопку "Прочитай" к правому краю */
 }
 
 .language-select-container {
@@ -459,18 +471,6 @@ button:focus-visible {
     }
 }
 
-/* Переопределение стилей Telegram */
-body > #app {
-    margin: 0 auto !important;
-    width: 100% !important;
-    max-width: 600px !important;
-}
-
-body > #app .display {
-    margin: 0 auto !important;
-    width: 100% !important;
-}
-
 /* Адаптивность для маленьких экранов */
 @media screen and (max-width: 480px) {
     body {
@@ -535,10 +535,31 @@ body > #app .display {
         gap: 10px;
     }
 
+    .menu-controls {
+        flex-direction: column; /* Элементы располагаются вертикально */
+        align-items: center; /* Центрирование по горизонтали */
+        gap: 8px; /* Добавляем небольшой отступ между элементами */
+    }
+
+    #theme-toggle-btn,
+    .language-select-container,
+    #btn-read-more {
+        margin: 0; /* Убираем авто-отступы для вертикальной компоновки */
+        width: 100%; /* Элементы занимают полную ширину */
+        max-width: 200px; /* Ограничиваем максимальную ширину для кнопок */
+        box-sizing: border-box;
+    }
+
     #theme-toggle-btn {
-        padding: 6px 12px;
-        font-size: 0.8em;
-        min-height: 28px;
+        order: 1; /* "День/Ночь" остаётся первым */
+    }
+
+    .language-select-container {
+        order: 2; /* "Язык" в центре */
+    }
+
+    #btn-read-more {
+        order: 3; /* "Прочитай" последним */
     }
 
     #language-select {
@@ -570,10 +591,6 @@ body > #app .display {
 
     .mode-select, .attempts-mode {
         gap: 10px;
-    }
-
-    .menu-controls {
-        gap: 8px;
     }
 
     #read-more-area {
