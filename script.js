@@ -13,6 +13,388 @@ const INTENTION_FIXATION_DELAY_MIN = 0;
 const INTENTION_FIXATION_DELAY_MAX = 500;
 const SHOW_INTENTION_THROTTLE_MS = 500;
 
+// Объект с переводами
+const translations = {
+    ru: {
+        greeting: 'Порепетируем, {name}',
+        title: 'Намеренье или Виденье',
+        playIntention: 'Играть в Намеренье',
+        playVision: 'Играть в Виденье',
+        readMore: 'Прочти',
+        intentionTitle: 'Намеренье',
+        visionTitle: 'Виденье',
+        newGame: 'Новая игра',
+        showResult: 'Показать',
+        shuffle: 'Перемешать',
+        back: 'На сейчас достаточно',
+        readMoreTitle: 'Отличие Намеренья и Виденья',
+        readMoreText1: 'В игре «Виденье» за черным экраном находится объект. Сначала перемешайте объекты, нажав на черный экран. Через три секунды перемешивание останавливается. Задача — в воображении увидеть, что скрыто за ширмой, и нажать соответствующую кнопку. Перед выбором обязательно перемешивайте объекты.',
+        readMoreText2: 'В игре «Намеренье» за черным экраном происходит циклический перебор объектов. Задача — в воображении зафиксировать объект и нажать на черный экран или кнопку «Показать». В этот момент цикл останавливается. Показанный объект может совпасть с вашим внутренним взором.',
+        closeReadMore: 'Закрыть',
+        themeToggle: 'День/Ночь',
+        success: 'Угадал',
+        failure: 'Не угадал',
+        color: 'Цвет',
+        shape: 'Фигура',
+        limited: '10 попыток',
+        unlimited: 'Безлимит',
+        statsAttempts: 'Попытки',
+        statsSuccesses: 'Успехи',
+        statsFailures: 'Неудачи',
+        statsSuccessRate: 'Процент успеха',
+        statsAvgTime: 'Среднее время',
+        visionSuccess: 'Успех!',
+        visionFailure: 'Попробуй ещё!'
+    },
+    uk: {
+        greeting: 'Порепетируємо, {name}',
+        title: 'Намір чи Бачення',
+        playIntention: 'Грати в Намір',
+        playVision: 'Грати в Бачення',
+        readMore: 'Прочитай',
+        intentionTitle: 'Намір',
+        visionTitle: 'Бачення',
+        newGame: 'Нова гра',
+        showResult: 'Показати',
+        shuffle: 'Перемішати',
+        back: 'Наразі досить',
+        readMoreTitle: 'Відмінність Наміру та Бачення',
+        readMoreText1: 'У грі «Бачення» за чорним екраном знаходиться об’єкт. Спочатку перемішайте об’єкти, натиснувши на чорний екран. Через три секунди перемішування зупиняється. Завдання — уявити, що приховано за ширмою, і натиснути відповідну кнопку. Перед вибором обов’язково перемішуйте об’єкти.',
+        readMoreText2: 'У грі «Намір» за чорним екраном відбувається циклічний перегляд об’єктів. Завдання — уявити об’єкт і натиснути на чорний екран або кнопку «Показати». У цей момент цикл зупиняється. Показаний об’єкт може збігтися з вашим внутрішнім баченням.',
+        closeReadMore: 'Закрити',
+        themeToggle: 'День/Ніч',
+        success: 'Вгадав',
+        failure: 'Не вгадав',
+        color: 'Колір',
+        shape: 'Фігура',
+        limited: '10 спроб',
+        unlimited: 'Безліміт',
+        statsAttempts: 'Спроби',
+        statsSuccesses: 'Успіхи',
+        statsFailures: 'Невдачі',
+        statsSuccessRate: 'Відсоток успіху',
+        statsAvgTime: 'Середній час',
+        visionSuccess: 'Успіх!',
+        visionFailure: 'Спробуй ще!'
+    },
+    en: {
+        greeting: 'Let\'s practice, {name}',
+        title: 'Intention or Vision',
+        playIntention: 'Play Intention',
+        playVision: 'Play Vision',
+        readMore: 'Read More',
+        intentionTitle: 'Intention',
+        visionTitle: 'Vision',
+        newGame: 'New Game',
+        showResult: 'Show',
+        shuffle: 'Shuffle',
+        back: 'Enough for Now',
+        readMoreTitle: 'Difference Between Intention and Vision',
+        readMoreText1: 'In the "Vision" game, an object is hidden behind a black screen. First, shuffle the objects by clicking the black screen. After three seconds, the shuffling stops. Your task is to imagine what is hidden behind the screen and press the corresponding button. You must shuffle the objects before making a choice.',
+        readMoreText2: 'In the "Intention" game, objects are cycled behind a black screen. Your task is to mentally fixate on an object and click the black screen or the "Show" button. At that moment, the cycle stops. The revealed object may match your mental image.',
+        closeReadMore: 'Close',
+        themeToggle: 'Day/Night',
+        success: 'Guessed',
+        failure: 'Not Guessed',
+        color: 'Color',
+        shape: 'Shape',
+        limited: '10 Attempts',
+        unlimited: 'Unlimited',
+        statsAttempts: 'Attempts',
+        statsSuccesses: 'Successes',
+        statsFailures: 'Failures',
+        statsSuccessRate: 'Success Rate',
+        statsAvgTime: 'Average Time',
+        visionSuccess: 'Success!',
+        visionFailure: 'Try Again!'
+    },
+    es: {
+        greeting: 'Practiquemos, {name}',
+        title: 'Intención o Visión',
+        playIntention: 'Jugar a Intención',
+        playVision: 'Jugar a Visión',
+        readMore: 'Leer Más',
+        intentionTitle: 'Intención',
+        visionTitle: 'Visión',
+        newGame: 'Nuevo Juego',
+        showResult: 'Mostrar',
+        shuffle: 'Mezclar',
+        back: 'Suficiente por Ahora',
+        readMoreTitle: 'Diferencia entre Intención y Visión',
+        readMoreText1: 'En el juego "Visión", un objeto está oculto detrás de una pantalla negra. Primero, mezcla los objetos haciendo clic en la pantalla negra. Después de tres segundos, la mezcla se detiene. Tu tarea es imaginar qué está oculto detrás de la pantalla y presionar el botón correspondiente. Debes mezclar los objetos antes de elegir.',
+        readMoreText2: 'En el juego "Intención", los objetos se ciclan detrás de una pantalla negra. Tu tarea es fijar mentalmente un objeto y hacer clic en la pantalla negra o en el botón "Mostrar". En ese momento, el ciclo se detiene. El objeto revelado puede coincidir con tu imagen mental.',
+        closeReadMore: 'Cerrar',
+        themeToggle: 'Día/Noche',
+        success: 'Adivinado',
+        failure: 'No Adivinado',
+        color: 'Color',
+        shape: 'Forma',
+        limited: '10 Intentos',
+        unlimited: 'Ilimitado',
+        statsAttempts: 'Intentos',
+        statsSuccesses: 'Éxitos',
+        statsFailures: 'Fracasos',
+        statsSuccessRate: 'Tasa de Éxito',
+        statsAvgTime: 'Tiempo Promedio',
+        visionSuccess: '¡Éxito!',
+        visionFailure: '¡Intenta de Nuevo!'
+    },
+    alien: {
+        greeting: '⊸◈ {name}',
+        title: '△◈▷',
+        playIntention: '⊸◉',
+        playVision: '⊸◬',
+        readMore: '◇',
+        intentionTitle: '◉',
+        visionTitle: '◬',
+        newGame: '↺',
+        showResult: '◉',
+        shuffle: '↻',
+        back: '⟿',
+        readMoreTitle: '◉◬',
+        readMoreText1: '◬⊸|▥|⊹|↻▥→3⊸→⊹|⊹|◈▥→⊸|⊹|↻',
+        readMoreText2: '◉⊸|↺▥|⊹|◈⊸→▥/◉|⊹|⊹↺|⊹|▥=◈',
+        closeReadMore: '⊷',
+        themeToggle: '◍◌',
+        success: '⊸',
+        failure: '⊹',
+        color: '◼|⊹',
+        shape: '◻|⊹',
+        limited: '⊸⊸|⊹',
+        unlimited: '↺|⊹',
+        statsAttempts: '↺|⊹',
+        statsSuccesses: '⊸',
+        statsFailures: '⊹',
+        statsSuccessRate: '%⊸',
+        statsAvgTime: '⊸⊹',
+        visionSuccess: '⊸◬',
+        visionFailure: '↺◬'
+    }
+};
+
+// Текущий язык (по умолчанию украинский)
+let currentLanguage = 'uk';
+
+// Функция для обновления текста на странице
+function updateLanguage() {
+    const t = translations[currentLanguage] || translations['uk']; // Fallback на украинский
+    const userName = telegramUser ? telegramUser.first_name || 'Игрок' : 'Игрок';
+
+    // Обновление приветствия
+    const greetingElement = document.getElementById('user-greeting');
+    if (greetingElement && t.greeting) {
+        greetingElement.innerHTML = t.greeting.replace('{name}', `<span id="telegram-user-name">${userName}</span>👁`);
+    } else {
+        console.warn('Greeting element or translation missing for language:', currentLanguage);
+    }
+
+    // Обновление заголовка
+    const titleElement = document.querySelector('#menu-screen h1');
+    if (titleElement && t.title) {
+        titleElement.textContent = t.title;
+    } else {
+        console.warn('Title element or translation missing for language:', currentLanguage);
+    }
+
+    // Обновление кнопки "Играть в Намеренье"
+    const btnStartIntention = document.getElementById('btn-start-intention');
+    if (btnStartIntention && t.playIntention) {
+        btnStartIntention.textContent = t.playIntention;
+        btnStartIntention.setAttribute('aria-label', t.playIntention);
+    } else {
+        console.warn('btn-start-intention element or translation missing for language:', currentLanguage);
+    }
+
+    // Обновление кнопки "Играть в Виденье"
+    const btnStartVision = document.getElementById('btn-start-vision');
+    if (btnStartVision && t.playVision) {
+        btnStartVision.textContent = t.playVision;
+        btnStartVision.setAttribute('aria-label', t.playVision);
+    } else {
+        console.warn('btn-start-vision element or translation missing for language:', currentLanguage);
+    }
+
+    // Обновление кнопки "Прочти"
+    const btnReadMore = document.getElementById('btn-read-more');
+    if (btnReadMore && t.readMore) {
+        btnReadMore.textContent = t.readMore;
+        btnReadMore.setAttribute('aria-label', t.readMore);
+    } else {
+        console.warn('btn-read-more element or translation missing for language:', currentLanguage);
+    }
+
+    // Обновление заголовков игр
+    const intentionTitleElement = document.getElementById('game-intention')?.querySelector('h2');
+    if (intentionTitleElement && t.intentionTitle) {
+        intentionTitleElement.textContent = t.intentionTitle;
+    }
+
+    const visionTitleElement = document.getElementById('game-vision')?.querySelector('h2');
+    if (visionTitleElement && t.visionTitle) {
+        visionTitleElement.textContent = t.visionTitle;
+    }
+
+    // Обновление кнопок "Новая игра"
+    const intentionNewGameBtn = document.getElementById('intention-new-game-btn');
+    if (intentionNewGameBtn && t.newGame) {
+        intentionNewGameBtn.textContent = t.newGame;
+        intentionNewGameBtn.setAttribute('aria-label', `${t.newGame} Намір`);
+    }
+
+    const visionNewGameBtn = document.getElementById('vision-new-game-btn');
+    if (visionNewGameBtn && t.newGame) {
+        visionNewGameBtn.textContent = t.newGame;
+        visionNewGameBtn.setAttribute('aria-label', `${t.newGame} Бачення`);
+    }
+
+    // Обновление кнопки "Показать" для Intention
+    const intentionShowBtn = document.getElementById('intention-show-btn');
+    if (intentionShowBtn && t.showResult) {
+        intentionShowBtn.textContent = t.showResult;
+        intentionShowBtn.setAttribute('aria-label', t.showResult);
+    }
+
+    // Обновление кнопки "Перемешать" для Vision
+    const visionShuffleBtn = document.getElementById('vision-shuffle-btn');
+    if (visionShuffleBtn && t.shuffle) {
+        visionShuffleBtn.textContent = t.shuffle;
+        visionShuffleBtn.setAttribute('aria-label', t.shuffle);
+    }
+
+    // Обновление кнопок "Назад"
+    document.querySelectorAll('.back-btn').forEach(btn => {
+        if (t.back) {
+            btn.textContent = t.back;
+            btn.setAttribute('aria-label', t.back);
+        }
+    });
+
+    // Обновление области "Прочти"
+    const readMoreArea = document.getElementById('read-more-area');
+    if (readMoreArea && t.readMoreTitle && t.readMoreText1 && t.readMoreText2) {
+        readMoreArea.querySelector('h3').textContent = t.readMoreTitle;
+        readMoreArea.querySelectorAll('p')[0].textContent = t.readMoreText1;
+        readMoreArea.querySelectorAll('p')[1].textContent = t.readMoreText2;
+    }
+
+    // Обновление кнопки "Закрыть" для области "Прочти"
+    const btnCloseReadMore = document.getElementById('btn-close-read-more');
+    if (btnCloseReadMore && t.closeReadMore) {
+        btnCloseReadMore.textContent = t.closeReadMore;
+        btnCloseReadMore.setAttribute('aria-label', t.closeReadMore);
+    }
+
+    // Обновление кнопки переключения темы
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    if (themeToggleBtn && t.themeToggle) {
+        themeToggleBtn.querySelector('span').textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
+        themeToggleBtn.childNodes[2].textContent = t.themeToggle;
+        themeToggleBtn.setAttribute('aria-label', t.themeToggle);
+    }
+
+    // Обновление меток для режимов
+    const intentionColorLabel = document.querySelector('label[for="intention-mode-color"]');
+    if (intentionColorLabel && t.color) {
+        intentionColorLabel.childNodes[1].textContent = t.color;
+    }
+
+    const intentionShapeLabel = document.querySelector('label[for="intention-mode-shape"]');
+    if (intentionShapeLabel && t.shape) {
+        intentionShapeLabel.childNodes[1].textContent = t.shape;
+    }
+
+    const visionColorLabel = document.querySelector('label[for="vision-mode-color"]');
+    if (visionColorLabel && t.color) {
+        visionColorLabel.childNodes[1].textContent = t.color;
+    }
+
+    const visionShapeLabel = document.querySelector('label[for="vision-mode-shape"]');
+    if (visionShapeLabel && t.shape) {
+        visionShapeLabel.childNodes[1].textContent = t.shape;
+    }
+
+    const intentionLimitedLabel = document.querySelector('label[for="intention-attempts-limited"]');
+    if (intentionLimitedLabel && t.limited) {
+        intentionLimitedLabel.childNodes[1].textContent = t.limited;
+    }
+
+    const intentionUnlimitedLabel = document.querySelector('label[for="intention-attempts-unlimited"]');
+    if (intentionUnlimitedLabel && t.unlimited) {
+        intentionUnlimitedLabel.childNodes[1].textContent = t.unlimited;
+    }
+
+    const visionLimitedLabel = document.querySelector('label[for="vision-attempts-limited"]');
+    if (visionLimitedLabel && t.limited) {
+        visionLimitedLabel.childNodes[1].textContent = t.limited;
+    }
+
+    const visionUnlimitedLabel = document.querySelector('label[for="vision-attempts-unlimited"]');
+    if (visionUnlimitedLabel && t.unlimited) {
+        visionUnlimitedLabel.childNodes[1].textContent = t.unlimited;
+    }
+
+    // Обновление статистики
+    const intentionStats = document.querySelector('#intention-stats');
+    if (intentionStats && t.statsAttempts && t.statsSuccesses && t.statsFailures && t.statsSuccessRate && t.statsAvgTime) {
+        intentionStats.querySelector('p:nth-child(1)').childNodes[0].textContent = `${t.statsAttempts}: `;
+        intentionStats.querySelector('p:nth-child(2)').childNodes[0].textContent = `${t.statsSuccesses}: `;
+        intentionStats.querySelector('p:nth-child(3)').childNodes[0].textContent = `${t.statsFailures}: `;
+        intentionStats.querySelector('p:nth-child(4)').childNodes[0].textContent = `${t.statsSuccessRate}: `;
+        intentionStats.querySelector('p:nth-child(5)').childNodes[0].textContent = `${t.statsAvgTime}: `;
+    }
+
+    const visionStats = document.querySelector('#vision-stats');
+    if (visionStats && t.statsAttempts && t.statsSuccesses && t.statsFailures && t.statsSuccessRate && t.statsAvgTime) {
+        visionStats.querySelector('p:nth-child(1)').childNodes[0].textContent = `${t.statsAttempts}: `;
+        visionStats.querySelector('p:nth-child(2)').childNodes[0].textContent = `${t.statsSuccesses}: `;
+        visionStats.querySelector('p:nth-child(3)').childNodes[0].textContent = `${t.statsFailures}: `;
+        visionStats.querySelector('p:nth-child(4)').childNodes[0].textContent = `${t.statsSuccessRate}: `;
+        visionStats.querySelector('p:nth-child(5)').childNodes[0].textContent = `${t.statsAvgTime}: `;
+    }
+
+    // Обновление кнопок обратной связи
+    feedbackButtonsTemplate.querySelectorAll('button')[0].textContent = t.success || 'Success';
+    feedbackButtonsTemplate.querySelectorAll('button')[1].textContent = t.failure || 'Failure';
+
+    // Обновление сообщения Vision
+    const visionMessage = document.querySelector('#vision-result p');
+    if (visionMessage && (visionMessage.textContent.includes('Успех') || visionMessage.textContent.includes('Успіх'))) {
+        visionMessage.textContent = t.visionSuccess || 'Success!';
+    } else if (visionMessage) {
+        visionMessage.textContent = t.visionFailure || 'Try Again!';
+    }
+
+    // Обновление aria-label для кнопок выбора
+    const colorBtnRed = document.querySelector('.color-btn[data-choice="red"]');
+    if (colorBtnRed && t.color) {
+        colorBtnRed.setAttribute('aria-label', `${t.color} Червоний`);
+    }
+
+    const colorBtnBlue = document.querySelector('.color-btn[data-choice="blue"]');
+    if (colorBtnBlue && t.color) {
+        colorBtnBlue.setAttribute('aria-label', `${t.color} Синій`);
+    }
+
+    const shapeBtnCircle = document.querySelector('.shape-btn[data-choice="circle"]');
+    if (shapeBtnCircle && t.shape) {
+        shapeBtnCircle.setAttribute('aria-label', `${t.shape} Коло`);
+    }
+
+    const shapeBtnTriangle = document.querySelector('.shape-btn[data-choice="triangle"]');
+    if (shapeBtnTriangle && t.shape) {
+        shapeBtnTriangle.setAttribute('aria-label', `${t.shape} Трикутник`);
+    }
+
+    // Управление классом alien-text
+    if (readMoreArea) {
+        if (currentLanguage === 'alien') {
+            readMoreArea.classList.add('alien-text');
+        } else {
+            readMoreArea.classList.remove('alien-text');
+        }
+    }
+}
+
 // Initialize sessionId, userId, and subsessionId
 window.sessionId = `${Date.now()}${Math.random().toString(36).slice(2)}`;
 window.userId = 'anonymous_' + Math.random().toString(36).slice(2, 9);
@@ -100,6 +482,8 @@ const visionStatsSpanAvgTime = document.getElementById('stats-avg-time');
 const visionModeRadios = document.querySelectorAll('input[name="vision-mode"]');
 const visionAttemptsModeRadios = document.querySelectorAll('input[name="vision-attempts-mode"]');
 const backButtons = document.querySelectorAll('.back-btn');
+const themeToggleBtn = document.getElementById('theme-toggle-btn');
+const languageSelect = document.getElementById('language-select');
 
 // Check critical DOM elements
 if (!appDiv || !menuScreen || !gameIntention || !gameVision) {
@@ -120,10 +504,10 @@ cachedElements.colorBlock.style.height = '100%';
 const feedbackButtonsTemplate = document.createElement('div');
 feedbackButtonsTemplate.className = 'feedback-buttons';
 const successBtnTemplate = document.createElement('button');
-successBtnTemplate.textContent = 'Угадал';
+successBtnTemplate.textContent = translations[currentLanguage].success;
 successBtnTemplate.className = 'small-btn';
 const failureBtnTemplate = document.createElement('button');
-failureBtnTemplate.textContent = 'Не угадал';
+failureBtnTemplate.textContent = translations[currentLanguage].failure;
 failureBtnTemplate.className = 'small-btn';
 feedbackButtonsTemplate.appendChild(successBtnTemplate);
 feedbackButtonsTemplate.appendChild(failureBtnTemplate);
@@ -294,7 +678,7 @@ function showScreen(screenId) {
         sendSessionSummary();
         if (menuScreen) menuScreen.classList.remove('hidden');
         currentGameMode = 'menu';
-        gameStartTime = null; // Сбрасываем gameStartTime
+        gameStartTime = null;
         Telegram.WebApp.MainButton.hide();
         if (readMoreArea) readMoreArea.classList.add('hidden');
         if (btnReadMore) btnReadMore.classList.remove('hidden');
@@ -329,7 +713,7 @@ function showScreen(screenId) {
         if (visionResultDisplay) visionResultDisplay.style.backgroundColor = 'transparent';
         visionCurrentResult = null;
         choiceButtonsEnabledTime = null;
-        generateSubsessionId(); // Generate new subsession_id for Vision
+        generateSubsessionId();
     }
 }
 
@@ -379,8 +763,8 @@ function resetIntentionGame() {
     intentionAttempts.length = 0;
     intentionAttemptStartTime = null;
     intentionRandomizerCount = 0;
-    gameStartTime = null; // Сбрасываем gameStartTime
-    generateSubsessionId(); // Generate new subsession_id
+    gameStartTime = null;
+    generateSubsessionId();
     sentRandomizerStartEvents.clear();
     stopIntentionGame();
     startIntentionGame('resetIntentionGame');
@@ -403,7 +787,7 @@ function resetVisionGame() {
     visionGuessSequence = [];
     visionAttempts.length = 0;
     stopVisionGame();
-    generateSubsessionId(); // Generate new subsession_id
+    generateSubsessionId();
     updateVisionStatsDisplay();
     if (visionShuffleBtn) visionShuffleBtn.disabled = false;
     if (visionNewGameBtn) visionNewGameBtn.classList.add('hidden');
@@ -813,7 +1197,7 @@ function handleVisionChoice(event) {
     if (visionMode === 'color' && visionResultDisplay) {
         visionResultDisplay.style.backgroundColor = visionCurrentResult;
         let messageText = document.createElement('p');
-        messageText.textContent = isCorrect ? `Успех!` : `Попробуй ещё!`;
+        messageText.textContent = isCorrect ? translations[currentLanguage].visionSuccess : translations[currentLanguage].visionFailure;
         messageText.style.color = 'white';
         messageText.style.textShadow = '1px 1px 3px rgba(0,0,0,0.5)';
         visionResultDisplay.appendChild(messageText);
@@ -826,7 +1210,7 @@ function handleVisionChoice(event) {
         const svg = visionCurrentResult === 'circle' ? cachedElements.svgCircle : cachedElements.svgTriangle;
         feedbackContent.appendChild(svg.cloneNode(true));
         const messageText = document.createElement('p');
-        messageText.textContent = isCorrect ? `Успех!` : `Попробуй ещё!`;
+        messageText.textContent = isCorrect ? translations[currentLanguage].visionSuccess : translations[currentLanguage].visionFailure;
         messageText.style.color = 'black';
         feedbackContent.appendChild(messageText);
         visionResultDisplay.appendChild(feedbackContent);
@@ -848,7 +1232,7 @@ function handleVisionChoice(event) {
             }
             if (visionNewGameBtn) visionNewGameBtn.classList.remove('hidden');
         } else {
-            if (visionShuffleBtn) visionShuffleBtn.disabled = false;
+            if (visionShuffleBtn) visionShuffleBtn.disabledmeteorology = false;
         }
     }, 2500);
 }
@@ -874,6 +1258,38 @@ function updateVisionChoicesDisplay() {
     } else {
         if (visionShapeChoiceBtns) visionShapeChoiceBtns.forEach(btn => btn.classList.remove('hidden'));
     }
+}
+
+// Theme toggle functionality
+function toggleTheme() {
+    document.body.classList.toggle('light-theme');
+    const themeIcon = document.getElementById('theme-icon');
+    if (themeIcon) themeIcon.textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
+    updateLanguage(); // Обновляем текст кнопки темы
+    sendGtagEvent('theme_change', {
+        event_category: 'App',
+        event_label: 'Theme Toggle',
+        value: document.body.classList.contains('light-theme') ? 'light' : 'dark',
+        subsession_id: window.currentSubsessionId
+    });
+}
+
+// Event listeners
+if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', toggleTheme);
+}
+
+if (languageSelect) {
+    languageSelect.addEventListener('change', (event) => {
+        currentLanguage = event.target.value;
+        updateLanguage();
+        sendGtagEvent('language_change', {
+            event_category: 'App',
+            event_label: 'Language Change',
+            value: currentLanguage,
+            subsession_id: window.currentSubsessionId
+        });
+    });
 }
 
 if (btnStartIntention) {
@@ -1042,7 +1458,7 @@ if (visionModeRadios) {
                 sendSessionSummary();
             }
             visionMode = event.target.value;
-            generateSubsessionId(); // Generate new subsession_id for mode change
+            generateSubsessionId();
             sendGtagEvent('mode_change', {
                 event_category: 'Game',
                 event_label: 'Vision Mode',
@@ -1134,42 +1550,46 @@ Telegram.WebApp.MainButton.onClick(() => {
     Telegram.WebApp.close();
 });
 
-try {
-    Telegram.WebApp.ready();
-    Telegram.WebApp.expand();
-    if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
-        telegramUser = Telegram.WebApp.initDataUnsafe.user;
-        window.userId = telegramUser.id;
-        if (userNameSpan) userNameSpan.textContent = telegramUser.first_name || 'Игрок';
-        logDebug('Telegram User:', { id: telegramUser.id, first_name: telegramUser.first_name });
-        gtag('set', 'user_properties', { custom_user_id: telegramUser.id });
-        sendGtagEvent('app_launch', {
-            event_category: 'App',
-            event_label: 'Mini App Started',
-            start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none',
-            subsession_id: window.currentSubsessionId
-        });
-    } else {
+// Инициализация
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+        if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
+            telegramUser = Telegram.WebApp.initDataUnsafe.user;
+            window.userId = telegramUser.id;
+            if (userNameSpan) userNameSpan.textContent = telegramUser.first_name || 'Игрок';
+            logDebug('Telegram User:', { id: telegramUser.id, first_name: telegramUser.first_name });
+            gtag('set', 'user_properties', { custom_user_id: telegramUser.id });
+            sendGtagEvent('app_launch', {
+                event_category: 'App',
+                event_label: 'Mini App Started',
+                start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none',
+                subsession_id: window.currentSubsessionId
+            });
+        } else {
+            telegramUser = { id: window.userId, first_name: 'Игрок' };
+            if (userNameSpan) userNameSpan.textContent = telegramUser.first_name;
+            logDebug('Anonymous User:', { id: window.userId });
+            gtag('set', 'user_properties', { custom_user_id: window.userId });
+            sendGtagEvent('app_launch', {
+                event_category: 'App',
+                event_label: 'Mini App Started (No User)',
+                start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none',
+                subsession_id: window.currentSubsessionId
+            });
+        }
+    } catch (e) {
+        console.warn('Telegram WebApp not available, using anonymous user');
         telegramUser = { id: window.userId, first_name: 'Игрок' };
         if (userNameSpan) userNameSpan.textContent = telegramUser.first_name;
-        logDebug('Anonymous User:', { id: window.userId });
-        gtag('set', 'user_properties', { custom_user_id: window.userId });
-        sendGtagEvent('app_launch', {
-            event_category: 'App',
-            event_label: 'Mini App Started (No User)',
-            start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none',
-            subsession_id: window.currentSubsessionId
-        });
     }
-} catch (e) {
-    console.warn('Telegram WebApp not available, using anonymous user');
-    telegramUser = { id: window.userId, first_name: 'Игрок' };
-    if (userNameSpan) userNameSpan.textContent = telegramUser.first_name;
-}
 
-logDebug('Initialization completed, calling sendSavedStats and showScreen');
-sendSavedStats();
-showScreen('menu-screen');
+    updateLanguage();
+    logDebug('Initialization completed, calling sendSavedStats and showScreen');
+    sendSavedStats();
+    showScreen('menu-screen');
+});
 
 Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
     if (!isStateStable && !Telegram.WebApp.isExpanded() && gameStartTime && !sessionSummarySent) {
