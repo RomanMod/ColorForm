@@ -16,7 +16,6 @@ const SHOW_INTENTION_THROTTLE_MS = 500;
 // Объект с переводами
 const translations = {
     ru: {
-        greeting: 'Порепетируем, {name}',
         title: 'Намеренье или Виденье',
         playIntention: 'Играть в Намеренье',
         playVision: 'Играть в Виденье',
@@ -44,10 +43,11 @@ const translations = {
         statsSuccessRate: 'Процент успеха',
         statsAvgTime: 'Среднее время',
         visionSuccess: 'Успех!',
-        visionFailure: 'Попробуй ещё!'
+        visionFailure: 'Попробуй ещё!',
+        greeting: 'Порепетируем',
+        defaultUserName: 'Игрок'
     },
     uk: {
-        greeting: 'Порепетируємо, {name}',
         title: 'Намір чи Бачення',
         playIntention: 'Грати в Намір',
         playVision: 'Грати в Бачення',
@@ -75,10 +75,11 @@ const translations = {
         statsSuccessRate: 'Відсоток успіху',
         statsAvgTime: 'Середній час',
         visionSuccess: 'Успіх!',
-        visionFailure: 'Спробуй ще!'
+        visionFailure: 'Спробуй ще!',
+        greeting: 'Порепетируємо',
+        defaultUserName: 'Гравець'
     },
     en: {
-        greeting: 'Let\'s practice, {name}',
         title: 'Intention or Vision',
         playIntention: 'Play Intention',
         playVision: 'Play Vision',
@@ -106,10 +107,11 @@ const translations = {
         statsSuccessRate: 'Success Rate',
         statsAvgTime: 'Average Time',
         visionSuccess: 'Success!',
-        visionFailure: 'Try Again!'
+        visionFailure: 'Try Again!',
+        greeting: 'Let\'s practice',
+        defaultUserName: 'Player'
     },
     es: {
-        greeting: 'Practiquemos, {name}',
         title: 'Intención o Visión',
         playIntention: 'Jugar a Intención',
         playVision: 'Jugar a Visión',
@@ -137,10 +139,11 @@ const translations = {
         statsSuccessRate: 'Tasa de Éxito',
         statsAvgTime: 'Tiempo Promedio',
         visionSuccess: '¡Éxito!',
-        visionFailure: '¡Intenta de Nuevo!'
+        visionFailure: '¡Intenta de Nuevo!',
+        greeting: 'Practiquemos',
+        defaultUserName: 'Jugador'
     },
     alien: {
-        greeting: '⊸◈ {name}',
         title: '△◈▷',
         playIntention: '⊸◉',
         playVision: '⊸◬',
@@ -168,7 +171,9 @@ const translations = {
         statsSuccessRate: '%⊸',
         statsAvgTime: '⊸⊹',
         visionSuccess: '⊸◬',
-        visionFailure: '↺◬'
+        visionFailure: '↺◬',
+        greeting: '⊸◇',
+        defaultUserName: '⊸Игрок⊹'
     }
 };
 
@@ -177,221 +182,82 @@ let currentLanguage = 'uk';
 
 // Функция для обновления текста на странице
 function updateLanguage() {
-    const t = translations[currentLanguage] || translations['uk']; // Fallback на украинский
-    const userName = telegramUser ? telegramUser.first_name || 'Игрок' : 'Игрок';
-
-    // Обновление приветствия
-    const greetingElement = document.getElementById('user-greeting');
-    if (greetingElement && t.greeting) {
-        greetingElement.innerHTML = t.greeting.replace('{name}', `<span id="telegram-user-name">${userName}</span>👁`);
-    } else {
-        console.warn('Greeting element or translation missing for language:', currentLanguage);
-    }
-
-    // Обновление заголовка
-    const titleElement = document.querySelector('#menu-screen h1');
-    if (titleElement && t.title) {
-        titleElement.textContent = t.title;
-    } else {
-        console.warn('Title element or translation missing for language:', currentLanguage);
-    }
-
-    // Обновление кнопки "Играть в Намеренье"
-    const btnStartIntention = document.getElementById('btn-start-intention');
-    if (btnStartIntention && t.playIntention) {
-        btnStartIntention.textContent = t.playIntention;
-        btnStartIntention.setAttribute('aria-label', t.playIntention);
-    } else {
-        console.warn('btn-start-intention element or translation missing for language:', currentLanguage);
-    }
-
-    // Обновление кнопки "Играть в Виденье"
-    const btnStartVision = document.getElementById('btn-start-vision');
-    if (btnStartVision && t.playVision) {
-        btnStartVision.textContent = t.playVision;
-        btnStartVision.setAttribute('aria-label', t.playVision);
-    } else {
-        console.warn('btn-start-vision element or translation missing for language:', currentLanguage);
-    }
-
-    // Обновление кнопки "Прочти"
-    const btnReadMore = document.getElementById('btn-read-more');
-    if (btnReadMore && t.readMore) {
-        btnReadMore.textContent = t.readMore;
-        btnReadMore.setAttribute('aria-label', t.readMore);
-    } else {
-        console.warn('btn-read-more element or translation missing for language:', currentLanguage);
-    }
-
-    // Обновление заголовков игр
-    const intentionTitleElement = document.getElementById('game-intention')?.querySelector('h2');
-    if (intentionTitleElement && t.intentionTitle) {
-        intentionTitleElement.textContent = t.intentionTitle;
-    }
-
-    const visionTitleElement = document.getElementById('game-vision')?.querySelector('h2');
-    if (visionTitleElement && t.visionTitle) {
-        visionTitleElement.textContent = t.visionTitle;
-    }
-
-    // Обновление кнопок "Новая игра"
-    const intentionNewGameBtn = document.getElementById('intention-new-game-btn');
-    if (intentionNewGameBtn && t.newGame) {
-        intentionNewGameBtn.textContent = t.newGame;
-        intentionNewGameBtn.setAttribute('aria-label', `${t.newGame} Намір`);
-    }
-
-    const visionNewGameBtn = document.getElementById('vision-new-game-btn');
-    if (visionNewGameBtn && t.newGame) {
-        visionNewGameBtn.textContent = t.newGame;
-        visionNewGameBtn.setAttribute('aria-label', `${t.newGame} Бачення`);
-    }
-
-    // Обновление кнопки "Показать" для Intention
-    const intentionShowBtn = document.getElementById('intention-show-btn');
-    if (intentionShowBtn && t.showResult) {
-        intentionShowBtn.textContent = t.showResult;
-        intentionShowBtn.setAttribute('aria-label', t.showResult);
-    }
-
-    // Обновление кнопки "Перемешать" для Vision
-    const visionShuffleBtn = document.getElementById('vision-shuffle-btn');
-    if (visionShuffleBtn && t.shuffle) {
-        visionShuffleBtn.textContent = t.shuffle;
-        visionShuffleBtn.setAttribute('aria-label', t.shuffle);
-    }
-
-    // Обновление кнопок "Назад"
-    document.querySelectorAll('.back-btn').forEach(btn => {
-        if (t.back) {
-            btn.textContent = t.back;
-            btn.setAttribute('aria-label', t.back);
-        }
-    });
-
-    // Обновление области "Прочти"
+    const t = translations[currentLanguage];
+    document.querySelector('#menu-screen h1').textContent = t.title;
+    document.getElementById('btn-start-intention').textContent = t.playIntention;
+    document.getElementById('btn-start-vision').textContent = t.playVision;
+    document.getElementById('btn-read-more').textContent = t.readMore;
+    document.getElementById('game-intention').querySelector('h2').textContent = t.intentionTitle;
+    document.getElementById('game-vision').querySelector('h2').textContent = t.visionTitle;
+    document.getElementById('intention-new-game-btn').textContent = t.newGame;
+    document.getElementById('vision-new-game-btn').textContent = t.newGame;
+    document.getElementById('intention-show-btn').textContent = t.showResult;
+    document.getElementById('vision-shuffle-btn').textContent = t.shuffle;
+    document.querySelectorAll('.back-btn').forEach(btn => btn.textContent = t.back);
     const readMoreArea = document.getElementById('read-more-area');
-    if (readMoreArea && t.readMoreTitle && t.readMoreText1 && t.readMoreText2) {
-        readMoreArea.querySelector('h3').textContent = t.readMoreTitle;
-        readMoreArea.querySelectorAll('p')[0].textContent = t.readMoreText1;
-        readMoreArea.querySelectorAll('p')[1].textContent = t.readMoreText2;
-    }
-
-    // Обновление кнопки "Закрыть" для области "Прочти"
-    const btnCloseReadMore = document.getElementById('btn-close-read-more');
-    if (btnCloseReadMore && t.closeReadMore) {
-        btnCloseReadMore.textContent = t.closeReadMore;
-        btnCloseReadMore.setAttribute('aria-label', t.closeReadMore);
-    }
-
-    // Обновление кнопки переключения темы
-    const themeToggleBtn = document.getElementById('theme-toggle-btn');
-    if (themeToggleBtn && t.themeToggle) {
-        themeToggleBtn.querySelector('span').textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
-        themeToggleBtn.childNodes[2].textContent = t.themeToggle;
-        themeToggleBtn.setAttribute('aria-label', t.themeToggle);
-    }
-
-    // Обновление меток для режимов
-    const intentionColorLabel = document.querySelector('label[for="intention-mode-color"]');
-    if (intentionColorLabel && t.color) {
-        intentionColorLabel.childNodes[1].textContent = t.color;
-    }
-
-    const intentionShapeLabel = document.querySelector('label[for="intention-mode-shape"]');
-    if (intentionShapeLabel && t.shape) {
-        intentionShapeLabel.childNodes[1].textContent = t.shape;
-    }
-
-    const visionColorLabel = document.querySelector('label[for="vision-mode-color"]');
-    if (visionColorLabel && t.color) {
-        visionColorLabel.childNodes[1].textContent = t.color;
-    }
-
-    const visionShapeLabel = document.querySelector('label[for="vision-mode-shape"]');
-    if (visionShapeLabel && t.shape) {
-        visionShapeLabel.childNodes[1].textContent = t.shape;
-    }
-
-    const intentionLimitedLabel = document.querySelector('label[for="intention-attempts-limited"]');
-    if (intentionLimitedLabel && t.limited) {
-        intentionLimitedLabel.childNodes[1].textContent = t.limited;
-    }
-
-    const intentionUnlimitedLabel = document.querySelector('label[for="intention-attempts-unlimited"]');
-    if (intentionUnlimitedLabel && t.unlimited) {
-        intentionUnlimitedLabel.childNodes[1].textContent = t.unlimited;
-    }
-
-    const visionLimitedLabel = document.querySelector('label[for="vision-attempts-limited"]');
-    if (visionLimitedLabel && t.limited) {
-        visionLimitedLabel.childNodes[1].textContent = t.limited;
-    }
-
-    const visionUnlimitedLabel = document.querySelector('label[for="vision-attempts-unlimited"]');
-    if (visionUnlimitedLabel && t.unlimited) {
-        visionUnlimitedLabel.childNodes[1].textContent = t.unlimited;
-    }
-
-    // Обновление статистики
-    const intentionStats = document.querySelector('#intention-stats');
-    if (intentionStats && t.statsAttempts && t.statsSuccesses && t.statsFailures && t.statsSuccessRate && t.statsAvgTime) {
-        intentionStats.querySelector('p:nth-child(1)').childNodes[0].textContent = `${t.statsAttempts}: `;
-        intentionStats.querySelector('p:nth-child(2)').childNodes[0].textContent = `${t.statsSuccesses}: `;
-        intentionStats.querySelector('p:nth-child(3)').childNodes[0].textContent = `${t.statsFailures}: `;
-        intentionStats.querySelector('p:nth-child(4)').childNodes[0].textContent = `${t.statsSuccessRate}: `;
-        intentionStats.querySelector('p:nth-child(5)').childNodes[0].textContent = `${t.statsAvgTime}: `;
-    }
-
-    const visionStats = document.querySelector('#vision-stats');
-    if (visionStats && t.statsAttempts && t.statsSuccesses && t.statsFailures && t.statsSuccessRate && t.statsAvgTime) {
-        visionStats.querySelector('p:nth-child(1)').childNodes[0].textContent = `${t.statsAttempts}: `;
-        visionStats.querySelector('p:nth-child(2)').childNodes[0].textContent = `${t.statsSuccesses}: `;
-        visionStats.querySelector('p:nth-child(3)').childNodes[0].textContent = `${t.statsFailures}: `;
-        visionStats.querySelector('p:nth-child(4)').childNodes[0].textContent = `${t.statsSuccessRate}: `;
-        visionStats.querySelector('p:nth-child(5)').childNodes[0].textContent = `${t.statsAvgTime}: `;
-    }
-
-    // Обновление кнопок обратной связи
-    feedbackButtonsTemplate.querySelectorAll('button')[0].textContent = t.success || 'Success';
-    feedbackButtonsTemplate.querySelectorAll('button')[1].textContent = t.failure || 'Failure';
-
-    // Обновление сообщения Vision
+    readMoreArea.querySelector('h3').textContent = t.readMoreTitle;
+    readMoreArea.querySelectorAll('p')[0].textContent = t.readMoreText1;
+    readMoreArea.querySelectorAll('p')[1].textContent = t.readMoreText2;
+    document.getElementById('btn-close-read-more').textContent = t.closeReadMore;
+    document.getElementById('theme-toggle-btn').querySelector('span').textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
+    document.getElementById('theme-toggle-btn').childNodes[2].textContent = t.themeToggle;
+    document.querySelector('label[for="intention-mode-color"]').childNodes[1].textContent = t.color;
+    document.querySelector('label[for="intention-mode-shape"]').childNodes[1].textContent = t.shape;
+    document.querySelector('label[for="vision-mode-color"]').childNodes[1].textContent = t.color;
+    document.querySelector('label[for="vision-mode-shape"]').childNodes[1].textContent = t.shape;
+    document.querySelector('label[for="intention-attempts-limited"]').childNodes[1].textContent = t.limited;
+    document.querySelector('label[for="intention-attempts-unlimited"]').childNodes[1].textContent = t.unlimited;
+    document.querySelector('label[for="vision-attempts-limited"]').childNodes[1].textContent = t.limited;
+    document.querySelector('label[for="vision-attempts-unlimited"]').childNodes[1].textContent = t.unlimited;
+    document.querySelector('#intention-stats p:nth-child(1)').childNodes[0].textContent = `${t.statsAttempts}: `;
+    document.querySelector('#intention-stats p:nth-child(2)').childNodes[0].textContent = `${t.statsSuccesses}: `;
+    document.querySelector('#intention-stats p:nth-child(3)').childNodes[0].textContent = `${t.statsFailures}: `;
+    document.querySelector('#intention-stats p:nth-child(4)').childNodes[0].textContent = `${t.statsSuccessRate}: `;
+    document.querySelector('#intention-stats p:nth-child(5)').childNodes[0].textContent = `${t.statsAvgTime}: `;
+    document.querySelector('#vision-stats p:nth-child(1)').childNodes[0].textContent = `${t.statsAttempts}: `;
+    document.querySelector('#vision-stats p:nth-child(2)').childNodes[0].textContent = `${t.statsSuccesses}: `;
+    document.querySelector('#vision-stats p:nth-child(3)').childNodes[0].textContent = `${t.statsFailures}: `;
+    document.querySelector('#vision-stats p:nth-child(4)').childNodes[0].textContent = `${t.statsSuccessRate}: `;
+    document.querySelector('#vision-stats p:nth-child(5)').childNodes[0].textContent = `${t.statsAvgTime}: `;
+    feedbackButtonsTemplate.querySelectorAll('button')[0].textContent = t.success;
+    feedbackButtonsTemplate.querySelectorAll('button')[1].textContent = t.failure;
     const visionMessage = document.querySelector('#vision-result p');
-    if (visionMessage && (visionMessage.textContent.includes('Успех') || visionMessage.textContent.includes('Успіх'))) {
-        visionMessage.textContent = t.visionSuccess || 'Success!';
-    } else if (visionMessage) {
-        visionMessage.textContent = t.visionFailure || 'Try Again!';
+    if (visionMessage) {
+        visionMessage.textContent = visionMessage.textContent.includes('Успех') || visionMessage.textContent.includes('Успіх') ? t.visionSuccess : t.visionFailure;
     }
 
-    // Обновление aria-label для кнопок выбора
-    const colorBtnRed = document.querySelector('.color-btn[data-choice="red"]');
-    if (colorBtnRed && t.color) {
-        colorBtnRed.setAttribute('aria-label', `${t.color} Червоний`);
+    // Обновление приветственного сообщения
+    const userGreeting = document.getElementById('user-greeting');
+    if (userGreeting) {
+        userGreeting.childNodes[0].textContent = `${t.greeting}, `;
     }
 
-    const colorBtnBlue = document.querySelector('.color-btn[data-choice="blue"]');
-    if (colorBtnBlue && t.color) {
-        colorBtnBlue.setAttribute('aria-label', `${t.color} Синій`);
+    // Обновление имени по умолчанию, если пользователь не из Telegram
+    if (!telegramUser || !telegramUser.first_name) {
+        if (userNameSpan) userNameSpan.textContent = t.defaultUserName;
     }
 
-    const shapeBtnCircle = document.querySelector('.shape-btn[data-choice="circle"]');
-    if (shapeBtnCircle && t.shape) {
-        shapeBtnCircle.setAttribute('aria-label', `${t.shape} Коло`);
-    }
+    // Обновление aria-label
+    document.getElementById('btn-start-intention').setAttribute('aria-label', t.playIntention);
+    document.getElementById('btn-start-vision').setAttribute('aria-label', t.playVision);
+    document.getElementById('btn-read-more').setAttribute('aria-label', t.readMore);
+    document.getElementById('intention-new-game-btn').setAttribute('aria-label', `${t.newGame} Намір`);
+    document.getElementById('vision-new-game-btn').setAttribute('aria-label', `${t.newGame} Бачення`);
+    document.getElementById('intention-show-btn').setAttribute('aria-label', t.showResult);
+    document.getElementById('vision-shuffle-btn').setAttribute('aria-label', t.shuffle);
+    document.querySelectorAll('.back-btn').forEach(btn => btn.setAttribute('aria-label', t.back));
+    document.getElementById('btn-close-read-more').setAttribute('aria-label', t.closeReadMore);
+    document.getElementById('theme-toggle-btn').setAttribute('aria-label', t.themeToggle);
+    document.querySelector('.color-btn[data-choice="red"]').setAttribute('aria-label', `${t.color} Червоний`);
+    document.querySelector('.color-btn[data-choice="blue"]').setAttribute('aria-label', `${t.color} Синій`);
+    document.querySelector('.shape-btn[data-choice="circle"]').setAttribute('aria-label', `${t.shape} Коло`);
+    document.querySelector('.shape-btn[data-choice="triangle"]').setAttribute('aria-label', `${t.shape} Трикутник`);
 
-    const shapeBtnTriangle = document.querySelector('.shape-btn[data-choice="triangle"]');
-    if (shapeBtnTriangle && t.shape) {
-        shapeBtnTriangle.setAttribute('aria-label', `${t.shape} Трикутник`);
-    }
-
-    // Управление классом alien-text
-    if (readMoreArea) {
-        if (currentLanguage === 'alien') {
-            readMoreArea.classList.add('alien-text');
-        } else {
-            readMoreArea.classList.remove('alien-text');
-        }
+    // Добавляем/удаляем класс alien-text
+    if (currentLanguage === 'alien') {
+        readMoreArea.classList.add('alien-text');
+    } else {
+        readMoreArea.classList.remove('alien-text');
     }
 }
 
@@ -678,7 +544,7 @@ function showScreen(screenId) {
         sendSessionSummary();
         if (menuScreen) menuScreen.classList.remove('hidden');
         currentGameMode = 'menu';
-        gameStartTime = null;
+        gameStartTime = null; // Сбрасываем gameStartTime
         Telegram.WebApp.MainButton.hide();
         if (readMoreArea) readMoreArea.classList.add('hidden');
         if (btnReadMore) btnReadMore.classList.remove('hidden');
@@ -713,7 +579,7 @@ function showScreen(screenId) {
         if (visionResultDisplay) visionResultDisplay.style.backgroundColor = 'transparent';
         visionCurrentResult = null;
         choiceButtonsEnabledTime = null;
-        generateSubsessionId();
+        generateSubsessionId(); // Generate new subsession_id for Vision
     }
 }
 
@@ -763,8 +629,8 @@ function resetIntentionGame() {
     intentionAttempts.length = 0;
     intentionAttemptStartTime = null;
     intentionRandomizerCount = 0;
-    gameStartTime = null;
-    generateSubsessionId();
+    gameStartTime = null; // Сбрасываем gameStartTime
+    generateSubsessionId(); // Generate new subsession_id
     sentRandomizerStartEvents.clear();
     stopIntentionGame();
     startIntentionGame('resetIntentionGame');
@@ -787,7 +653,7 @@ function resetVisionGame() {
     visionGuessSequence = [];
     visionAttempts.length = 0;
     stopVisionGame();
-    generateSubsessionId();
+    generateSubsessionId(); // Generate new subsession_id
     updateVisionStatsDisplay();
     if (visionShuffleBtn) visionShuffleBtn.disabled = false;
     if (visionNewGameBtn) visionNewGameBtn.classList.add('hidden');
@@ -1232,7 +1098,7 @@ function handleVisionChoice(event) {
             }
             if (visionNewGameBtn) visionNewGameBtn.classList.remove('hidden');
         } else {
-            if (visionShuffleBtn) visionShuffleBtn.disabledmeteorology = false;
+            if (visionShuffleBtn) visionShuffleBtn.disabled = false;
         }
     }, 2500);
 }
@@ -1264,7 +1130,7 @@ function updateVisionChoicesDisplay() {
 function toggleTheme() {
     document.body.classList.toggle('light-theme');
     const themeIcon = document.getElementById('theme-icon');
-    if (themeIcon) themeIcon.textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
+    themeIcon.textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
     updateLanguage(); // Обновляем текст кнопки темы
     sendGtagEvent('theme_change', {
         event_category: 'App',
@@ -1458,7 +1324,7 @@ if (visionModeRadios) {
                 sendSessionSummary();
             }
             visionMode = event.target.value;
-            generateSubsessionId();
+            generateSubsessionId(); // Generate new subsession_id for mode change
             sendGtagEvent('mode_change', {
                 event_category: 'Game',
                 event_label: 'Vision Mode',
@@ -1550,46 +1416,44 @@ Telegram.WebApp.MainButton.onClick(() => {
     Telegram.WebApp.close();
 });
 
-// Инициализация
-document.addEventListener('DOMContentLoaded', () => {
-    try {
-        Telegram.WebApp.ready();
-        Telegram.WebApp.expand();
-        if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
-            telegramUser = Telegram.WebApp.initDataUnsafe.user;
-            window.userId = telegramUser.id;
-            if (userNameSpan) userNameSpan.textContent = telegramUser.first_name || 'Игрок';
-            logDebug('Telegram User:', { id: telegramUser.id, first_name: telegramUser.first_name });
-            gtag('set', 'user_properties', { custom_user_id: telegramUser.id });
-            sendGtagEvent('app_launch', {
-                event_category: 'App',
-                event_label: 'Mini App Started',
-                start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none',
-                subsession_id: window.currentSubsessionId
-            });
-        } else {
-            telegramUser = { id: window.userId, first_name: 'Игрок' };
-            if (userNameSpan) userNameSpan.textContent = telegramUser.first_name;
-            logDebug('Anonymous User:', { id: window.userId });
-            gtag('set', 'user_properties', { custom_user_id: window.userId });
-            sendGtagEvent('app_launch', {
-                event_category: 'App',
-                event_label: 'Mini App Started (No User)',
-                start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none',
-                subsession_id: window.currentSubsessionId
-            });
-        }
-    } catch (e) {
-        console.warn('Telegram WebApp not available, using anonymous user');
-        telegramUser = { id: window.userId, first_name: 'Игрок' };
+try {
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
+    if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
+        telegramUser = Telegram.WebApp.initDataUnsafe.user;
+        window.userId = telegramUser.id;
+        if (userNameSpan) userNameSpan.textContent = telegramUser.first_name || translations[currentLanguage].defaultUserName;
+        logDebug('Telegram User:', { id: telegramUser.id, first_name: telegramUser.first_name });
+        gtag('set', 'user_properties', { custom_user_id: telegramUser.id });
+        sendGtagEvent('app_launch', {
+            event_category: 'App',
+            event_label: 'Mini App Started',
+            start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none',
+            subsession_id: window.currentSubsessionId
+        });
+    } else {
+        telegramUser = { id: window.userId, first_name: translations[currentLanguage].defaultUserName };
         if (userNameSpan) userNameSpan.textContent = telegramUser.first_name;
+        logDebug('Anonymous User:', { id: window.userId });
+        gtag('set', 'user_properties', { custom_user_id: window.userId });
+        sendGtagEvent('app_launch', {
+            event_category: 'App',
+            event_label: 'Mini App Started (No User)',
+            start_param: Telegram.WebApp.initDataUnsafe.start_param || 'none',
+            subsession_id: window.currentSubsessionId
+        });
     }
+} catch (e) {
+    console.warn('Telegram WebApp not available, using anonymous user');
+    telegramUser = { id: window.userId, first_name: translations[currentLanguage].defaultUserName };
+    if (userNameSpan) userNameSpan.textContent = telegramUser.first_name;
+}
 
-    updateLanguage();
-    logDebug('Initialization completed, calling sendSavedStats and showScreen');
-    sendSavedStats();
-    showScreen('menu-screen');
-});
+// Инициализация языка и темы
+updateLanguage();
+logDebug('Initialization completed, calling sendSavedStats and showScreen');
+sendSavedStats();
+showScreen('menu-screen');
 
 Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
     if (!isStateStable && !Telegram.WebApp.isExpanded() && gameStartTime && !sessionSummarySent) {
