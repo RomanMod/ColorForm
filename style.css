@@ -467,17 +467,20 @@ body.alien-language #read-more-area button {
     font-size: calc(var(--alien-font-size) * 0.9);
 }
 
+
+
+
 #vision-choices {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap:35px; /* Увеличенный отступ между кнопками */
     margin-top: 15px;
 }
 
 .choice-btn {
-    width: 150px;
-    height: 150px;
-    border-radius: 8px;
+    width: 180px; /* Увеличенная ширина */
+    height: 180px; /* Увеличенная высота */
+    border-radius: 10px; /* Слегка увеличенный радиус для пропорций */
     padding: 0;
     display: flex;
     justify-content: center;
@@ -485,6 +488,10 @@ body.alien-language #read-more-area button {
     border: 2px solid var(--border-color);
     box-sizing: border-box;
 }
+
+
+
+
 
 .choice-btn:focus-visible {
     outline: 2px solid var(--blue-color);
@@ -505,10 +512,12 @@ body.alien-language #read-more-area button {
 }
 
 .shape-btn svg {
-    width: 90%;
-    height: 90%;
+    width: 95%; /* Увеличенный размер SVG */
+    height: 95%;
     fill: var(--result-text-color);
 }
+
+
 
 #vision-stats, #intention-stats {
     margin-top: 15px;
@@ -629,18 +638,18 @@ body.alien-language #intention-stats p span {
     }
 
     #vision-choices {
-        gap: 10px;
+        gap: 20px; /* Увеличенный отступ */
         flex-wrap: wrap;
     }
 
     .choice-btn {
-        width: 100px;
-        height: 100px;
+        width: 140px; /* Увеличенная ширина для мобильных */
+        height: 120px; /* Увеличенная высота для мобильных */
     }
 
     .shape-btn svg {
-        width: 85%;
-        height: 85%;
+        width: 90%; /* Увеличенный размер SVG для мобильных */
+        height: 90%;
     }
 
     button {
