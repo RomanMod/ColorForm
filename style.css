@@ -307,8 +307,54 @@ button:focus-visible {
     opacity: 0.6;
 }
 
-.menu-btn.language-btn.active {
+.language-toggle-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+#language-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 120px;
+    justify-content: center;
+}
+
+.language-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 100;
+    min-width: 120px;
+    margin: 4px 0 0;
+    padding: 8px 0;
+    background-color: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    list-style: none;
+}
+
+.language-menu.hidden {
+    display: none;
+}
+
+.language-option {
+    padding: 8px 15px;
+    font-size: 0.9em;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    text-align: center;
+}
+
+.language-option:hover,
+.language-option.active {
     background-color: var(--button-hover-bg-color);
+}
+
+.language-option.active {
     font-weight: bold;
 }
 
@@ -546,12 +592,30 @@ button:focus-visible {
         max-width: 160px;
     }
 
-    .menu-btn[data-lang="uk"] {
-        font-size: 0.75em;
+    .language-toggle-wrapper {
+        width: 100%;
+        max-width: 160px;
     }
 
-    .menu-btn[data-lang="alien"] {
-        font-size: 1em;
+    #language-toggle-btn {
+        width: 100%;
+        max-width: 160px;
+        font-size: 0.8em;
+        padding: 6px 12px;
+        min-height: 28px;
+    }
+
+    .language-menu {
+        width: 100%;
+        min-width: 100%;
+        max-width: 160px;
+        border-radius: 6px;
+        margin-top: 2px;
+    }
+
+    .language-option {
+        padding: 6px 12px;
+        font-size: 0.8em;
     }
 
     #read-more-area button {
@@ -577,6 +641,10 @@ button:focus-visible {
 
     .mode-select, .attempts-mode {
         gap: 10px;
+    }
+
+    .mode-select label, .attempts-mode label {
+        font-size: 0.9em;
     }
 
     #read-more-area {
