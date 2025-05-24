@@ -199,6 +199,7 @@ const languageNames = {
     alien: '👽'
 };
 
+
 // Функция для обновления текста на странице
 function updateLanguage() {
     const t = translations[currentLanguage];
@@ -295,11 +296,13 @@ function updateLanguage() {
     document.querySelector('.shape-btn[data-choice="circle"]').setAttribute('aria-label', `${t.shape} Коло`);
     document.querySelector('.shape-btn[data-choice="triangle"]').setAttribute('aria-label', `${t.shape} Трикутник`);
 
-    // Добавляем/удаляем класс alien-text
+    // Управление классом alien-text и alien-language
     if (currentLanguage === 'alien') {
         readMoreArea.classList.add('alien-text');
+        document.body.classList.add('alien-language'); // Добавляем класс для инопланетного языка
     } else {
         readMoreArea.classList.remove('alien-text');
+        document.body.classList.remove('alien-language'); // Удаляем класс для других языков
     }
 }
 
@@ -1176,8 +1179,8 @@ function updateVisionChoicesDisplay() {
 function toggleTheme() {
     document.body.classList.toggle('light-theme');
     const themeIcon = document.getElementById('theme-icon');
-    const themeText = document.body.classList.contains('light-theme') 
-        ? translations[currentLanguage].themeDay 
+    const themeText = document.body.classList.contains('light-theme')
+        ? translations[currentLanguage].themeDay
         : translations[currentLanguage].themeNight;
     themeIcon.textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
     document.getElementById('theme-toggle-btn').childNodes[2].textContent = themeText;
