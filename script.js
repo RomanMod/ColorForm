@@ -190,6 +190,15 @@ const translations = {
 // Текущий язык (по умолчанию украинский)
 let currentLanguage = 'uk';
 
+// Объект для сопоставления кодов языков с их названиями для кнопки
+const languageNames = {
+    ru: 'RU',
+    uk: 'UK',
+    en: 'EN',
+    es: 'ES',
+    alien: '👽'
+};
+
 // Функция для обновления текста на странице
 function updateLanguage() {
     const t = translations[currentLanguage];
@@ -216,13 +225,22 @@ function updateLanguage() {
     document.getElementById('theme-icon').textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
     document.getElementById('theme-toggle-btn').setAttribute('aria-label', `${t.themeToggle}: ${themeText}`);
 
-    // Обновление активной кнопки языка
-    document.querySelectorAll('.language-btn').forEach(btn => {
-        btn.classList.remove('active');
-        btn.setAttribute('aria-checked', 'false');
-        if (btn.dataset.lang === currentLanguage) {
-            btn.classList.add('active');
-            btn.setAttribute('aria-checked', 'true');
+    // Обновление кнопки языка
+    const languageToggleBtn = document.getElementById('language-toggle-btn');
+    const languageText = document.getElementById('language-text');
+    if (languageToggleBtn && languageText) {
+        languageText.textContent = languageNames[currentLanguage];
+        languageToggleBtn.setAttribute('aria-label', `${t.themeToggle.replace('тему', 'мову')}: ${languageNames[currentLanguage]}`);
+    }
+
+    // Обновление активного пункта меню языка
+    const languageOptions = document.querySelectorAll('.language-option');
+    languageOptions.forEach(option => {
+        option.classList.remove('active');
+        option.setAttribute('aria-selected', 'false');
+        if (option.dataset.lang === currentLanguage) {
+            option.classList.add('active');
+            option.setAttribute('aria-selected', 'true');
         }
     });
 
@@ -373,11 +391,13 @@ const visionModeRadios = document.querySelectorAll('input[name="vision-mode"]');
 const visionAttemptsModeRadios = document.querySelectorAll('input[name="vision-attempts-mode"]');
 const backButtons = document.querySelectorAll('.back-btn');
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
-const languageButtons = document.querySelectorAll('.language-btn');
+const languageToggleBtn = document.getElementById('language-toggle-btn');
+const languageMenu = document.getElementById('language-menu');
+const languageOptions = document.querySelectorAll('.language-option');
 
 // Check critical DOM elements
-if (!appDiv || !menuScreen || !gameIntention || !gameVision) {
-    console.error('Critical DOM elements are missing. Check HTML for ids: app, menu-screen, game-intention, game-vision');
+if (!appDiv || !menuScreen || !gameIntention || !gameVision || !languageToggleBtn || !languageMenu) {
+    console.error('Critical DOM elements are missing. Check HTML for ids: app, menu-screen, game-intention, game-vision, language-toggle-btn, language-menu');
     throw new Error('Missing critical DOM elements');
 }
 
@@ -572,6 +592,8 @@ function showScreen(screenId) {
         Telegram.WebApp.MainButton.hide();
         if (readMoreArea) readMoreArea.classList.add('hidden');
         if (btnReadMore) btnReadMore.classList.remove('hidden');
+        if (languageMenu) languageMenu.classList.add('hidden'); // Скрываем меню языка
+        if (languageToggleBtn) languageToggleBtn.setAttribute('aria-expanded', 'false');
         if (ENABLE_LOGGING) {
             logDebug('Returned to menu');
             logDebug(`Intention subsession sequences:`, subsessionSequences);
@@ -1173,33 +1195,52 @@ if (themeToggleBtn) {
     themeToggleBtn.addEventListener('click', toggleTheme);
 }
 
-if (languageButtons.length) {
-    languageButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (btn.disabled) return;
-            const newLanguage = btn.dataset.lang;
-            if (newLanguage === currentLanguage) return;
-            languageButtons.forEach(b => {
-                b.classList.remove('active');
-                b.setAttribute('aria-checked', 'false');
-            });
-            btn.classList.add('active');
-            btn.setAttribute('aria-checked', 'true');
+if (languageToggleBtn && languageMenu && languageOptions.length) {
+    // Переключение видимости меню языка
+    languageToggleBtn.addEventListener('click', () => {
+        const isExpanded = languageMenu.classList.toggle('hidden');
+        languageToggleBtn.setAttribute('aria-expanded', !isExpanded);
+        logDebug(`Language menu ${isExpanded ? 'hidden' : 'shown'}`);
+    });
+
+    // Обработка выбора языка
+    languageOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            const newLanguage = option.dataset.lang;
+            if (newLanguage === currentLanguage) {
+                languageMenu.classList.add('hidden');
+                languageToggleBtn.setAttribute('aria-expanded', 'false');
+                return;
+            }
             currentLanguage = newLanguage;
             updateLanguage();
+            languageMenu.classList.add('hidden');
+            languageToggleBtn.setAttribute('aria-expanded', 'false');
             sendGtagEvent('language_change', {
                 event_category: 'App',
                 event_label: 'Language Change',
                 value: currentLanguage,
                 subsession_id: window.currentSubsessionId
             });
+            logDebug(`Language changed to: ${currentLanguage}`);
         });
-        btn.addEventListener('keydown', (event) => {
+
+        // Поддержка клавиатуры
+        option.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
-                btn.click();
+                option.click();
             }
         });
+    });
+
+    // Закрытие меню при клике вне его
+    document.addEventListener('click', (event) => {
+        if (!languageToggleBtn.contains(event.target) && !languageMenu.contains(event.target)) {
+            languageMenu.classList.add('hidden');
+            languageToggleBtn.setAttribute('aria-expanded', 'false');
+            logDebug('Language menu closed due to outside click');
+        }
     });
 }
 
@@ -1500,29 +1541,110 @@ logDebug('Initialization completed, calling sendSavedStats and showScreen');
 sendSavedStats();
 showScreen('menu-screen');
 
-// Инициализация текста кнопки темы
-const themeText = document.body.classList.contains('light-theme') 
-    ? translations[currentLanguage].themeDay 
-    : translations[currentLanguage].themeNight;
-document.getElementById('theme-toggle-btn').childNodes[2].textContent = themeText;
-document.getElementById('theme-icon').textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
-document.getElementById('theme-toggle-btn').setAttribute('aria-label', `${translations[currentLanguage].themeToggle}: ${themeText}`);
 
-Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
-    if (!isStateStable && !Telegram.WebApp.isExpanded() && gameStartTime && !sessionSummarySent) {
-        logDebug('Viewport changed, sending session summary');
-        sendSessionSummary();
-        sendGtagEvent('app_background', {
-            event_category: 'App',
-            event_label: 'Viewport Minimized',
-            session_duration_seconds: parseFloat(((Date.now() - gameStartTime) / 1000).toFixed(1)),
-            subsession_id: window.currentSubsessionId
-        });
+// Инициализация текста кнопки
+const languageText = document.getElementById('language-text');
+if (languageToggleBtn && languageText) {
+    languageText.textContent = languageNames[currentLanguage];
+    languageToggleBtn.setAttribute('aria-label', `${translations[currentLanguage].themeToggle.replace('тему', 'мову')}: ${languageNames[currentLanguage]}`);
+} else {
+    console.warn('Language toggle button or text element missing');
+}
+
+// Проверка инициализации критических элементов
+function checkCriticalElements() {
+    const criticalElements = [
+        { id: 'language-toggle-btn', element: languageToggleBtn },
+        { id: 'language-menu', element: languageMenu },
+        { id: 'language-text', element: languageText },
+        { id: 'menu-screen', element: menuScreen },
+        { id: 'game-intention', element: gameIntention },
+        { id: 'game-vision', element: gameVision }
+    ];
+
+    criticalElements.forEach(({ id, element }) => {
+        if (!element) {
+            console.error(`Critical element #${id} not found in DOM`);
+        }
+    });
+
+    if (!languageOptions.length) {
+        console.error('No language options found with class .language-option');
     }
+}
+
+// Финальная инициализация
+function initializeApp() {
+    // Проверка критических элементов
+    checkCriticalElements();
+
+    // Установка начального состояния меню языка
+    if (languageMenu) {
+        languageMenu.classList.add('hidden');
+        languageToggleBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    // Обновление отображения выбора для игры "Бачення"
+    updateVisionChoicesDisplay();
+
+    // Установка начальной темы, если не установлена
+    if (!document.body.classList.contains('light-theme') && !document.body.classList.contains('dark-theme')) {
+        document.body.classList.add('light-theme');
+        toggleTheme(); // Устанавливаем начальную тему и отправляем событие
+    }
+
+    // Отправка события инициализации приложения
+    sendGtagEvent('app_initialized', {
+        event_category: 'App',
+        event_label: 'App Fully Initialized',
+        language: currentLanguage,
+        theme: document.body.classList.contains('light-theme') ? 'light' : 'dark',
+        subsession_id: window.currentSubsessionId
+    });
+
+    // Проверка сохранённых попыток из localStorage
+    ['intentionAttempts', 'visionAttempts'].forEach(key => {
+        const savedAttempts = JSON.parse(localStorage.getItem(key) || '[]');
+        if (savedAttempts.length) {
+            logDebug(`Found ${savedAttempts.length} saved ${key} in localStorage`);
+            if (key === 'intentionAttempts') {
+                intentionAttempts.push(...savedAttempts);
+                updateIntentionStatsDisplay();
+            } else {
+                visionAttempts.push(...savedAttempts);
+                updateVisionStatsDisplay();
+            }
+        }
+    });
+
+    // Установка фокуса на главную кнопку меню для доступности
+    if (btnStartIntention) {
+        btnStartIntention.focus();
+    }
+
+    logDebug('App fully initialized', {
+        language: currentLanguage,
+        theme: document.body.classList.contains('light-theme') ? 'light' : 'dark',
+        subsessionId: window.currentSubsessionId
+    });
+}
+
+// Запуск инициализации приложения
+document.addEventListener('DOMContentLoaded', () => {
+    initializeApp();
 });
 
-window.dataLayer = window.dataLayer || [];
-function gtag() {
-    window.dataLayer.push(arguments);
-    logDebug('gtag call:', arguments);
+// Обработка ошибок во время инициализации
+try {
+    updateLanguage();
+    showScreen('menu-screen');
+} catch (error) {
+    console.error('Initialization error:', error);
+    sendGtagEvent('error', {
+        event_category: 'App',
+        event_label: 'Initialization Error',
+        error_message: error.message,
+        error_file: 'script.js',
+        subsession_id: window.currentSubsessionId
+    });
 }
