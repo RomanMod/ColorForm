@@ -38,13 +38,22 @@
             </div>
             <div class="menu-controls">
                 <button id="theme-toggle-btn" class="menu-btn" aria-label="Переключити тему: Ніч">
-                    <span id="theme-icon">🌙</span> Ніч
+                    <span id="theme-icon">🌙</span>
+                    <span id="theme-text"></span>
                 </button>
-                <button class="menu-btn language-btn" data-lang="ru" aria-label="Русский" role="radio">Русский</button>
-                <button class="menu-btn language-btn active" data-lang="uk" aria-label="Українська" role="radio">Українська</button>
-                <button class="menu-btn language-btn" data-lang="en" aria-label="English" role="radio">English</button>
-                <button class="menu-btn language-btn" data-lang="es" aria-label="Español" role="radio">Español</button>
-                <button class="menu-btn language-btn" data-lang="alien" aria-label="Alien" role="radio">👽</button>
+                <div class="language-toggle-wrapper">
+                    <button id="language-toggle-btn" class="menu-btn" aria-label="Обрати мову: Українська" aria-expanded="false">
+                        <span id="language-icon">🌐</span>
+                        <span id="language-text">UK</span>
+                    </button>
+                    <ul id="language-menu" class="language-menu hidden">
+                        <li class="language-option" data-lang="ru" aria-selected="false">RU</li>
+                        <li class="language-option active" data-lang="uk" aria-selected="true">UK</li>
+                        <li class="language-option" data-lang="en" aria-selected="false">EN</li>
+                        <li class="language-option" data-lang="es" aria-selected="false">ES</li>
+                        <li class="language-option" data-lang="alien" aria-selected="false">👽</li>
+                    </ul>
+                </div>
                 <button id="btn-read-more" class="menu-btn" aria-label="Прочитати опис ігор">Прочитай</button>
             </div>
             <div id="read-more-area" class="hidden">
