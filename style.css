@@ -700,7 +700,7 @@ body.alien-language #intention-stats p span {
 
     
     .feedback-buttons .small-btn {
-        padding: 30px 55px; /* Увеличенный отступ для мобильных */
+        padding: 20px 30px; /* Увеличенный отступ для мобильных */
         font-size: calc(var(--base-font-size) * 1); /* Увеличенный шрифт */
         min-height: 36px; /* Увеличенная высота */
     }
