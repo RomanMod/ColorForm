@@ -270,6 +270,7 @@ button:focus-visible {
     margin-top: 40px;
     width: 100%;
     box-sizing: border-box;
+    gap: 12px; /* Добавляем небольшой отступ между элементами */
 }
 
 #theme-toggle-btn {
@@ -535,14 +536,15 @@ button:focus-visible {
         gap: 10px;
     }
 
-       .menu-controls {
+    
+    .menu-controls {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 5px;
+        margin-top: 40px;
         width: 100%;
         box-sizing: border-box;
-         gap: 15px; /* Добавляем небольшой отступ между элементами */
+        gap: 12px; /* Добавляем небольшой отступ между элементами */
     }
 
     #theme-toggle-btn,
