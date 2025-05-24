@@ -267,7 +267,7 @@ button:focus-visible {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 15px;
+    margin-top: 40px;
     width: 100%;
     box-sizing: border-box;
 }
