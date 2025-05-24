@@ -535,10 +535,14 @@ button:focus-visible {
         gap: 10px;
     }
 
-    .menu-controls {
-        flex-direction: column; /* Элементы располагаются вертикально */
-        align-items: center; /* Центрирование по горизонтали */
-        gap: 8px; /* Добавляем небольшой отступ между элементами */
+       .menu-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 5px;
+        width: 100%;
+        box-sizing: border-box;
+         gap: 15px; /* Добавляем небольшой отступ между элементами */
     }
 
     #theme-toggle-btn,
