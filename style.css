@@ -151,6 +151,10 @@ body.alien-language button {
     font-size: var(--alien-font-size);
 }
 
+body.alien-language #intention-show-btn {
+    font-size: calc(var(--alien-font-size) * 1.2); /* Увеличенный шрифт для alien */
+}
+
 button:hover:not(:disabled) {
     background-color: var(--button-hover-bg-color);
 }
@@ -261,6 +265,13 @@ body.alien-language .feedback-buttons .small-btn {
     align-items: center;
     margin-top: 10px;
 }
+
+#intention-show-btn {
+    padding: 12px 75px; /* Увеличенный отступ для большей площади */
+    font-size: calc(var(--base-font-size) * 1.2); /* Увеличенный шрифт */
+    min-height: 48px; /* Увеличенная высота */
+}
+
 
 .mode-select, .attempts-mode {
     display: flex;
@@ -660,6 +671,11 @@ body.alien-language #intention-stats p span {
 
     body.alien-language button {
         font-size: var(--alien-font-size);
+    }
+    
+    
+    body.alien-language #intention-show-btn {
+        font-size: calc(var(--alien-font-size) * 1.2); /* Увеличенный шрифт для alien */
     }
 
     .large-btn {
