@@ -265,32 +265,16 @@ button:focus-visible {
 
 .menu-controls {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    margin-top: 40px;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 15px;
     width: 100%;
     box-sizing: border-box;
-    gap: 12px; /* Добавляем небольшой отступ между элементами */
 }
 
-#theme-toggle-btn {
-    margin-right: auto; /* Прижимает кнопку "День/Ночь" к левому краю */
-}
-
-.language-select-container {
-    margin: 0 auto; /* Центрирует выбор языка */
-}
-
-#btn-read-more {
-    margin-left: auto; /* Прижимает кнопку "Прочитай" к правому краю */
-}
-
-.language-select-container {
-    display: flex;
-    align-items: center;
-}
-
-#language-select {
+.menu-btn {
     background-color: var(--button-bg-color);
     color: var(--button-text-color);
     border: none;
@@ -300,20 +284,32 @@ button:focus-visible {
     cursor: pointer;
     transition: background-color 0.2s ease;
     min-height: 36px;
-    appearance: none;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    padding-right: 30px;
+    width: 120px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
 }
 
-#language-select:hover {
+.menu-btn:hover:not(:disabled) {
     background-color: var(--button-hover-bg-color);
 }
 
-#language-select:focus-visible {
+.menu-btn:focus-visible {
     outline: 2px solid var(--blue-color);
     outline-offset: 1px;
+}
+
+.menu-btn:disabled {
+    background-color: #48484a;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.menu-btn.language-btn.active {
+    background-color: var(--button-hover-bg-color);
+    font-weight: bold;
 }
 
 #theme-toggle-btn {
@@ -536,42 +532,26 @@ button:focus-visible {
         gap: 10px;
     }
 
-    
     .menu-controls {
-        display: flex;
-        justify-content: space-between;
+        flex-direction: column;
+        gap: 8px;
         align-items: center;
-        margin-top: 40px;
-        width: 100%;
-        box-sizing: border-box;
-        gap: 12px; /* Добавляем небольшой отступ между элементами */
     }
 
-    #theme-toggle-btn,
-    .language-select-container,
-    #btn-read-more {
-        margin: 0; /* Убираем авто-отступы для вертикальной компоновки */
-        width: 100%; /* Элементы занимают полную ширину */
-        max-width: 200px; /* Ограничиваем максимальную ширину для кнопок */
-        box-sizing: border-box;
-    }
-
-    #theme-toggle-btn {
-        order: 1; /* "День/Ночь" остаётся первым */
-    }
-
-    .language-select-container {
-        order: 2; /* "Язык" в центре */
-    }
-
-    #btn-read-more {
-        order: 3; /* "Прочитай" последним */
-    }
-
-    #language-select {
+    .menu-btn {
         padding: 6px 12px;
         font-size: 0.8em;
         min-height: 28px;
+        width: 100%;
+        max-width: 160px;
+    }
+
+    .menu-btn[data-lang="uk"] {
+        font-size: 0.75em;
+    }
+
+    .menu-btn[data-lang="alien"] {
+        font-size: 1em;
     }
 
     #read-more-area button {
