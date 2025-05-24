@@ -41,21 +41,14 @@
                     <span id="theme-icon">🌙</span> День/Ніч
                 </button>
                 <div class="language-select-container">
-                    <div id="language-select-custom" class="custom-select" aria-label="Оберіть мову">
-                        <div class="selected-option">
-                            <span id="selected-language">Українська</span>
-                            <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </div>
-                        <ul id="language-options" class="options-list hidden">
-                            <li data-value="ru">Русский</li>
-                            <li data-value="uk">Українська</li>
-                            <li data-value="en">English</li>
-                            <li data-value="es">Español</li>
-                            <li data-value="alien">👽</li>
-                        </ul>
-                    </div>
+                    <label for="language-select" class="hidden">Оберіть мову</label>
+                    <select id="language-select" aria-label="Оберіть мову">
+                        <option value="ru">Русский</option>
+                        <option value="uk" selected>Українська</option>
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="alien">👽</option>
+                    </select>
                 </div>
                 <button id="btn-read-more" class="small-btn" aria-label="Прочитати опис ігор">Прочитай</button>
             </div>
