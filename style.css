@@ -289,67 +289,30 @@ button:focus-visible {
     align-items: center;
 }
 
-.custom-select {
-    position: relative;
-    display: inline-block;
-    cursor: pointer;
+#language-select {
     background-color: var(--button-bg-color);
     color: var(--button-text-color);
+    border: none;
     border-radius: 8px;
-    padding: 8px 30px 8px 15px;
+    padding: 8px 15px;
     font-size: 0.9em;
-    min-height: 36px;
+    cursor: pointer;
     transition: background-color 0.2s ease;
+    min-height: 36px;
+    appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
 }
 
-.custom-select:hover {
+#language-select:hover {
     background-color: var(--button-hover-bg-color);
 }
 
-.custom-select:focus-visible {
+#language-select:focus-visible {
     outline: 2px solid var(--blue-color);
     outline-offset: 1px;
-}
-
-.selected-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.dropdown-arrow {
-    color: var(--button-text-color);
-}
-
-.options-list {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background-color: var(--button-bg-color);
-    color: var(--button-text-color);
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    margin-top: 5px;
-    z-index: 100;
-    list-style: none;
-    padding: 0;
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-.options-list li {
-    padding: 10px 15px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.options-list li:hover {
-    background-color: var(--button-hover-bg-color);
-}
-
-.options-list.hidden {
-    display: none;
 }
 
 #theme-toggle-btn {
@@ -557,7 +520,7 @@ button:focus-visible {
     }
 
     .small-btn {
-        padding: 6px 10px;
+        padding: 6px 12px;
         font-size: 0.8em;
         min-height: 28px;
     }
@@ -573,62 +536,52 @@ button:focus-visible {
     }
 
     .menu-controls {
-        display: flex;
-        flex-direction: row; /* Элементы в ряд */
-        flex-wrap: wrap; /* Перенос при нехватке места */
-        justify-content: space-between; /* Равномерное распределение */
-        align-items: center;
-        gap: 8px; /* Отступ между элементами */
-        width: 100%;
+        flex-direction: column; /* Элементы располагаются вертикально */
+        align-items: center; /* Центрирование по горизонтали */
+        gap: 8px; /* Добавляем небольшой отступ между элементами */
     }
 
     #theme-toggle-btn,
     .language-select-container,
     #btn-read-more {
-        margin: 0; /* Убираем лишние отступы */
-        width: 100px; /* Фиксированная ширина для всех кнопок */
+        margin: 0; /* Убираем авто-отступы для вертикальной компоновки */
+        width: 100%; /* Элементы занимают полную ширину */
+        max-width: 200px; /* Ограничиваем максимальную ширину для кнопок */
         box-sizing: border-box;
-        flex: 0 0 auto; /* Отключаем растяжение */
     }
 
     #theme-toggle-btn {
-        order: 1;
-        padding: 6px 10px;
-        font-size: 0.8em;
-        min-height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center; /* Центрируем содержимое */
+        order: 1; /* "День/Ночь" остаётся первым */
     }
 
     .language-select-container {
-        order: 2;
+        order: 2; /* "Язык" в центре */
     }
 
     #btn-read-more {
-        order: 3;
-        padding: 6px 10px;
+        order: 3; /* "Прочитай" последним */
+    }
+
+    #language-select {
+        padding: 6px 12px;
         font-size: 0.8em;
         min-height: 28px;
     }
 
-    .custom-select {
-        padding: 6px 10px; /* Уменьшенные отступы */
+    #read-more-area button {
+        padding: 6px 12px;
         font-size: 0.8em;
         min-height: 28px;
-        width: 100%; /* Полная ширина внутри .language-select-container */
-        display: flex;
-        align-items: center;
-        justify-content: center; /* Центрируем содержимое */
     }
 
-    .options-list li {
-        padding: 8px 10px;
+    .new-game-btn {
+        padding: 10px 15px;
+        font-size: 1em;
+    }
+
+    .back-btn {
+        padding: 8px 12px;
         font-size: 0.8em;
-    }
-
-    .selected-option {
-        justify-content: center; /* Центрируем текст и стрелку */
     }
 
     .controls {
