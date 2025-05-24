@@ -579,39 +579,41 @@ button:focus-visible {
     }
 
     .menu-controls {
-        flex-direction: column;
-        gap: 8px;
+        flex-direction: row; /* Меняем на горизонтальное расположение */
+        gap: 8px; /* Сохраняем небольшой отступ между кнопками */
         align-items: center;
+        justify-content: center; /* Центрируем кнопки */
+        flex-wrap: wrap; /* Если не помещаются, кнопки переносятся на следующую строку */
     }
 
     .menu-btn {
         padding: 6px 12px;
         font-size: 0.8em;
         min-height: 28px;
-        width: 100%;
-        max-width: 160px;
+        width: auto; /* Убираем фиксированную ширину, чтобы кнопки подстраивались под содержимое */
+        min-width: 80px; /* Минимальная ширина для кнопок, чтобы они не были слишком узкими */
     }
 
     .language-toggle-wrapper {
-        width: 100%;
-        max-width: 160px;
+        width: auto; /* Убираем фиксированную ширину */
+        min-width: 80px; /* Минимальная ширина для согласованности */
     }
 
     #language-toggle-btn {
-        width: 100%;
-        max-width: 160px;
+        width: auto;
+        min-width: 80px;
         font-size: 0.8em;
         padding: 6px 12px;
         min-height: 28px;
     }
 
     .language-menu {
-        width: 100%;
-        min-width: 100%;
-        max-width: 160px;
-        border-radius: 6px;
-        margin-top: 2px;
+        min-width: 80px; /* Уменьшаем ширину меню языка */
+        max-width: 120px;
     }
+
+    
+
 
     .language-option {
         padding: 6px 12px;
@@ -658,5 +660,15 @@ button:focus-visible {
 
     #user-greeting {
         font-size: 1em;
+    }
+    #menu-screen .btn-container { /* Предполагаемый контейнер кнопок */
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 10px;
+    }
+    #theme-toggle-btn, #language-toggle-btn, #btn-read-more {
+        width: auto;
+        min-width: 80px;
     }
 }
