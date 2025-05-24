@@ -187,9 +187,9 @@ body.alien-language .small-btn {
 }
 
 .feedback-buttons .small-btn {
-    padding: 8px 15px;
-    font-size: calc(var(--base-font-size) * 0.9);
-    min-height: 32px;
+    padding: 42px 80px; /* Увеличенный отступ для большей площади */
+    font-size: calc(var(--base-font-size) * 1.1); /* Увеличенный шрифт */
+    min-height: 40px; /* Увеличенная высота */
     line-height: 1.2;
 }
 
@@ -673,15 +673,17 @@ body.alien-language #intention-stats p span {
         font-size: calc(var(--alien-font-size) * 0.9);
     }
 
+    
     .feedback-buttons .small-btn {
-        padding: 6px 12px;
-        font-size: calc(var(--base-font-size) * 0.9);
-        min-height: 28px;
+        padding: 30px 55px; /* Увеличенный отступ для мобильных */
+        font-size: calc(var(--base-font-size) * 1); /* Увеличенный шрифт */
+        min-height: 36px; /* Увеличенная высота */
     }
 
+   
     body.alien-language .feedback-buttons .small-btn {
-        font-size: calc(var(--alien-font-size) * 0.9);
-    }
+    font-size: calc(var(--alien-font-size) * 1.1); /* Увеличенный шрифт для alien */
+}
 
     .menu-buttons {
         gap: 10px;
