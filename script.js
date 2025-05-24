@@ -30,7 +30,9 @@ const translations = {
         readMoreText1: 'В игре «Виденье» за черным экраном находится объект. Сначала перемешайте объекты, нажав на черный экран. Через три секунды перемешивание останавливается. Задача — в воображении увидеть, что скрыто за ширмой, и нажать соответствующую кнопку. Перед выбором обязательно перемешивайте объекты.',
         readMoreText2: 'В игре «Намеренье» за черным экраном происходит циклический перебор объектов. Задача — в воображении зафиксировать объект и нажать на черный экран или кнопку «Показать». В этот момент цикл останавливается. Показанный объект может совпасть с вашим внутренним взором.',
         closeReadMore: 'Закрыть',
-        themeToggle: 'День/Ночь',
+        themeDay: 'День',
+        themeNight: 'Ночь',
+        themeToggle: 'Переключить тему',
         success: 'Угадал',
         failure: 'Не угадал',
         color: 'Цвет',
@@ -62,7 +64,9 @@ const translations = {
         readMoreText1: 'У грі «Бачення» за чорним екраном знаходиться об’єкт. Спочатку перемішайте об’єкти, натиснувши на чорний екран. Через три секунди перемішування зупиняється. Завдання — уявити, що приховано за ширмою, і натиснути відповідну кнопку. Перед вибором обов’язково перемішуйте об’єкти.',
         readMoreText2: 'У грі «Намір» за чорним екраном відбувається циклічний перегляд об’єктів. Завдання — уявити об’єкт і натиснути на чорний екран або кнопку «Показати». У цей момент цикл зупиняється. Показаний об’єкт може збігтися з вашим внутрішнім баченням.',
         closeReadMore: 'Закрити',
-        themeToggle: 'День/Ніч',
+        themeDay: 'День',
+        themeNight: 'Ніч',
+        themeToggle: 'Переключити тему',
         success: 'Вгадав',
         failure: 'Не вгадав',
         color: 'Колір',
@@ -94,7 +98,9 @@ const translations = {
         readMoreText1: 'In the "Vision" game, an object is hidden behind a black screen. First, shuffle the objects by clicking the black screen. After three seconds, the shuffling stops. Your task is to imagine what is hidden behind the screen and press the corresponding button. You must shuffle the objects before making a choice.',
         readMoreText2: 'In the "Intention" game, objects are cycled behind a black screen. Your task is to mentally fixate on an object and click the black screen or the "Show" button. At that moment, the cycle stops. The revealed object may match your mental image.',
         closeReadMore: 'Close',
-        themeToggle: 'Day/Night',
+        themeDay: 'Day',
+        themeNight: 'Night',
+        themeToggle: 'Toggle Theme',
         success: 'Guessed',
         failure: 'Not Guessed',
         color: 'Color',
@@ -126,7 +132,9 @@ const translations = {
         readMoreText1: 'En el juego "Visión", un objeto está oculto detrás de una pantalla negra. Primero, mezcla los objetos haciendo clic en la pantalla negra. Después de tres segundos, la mezcla se detiene. Tu tarea es imaginar qué está oculto detrás de la pantalla y presionar el botón correspondiente. Debes mezclar los objetos antes de elegir.',
         readMoreText2: 'En el juego "Intención", los objetos se ciclan detrás de una pantalla negra. Tu tarea es fijar mentalmente un objeto y hacer clic en la pantalla negra o en el botón "Mostrar". En ese momento, el ciclo se detiene. El objeto revelado puede coincidir con tu imagen mental.',
         closeReadMore: 'Cerrar',
-        themeToggle: 'Día/Noche',
+        themeDay: 'Día',
+        themeNight: 'Noche',
+        themeToggle: 'Cambiar Tema',
         success: 'Adivinado',
         failure: 'No Adivinado',
         color: 'Color',
@@ -158,7 +166,9 @@ const translations = {
         readMoreText1: '◬⊸|▥|⊹|↻▥→3⊸→⊹|⊹|◈▥→⊸|⊹|↻',
         readMoreText2: '◉⊸|↺▥|⊹|◈⊸→▥/◉|⊹|⊹↺|⊹|▥=◈',
         closeReadMore: '⊷',
-        themeToggle: '◍◌',
+        themeDay: '◍',
+        themeNight: '◌',
+        themeToggle: '⊸◍◌',
         success: '⊸',
         failure: '⊹',
         color: '◼|⊹',
@@ -199,8 +209,23 @@ function updateLanguage() {
     readMoreArea.querySelectorAll('p')[0].textContent = t.readMoreText1;
     readMoreArea.querySelectorAll('p')[1].textContent = t.readMoreText2;
     document.getElementById('btn-close-read-more').textContent = t.closeReadMore;
-    document.getElementById('theme-toggle-btn').querySelector('span').textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
-    document.getElementById('theme-toggle-btn').childNodes[2].textContent = t.themeToggle;
+
+    // Обновление кнопки темы
+    const themeText = document.body.classList.contains('light-theme') ? t.themeDay : t.themeNight;
+    document.getElementById('theme-toggle-btn').childNodes[2].textContent = themeText;
+    document.getElementById('theme-icon').textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
+    document.getElementById('theme-toggle-btn').setAttribute('aria-label', `${t.themeToggle}: ${themeText}`);
+
+    // Обновление активной кнопки языка
+    document.querySelectorAll('.language-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-checked', 'false');
+        if (btn.dataset.lang === currentLanguage) {
+            btn.classList.add('active');
+            btn.setAttribute('aria-checked', 'true');
+        }
+    });
+
     document.querySelector('label[for="intention-mode-color"]').childNodes[1].textContent = t.color;
     document.querySelector('label[for="intention-mode-shape"]').childNodes[1].textContent = t.shape;
     document.querySelector('label[for="vision-mode-color"]').childNodes[1].textContent = t.color;
@@ -247,7 +272,6 @@ function updateLanguage() {
     document.getElementById('vision-shuffle-btn').setAttribute('aria-label', t.shuffle);
     document.querySelectorAll('.back-btn').forEach(btn => btn.setAttribute('aria-label', t.back));
     document.getElementById('btn-close-read-more').setAttribute('aria-label', t.closeReadMore);
-    document.getElementById('theme-toggle-btn').setAttribute('aria-label', t.themeToggle);
     document.querySelector('.color-btn[data-choice="red"]').setAttribute('aria-label', `${t.color} Червоний`);
     document.querySelector('.color-btn[data-choice="blue"]').setAttribute('aria-label', `${t.color} Синій`);
     document.querySelector('.shape-btn[data-choice="circle"]').setAttribute('aria-label', `${t.shape} Коло`);
@@ -349,7 +373,7 @@ const visionModeRadios = document.querySelectorAll('input[name="vision-mode"]');
 const visionAttemptsModeRadios = document.querySelectorAll('input[name="vision-attempts-mode"]');
 const backButtons = document.querySelectorAll('.back-btn');
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
-const languageSelect = document.getElementById('language-select');
+const languageButtons = document.querySelectorAll('.language-btn');
 
 // Check critical DOM elements
 if (!appDiv || !menuScreen || !gameIntention || !gameVision) {
@@ -1130,8 +1154,12 @@ function updateVisionChoicesDisplay() {
 function toggleTheme() {
     document.body.classList.toggle('light-theme');
     const themeIcon = document.getElementById('theme-icon');
+    const themeText = document.body.classList.contains('light-theme') 
+        ? translations[currentLanguage].themeDay 
+        : translations[currentLanguage].themeNight;
     themeIcon.textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
-    updateLanguage(); // Обновляем текст кнопки темы
+    document.getElementById('theme-toggle-btn').childNodes[2].textContent = themeText;
+    document.getElementById('theme-toggle-btn').setAttribute('aria-label', `${translations[currentLanguage].themeToggle}: ${themeText}`);
     sendGtagEvent('theme_change', {
         event_category: 'App',
         event_label: 'Theme Toggle',
@@ -1145,15 +1173,32 @@ if (themeToggleBtn) {
     themeToggleBtn.addEventListener('click', toggleTheme);
 }
 
-if (languageSelect) {
-    languageSelect.addEventListener('change', (event) => {
-        currentLanguage = event.target.value;
-        updateLanguage();
-        sendGtagEvent('language_change', {
-            event_category: 'App',
-            event_label: 'Language Change',
-            value: currentLanguage,
-            subsession_id: window.currentSubsessionId
+if (languageButtons.length) {
+    languageButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.disabled) return;
+            const newLanguage = btn.dataset.lang;
+            if (newLanguage === currentLanguage) return;
+            languageButtons.forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-checked', 'false');
+            });
+            btn.classList.add('active');
+            btn.setAttribute('aria-checked', 'true');
+            currentLanguage = newLanguage;
+            updateLanguage();
+            sendGtagEvent('language_change', {
+                event_category: 'App',
+                event_label: 'Language Change',
+                value: currentLanguage,
+                subsession_id: window.currentSubsessionId
+            });
+        });
+        btn.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                btn.click();
+            }
         });
     });
 }
@@ -1454,6 +1499,14 @@ updateLanguage();
 logDebug('Initialization completed, calling sendSavedStats and showScreen');
 sendSavedStats();
 showScreen('menu-screen');
+
+// Инициализация текста кнопки темы
+const themeText = document.body.classList.contains('light-theme') 
+    ? translations[currentLanguage].themeDay 
+    : translations[currentLanguage].themeNight;
+document.getElementById('theme-toggle-btn').childNodes[2].textContent = themeText;
+document.getElementById('theme-icon').textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
+document.getElementById('theme-toggle-btn').setAttribute('aria-label', `${translations[currentLanguage].themeToggle}: ${themeText}`);
 
 Telegram.WebApp.onEvent('viewportChanged', (isStateStable) => {
     if (!isStateStable && !Telegram.WebApp.isExpanded() && gameStartTime && !sessionSummarySent) {
