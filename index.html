@@ -37,20 +37,15 @@
                 <button id="btn-start-vision" class="large-btn" aria-label="Грати в Бачення">Грати в Бачення</button>
             </div>
             <div class="menu-controls">
-                <button id="theme-toggle-btn" class="small-btn" aria-label="Переключити тему">
-                    <span id="theme-icon">🌙</span> День/Ніч
+                <button id="theme-toggle-btn" class="menu-btn" aria-label="Переключити тему: Ніч">
+                    <span id="theme-icon">🌙</span> Ніч
                 </button>
-                <div class="language-select-container">
-                    <label for="language-select" class="hidden">Оберіть мову</label>
-                    <select id="language-select" aria-label="Оберіть мову">
-                        <option value="ru">Русский</option>
-                        <option value="uk" selected>Українська</option>
-                        <option value="en">English</option>
-                        <option value="es">Español</option>
-                        <option value="alien">👽</option>
-                    </select>
-                </div>
-                <button id="btn-read-more" class="small-btn" aria-label="Прочитати опис ігор">Прочитай</button>
+                <button class="menu-btn language-btn" data-lang="ru" aria-label="Русский" role="radio">Русский</button>
+                <button class="menu-btn language-btn active" data-lang="uk" aria-label="Українська" role="radio">Українська</button>
+                <button class="menu-btn language-btn" data-lang="en" aria-label="English" role="radio">English</button>
+                <button class="menu-btn language-btn" data-lang="es" aria-label="Español" role="radio">Español</button>
+                <button class="menu-btn language-btn" data-lang="alien" aria-label="Alien" role="radio">👽</button>
+                <button id="btn-read-more" class="menu-btn" aria-label="Прочитати опис ігор">Прочитай</button>
             </div>
             <div id="read-more-area" class="hidden">
                 <h3>Відмінність Наміру та Бачення</h3>
