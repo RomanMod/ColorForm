@@ -1247,6 +1247,9 @@ if (languageToggleBtn && languageMenu && languageOptions.length) {
     });
 }
 
+
+
+
 if (btnStartIntention) {
     btnStartIntention.addEventListener('click', () => {
         gameStartTime = Date.now();
@@ -1258,7 +1261,9 @@ if (btnStartIntention) {
                 event_category: 'Game',
                 event_label: 'Intention',
                 game_mode: intentionMode,
-                subsession_id: window.currentSubsessionId
+                subsession_id: window.currentSubsessionId,
+                event_timestamp_ms: Date.now(),
+                timezone_offset: new Date().getTimezoneOffset() // Минуты смещения от UTC
             });
         }, 0);
     });
@@ -1275,11 +1280,16 @@ if (btnStartVision) {
                 event_category: 'Game',
                 event_label: 'Vision',
                 game_mode: visionMode,
-                subsession_id: window.currentSubsessionId
+                subsession_id: window.currentSubsessionId,
+                event_timestamp_ms: Date.now(),
+                timezone_offset: new Date().getTimezoneOffset() // Минуты смещения от UTC
             });
         }, 0);
     });
 }
+
+
+
 
 if (btnReadMore) {
     btnReadMore.addEventListener('click', () => {
