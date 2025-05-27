@@ -228,9 +228,9 @@ function updateLanguage() {
 
     // Обновление кнопки языка
     const languageToggleBtn = document.getElementById('language-toggle-btn');
-    const languageText = document.getElementById('language-text');
-    if (languageToggleBtn && languageText) {
-        languageText.textContent = languageNames[currentLanguage];
+    const languageTextEl = document.getElementById('language-text'); // Renamed to avoid conflict
+    if (languageToggleBtn && languageTextEl) {
+        languageTextEl.textContent = languageNames[currentLanguage];
         languageToggleBtn.setAttribute('aria-label', `${t.themeToggle.replace('тему', 'мову')}: ${languageNames[currentLanguage]}`);
     }
 
@@ -271,15 +271,18 @@ function updateLanguage() {
     }
 
     // Обновление приветственного сообщения
-    const userGreeting = document.getElementById('user-greeting');
-    if (userGreeting) {
-        userGreeting.childNodes[0].textContent = `${t.greeting}, `;
+    const greetingTextPart = document.getElementById('greeting-text-part');
+    if (greetingTextPart) {
+        greetingTextPart.textContent = t.greeting;
     }
-
-    // Обновление имени по умолчанию, если пользователь не из Telegram
+    const userNameSpan = document.getElementById('telegram-user-name');
+    // Обновление имени по умолчанию, если пользователь не из Telegram или имя не определено
     if (!telegramUser || !telegramUser.first_name) {
         if (userNameSpan) userNameSpan.textContent = t.defaultUserName;
+    } else {
+         if (userNameSpan) userNameSpan.textContent = telegramUser.first_name; // Set actual telegram name if available
     }
+
 
     // Обновление aria-label
     document.getElementById('btn-start-intention').setAttribute('aria-label', t.playIntention);
@@ -354,7 +357,7 @@ const visionAttempts = [];
 
 // DOM elements
 const appDiv = document.getElementById('app');
-const userNameSpan = document.getElementById('telegram-user-name');
+// const userNameSpan = document.getElementById('telegram-user-name'); // Already declared in updateLanguage, ensure consistency
 const menuScreen = document.getElementById('menu-screen');
 const btnStartIntention = document.getElementById('btn-start-intention');
 const btnStartVision = document.getElementById('btn-start-vision');
@@ -1518,6 +1521,7 @@ Telegram.WebApp.MainButton.onClick(() => {
 try {
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
+    const userNameSpan = document.getElementById('telegram-user-name');
     if (Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) {
         telegramUser = Telegram.WebApp.initDataUnsafe.user;
         window.userId = telegramUser.id;
@@ -1544,6 +1548,7 @@ try {
     }
 } catch (e) {
     console.warn('Telegram WebApp not available, using anonymous user');
+    const userNameSpan = document.getElementById('telegram-user-name');
     telegramUser = { id: window.userId, first_name: translations[currentLanguage].defaultUserName };
     if (userNameSpan) userNameSpan.textContent = telegramUser.first_name;
 }
@@ -1556,9 +1561,9 @@ showScreen('menu-screen');
 
 
 // Инициализация текста кнопки
-const languageText = document.getElementById('language-text');
-if (languageToggleBtn && languageText) {
-    languageText.textContent = languageNames[currentLanguage];
+const languageTextEl = document.getElementById('language-text'); // Renamed to avoid conflict
+if (languageToggleBtn && languageTextEl) {
+    languageTextEl.textContent = languageNames[currentLanguage];
     languageToggleBtn.setAttribute('aria-label', `${translations[currentLanguage].themeToggle.replace('тему', 'мову')}: ${languageNames[currentLanguage]}`);
 } else {
     console.warn('Language toggle button or text element missing');
@@ -1569,7 +1574,7 @@ function checkCriticalElements() {
     const criticalElements = [
         { id: 'language-toggle-btn', element: languageToggleBtn },
         { id: 'language-menu', element: languageMenu },
-        { id: 'language-text', element: languageText },
+        { id: 'language-text', element: languageTextEl },
         { id: 'menu-screen', element: menuScreen },
         { id: 'game-intention', element: gameIntention },
         { id: 'game-vision', element: gameVision }
@@ -1601,10 +1606,23 @@ function initializeApp() {
     updateVisionChoicesDisplay();
 
     // Установка начальной темы, если не установлена
+    // Удалена строка document.body.classList.add('light-theme'); для установки ночной темы по умолчанию
     if (!document.body.classList.contains('light-theme') && !document.body.classList.contains('dark-theme')) {
-        document.body.classList.add('light-theme');
-        toggleTheme(); // Устанавливаем начальную тему и отправляем событие
+        // Теперь по умолчанию будет ночная тема (т.к. 'light-theme' не добавляется)
+        logDebug('Defaulting to night theme (no light-theme class added).');
     }
+    // Обновляем текст и иконку кнопки темы в любом случае, чтобы отразить текущее состояние
+    const themeText = document.body.classList.contains('light-theme')
+        ? translations[currentLanguage].themeDay
+        : translations[currentLanguage].themeNight;
+    const themeIconEl = document.getElementById('theme-icon');
+    if (themeIconEl) themeIconEl.textContent = document.body.classList.contains('light-theme') ? '☀️' : '🌙';
+    
+    const themeToggleBtnEl = document.getElementById('theme-toggle-btn');
+    if (themeToggleBtnEl && themeToggleBtnEl.childNodes[2]) {
+        themeToggleBtnEl.childNodes[2].textContent = themeText;
+    }
+
 
     // Отправка события инициализации приложения
     sendGtagEvent('app_initialized', {
@@ -1645,11 +1663,13 @@ function initializeApp() {
 // Запуск инициализации приложения
 document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
+    // После инициализации приложения, еще раз обновим язык/тему, чтобы гарантировать корректное отображение кнопки темы
+    updateLanguage();
 });
 
 // Обработка ошибок во время инициализации
 try {
-    updateLanguage();
+    updateLanguage(); // Вызывается до DOMContentLoaded, но initializeApp перевызовет updateLanguage
     showScreen('menu-screen');
 } catch (error) {
     console.error('Initialization error:', error);
