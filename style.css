@@ -88,6 +88,7 @@ body.alien-language {
 
 #user-greeting {
     font-size: calc(var(--base-font-size) * 1.2);
+    margin-bottom: 10px; /* Стандартный небольшой отступ */
 }
 
 body.alien-language #user-greeting {
@@ -102,6 +103,14 @@ h1 {
 
 body.alien-language h1 {
     font-size: calc(var(--alien-font-size) * 1.5);
+}
+
+#menu-screen {
+    margin-top: 10px; /* Создает общее пространство в 500px с учетом gap и margin-bottom приветствия */
+}
+
+#menu-screen h1 {
+    display: none;
 }
 
 h2 {
@@ -484,7 +493,8 @@ body.alien-language #read-more-area button {
 #vision-choices {
     display: flex;
     justify-content: center;
-    gap:35px; /* Увеличенный отступ между кнопками */
+    /* USER: Отступ между кнопками выбора в игре "Бачення" установлен на 50px */
+    gap: 50px; /* Увеличенный отступ между кнопками */
     margin-top: 15px;
 }
 
@@ -641,6 +651,15 @@ body.alien-language #intention-stats p span {
         width: 100%;
         max-width: 100%;
     }
+    
+    #user-greeting {
+        margin-bottom: 20px; /* Уменьшенный отступ для мобильных устройств */
+    }
+
+    #menu-screen {
+        margin-top: 0; /* Убираем большой отступ на мобильных */
+    }
+
 
     .display {
         aspect-ratio: 4 / 3;
@@ -649,7 +668,8 @@ body.alien-language #intention-stats p span {
     }
 
     #vision-choices {
-        gap: 20px; /* Увеличенный отступ */
+        /* USER: Отступ между кнопками выбора (маленькие экраны) установлен на 50px */
+        gap: 50px; /* Увеличенный отступ */
         flex-wrap: wrap;
     }
 
@@ -825,13 +845,10 @@ body.alien-language #intention-stats p span {
         font-size: var(--alien-font-size);
     }
 
-    #user-greeting {
-        font-size: calc(var(--base-font-size) * 1);
-    }
-
-    body.alien-language #user-greeting {
+    body.alien-language #user-greeting { /* This duplicates the one inside the #app media query */
         font-size: calc(var(--alien-font-size) * 1);
     }
+
 
     #menu-screen .btn-container {
         display: flex;
