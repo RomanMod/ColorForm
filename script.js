@@ -1,3 +1,4 @@
+
 // Logging settings
 const ENABLE_LOGGING = true;
 
@@ -16,19 +17,19 @@ const SHOW_INTENTION_THROTTLE_MS = 500;
 // Объект с переводами
 const translations = {
     ru: {
-        title: 'Намеренье или Виденье',
-        playIntention: 'Играть в Намеренье',
-        playVision: 'Играть в Виденье',
+        title: 'Намерение или Видение',
+        playIntention: 'Играть в Намерение',
+        playVision: 'Играть в Видение',
         readMore: 'Прочти',
-        intentionTitle: 'Намеренье',
-        visionTitle: 'Виденье',
+        intentionTitle: 'Намерение',
+        visionTitle: 'Видение',
         newGame: 'Новая игра',
         showResult: 'Показать',
         shuffle: 'Перемешать',
         back: 'На сейчас достаточно',
-        readMoreTitle: 'Отличие Намеренья и Виденья',
-        readMoreText1: 'В игре «Виденье» за черным экраном находится объект. Сначала перемешайте объекты, нажав на черный экран. Через три секунды перемешивание останавливается. Задача — в воображении увидеть, что скрыто за ширмой, и нажать соответствующую кнопку. Перед выбором обязательно перемешивайте объекты.',
-        readMoreText2: 'В игре «Намеренье» за черным экраном происходит циклический перебор объектов. Задача — в воображении зафиксировать объект и нажать на черный экран или кнопку «Показать». В этот момент цикл останавливается. Показанный объект может совпасть с вашим внутренним взором.',
+        readMoreTitle: 'Отличие Намерения и Видения',
+        readMoreText1: 'В игре «Видение» за черным экраном находится объект. Сначала перемешайте объекты, нажав на черный экран. Через три секунды перемешивание останавливается. Задача — в воображении увидеть, что скрыто за ширмой, и нажать соответствующую кнопку. Перед выбором обязательно перемешивайте объекты.',
+        readMoreText2: 'В игре «Намерение» за черным экраном происходит циклический перебор объектов. Задача — в воображении зафиксировать объект и нажать на черный экран или кнопку «Показать». В этот момент цикл останавливается. Показанный объект может совпасть с вашим внутренним взором.',
         closeReadMore: 'Закрыть',
         themeDay: 'День',
         themeNight: 'Ночь',
@@ -44,6 +45,8 @@ const translations = {
         statsFailures: 'Неудачи',
         statsSuccessRate: 'Процент успеха',
         statsAvgTime: 'Среднее время',
+        statsLastAttemptTimeLabel: 'Время на попытку',
+        statsHistoryLabel: 'История успеха',
         visionSuccess: 'Успех!',
         visionFailure: 'Попробуй ещё!',
         greeting: 'Порепетируем',
@@ -78,6 +81,8 @@ const translations = {
         statsFailures: 'Невдачі',
         statsSuccessRate: 'Відсоток успіху',
         statsAvgTime: 'Середній час',
+        statsLastAttemptTimeLabel: 'Час на спробу',
+        statsHistoryLabel: 'Історія успіху',
         visionSuccess: 'Успіх!',
         visionFailure: 'Спробуй ще!',
         greeting: 'Порепетируємо',
@@ -112,6 +117,8 @@ const translations = {
         statsFailures: 'Failures',
         statsSuccessRate: 'Success Rate',
         statsAvgTime: 'Average Time',
+        statsLastAttemptTimeLabel: 'Time per Attempt',
+        statsHistoryLabel: 'Success History',
         visionSuccess: 'Success!',
         visionFailure: 'Try Again!',
         greeting: 'Let\'s practice',
@@ -146,6 +153,8 @@ const translations = {
         statsFailures: 'Fracasos',
         statsSuccessRate: 'Tasa de Éxito',
         statsAvgTime: 'Tiempo Promedio',
+        statsLastAttemptTimeLabel: 'Tiempo por Intento',
+        statsHistoryLabel: 'Historial de Éxitos',
         visionSuccess: '¡Éxito!',
         visionFailure: '¡Intenta de Nuevo!',
         greeting: 'Practiquemos',
@@ -180,6 +189,8 @@ const translations = {
         statsFailures: '⊹',
         statsSuccessRate: '%⊸',
         statsAvgTime: '⊸⊹',
+        statsLastAttemptTimeLabel: '⏲️',
+        statsHistoryLabel: '📜',
         visionSuccess: '⊸◬',
         visionFailure: '↺◬',
         greeting: '⊸◇',
@@ -253,16 +264,29 @@ function updateLanguage() {
     document.querySelector('label[for="intention-attempts-unlimited"]').childNodes[1].textContent = t.unlimited;
     document.querySelector('label[for="vision-attempts-limited"]').childNodes[1].textContent = t.limited;
     document.querySelector('label[for="vision-attempts-unlimited"]').childNodes[1].textContent = t.unlimited;
-    document.querySelector('#intention-stats p:nth-child(1)').childNodes[0].textContent = `${t.statsAttempts}: `;
-    document.querySelector('#intention-stats p:nth-child(2)').childNodes[0].textContent = `${t.statsSuccesses}: `;
-    document.querySelector('#intention-stats p:nth-child(3)').childNodes[0].textContent = `${t.statsFailures}: `;
-    document.querySelector('#intention-stats p:nth-child(4)').childNodes[0].textContent = `${t.statsSuccessRate}: `;
-    document.querySelector('#intention-stats p:nth-child(5)').childNodes[0].textContent = `${t.statsAvgTime}: `;
-    document.querySelector('#vision-stats p:nth-child(1)').childNodes[0].textContent = `${t.statsAttempts}: `;
-    document.querySelector('#vision-stats p:nth-child(2)').childNodes[0].textContent = `${t.statsSuccesses}: `;
-    document.querySelector('#vision-stats p:nth-child(3)').childNodes[0].textContent = `${t.statsFailures}: `;
-    document.querySelector('#vision-stats p:nth-child(4)').childNodes[0].textContent = `${t.statsSuccessRate}: `;
-    document.querySelector('#vision-stats p:nth-child(5)').childNodes[0].textContent = `${t.statsAvgTime}: `;
+
+    // Обновление меток статистики Намерения
+    const intentionStatsDiv = document.getElementById('intention-stats');
+    if (intentionStatsDiv) {
+        intentionStatsDiv.querySelectorAll('p > span[data-translate-key]').forEach(span => {
+            const key = span.dataset.translateKey;
+            if (t[key]) {
+                span.textContent = t[key];
+            }
+        });
+    }
+
+    // Обновление меток статистики Видение
+    const visionStatsDiv = document.getElementById('vision-stats');
+    if (visionStatsDiv) {
+        visionStatsDiv.querySelectorAll('p > span[data-translate-key]').forEach(span => {
+            const key = span.dataset.translateKey;
+            if (t[key]) {
+                span.textContent = t[key];
+            }
+        });
+    }
+    
     feedbackButtonsTemplate.querySelectorAll('button')[0].textContent = t.success;
     feedbackButtonsTemplate.querySelectorAll('button')[1].textContent = t.failure;
     const visionMessage = document.querySelector('#vision-result p');
@@ -288,8 +312,8 @@ function updateLanguage() {
     document.getElementById('btn-start-intention').setAttribute('aria-label', t.playIntention);
     document.getElementById('btn-start-vision').setAttribute('aria-label', t.playVision);
     document.getElementById('btn-read-more').setAttribute('aria-label', t.readMore);
-    document.getElementById('intention-new-game-btn').setAttribute('aria-label', `${t.newGame} Намір`);
-    document.getElementById('vision-new-game-btn').setAttribute('aria-label', `${t.newGame} Бачення`);
+    document.getElementById('intention-new-game-btn').setAttribute('aria-label', `${t.newGame} ${t.intentionTitle}`); // Updated for dynamic title
+    document.getElementById('vision-new-game-btn').setAttribute('aria-label', `${t.newGame} ${t.visionTitle}`); // Updated for dynamic title
     document.getElementById('intention-show-btn').setAttribute('aria-label', t.showResult);
     document.getElementById('vision-shuffle-btn').setAttribute('aria-label', t.shuffle);
     document.querySelectorAll('.back-btn').forEach(btn => btn.setAttribute('aria-label', t.back));
@@ -307,6 +331,9 @@ function updateLanguage() {
         readMoreArea.classList.remove('alien-text');
         document.body.classList.remove('alien-language'); // Удаляем класс для других языков
     }
+    // Обновить статистику намерения, чтобы символы истории обновились при смене языка
+    updateIntentionStatsDisplay();
+    updateVisionStatsDisplay(); // Обновить статистику и для "Видение"
 }
 
 // Initialize sessionId, userId, and subsessionId
@@ -357,7 +384,7 @@ const visionAttempts = [];
 
 // DOM elements
 const appDiv = document.getElementById('app');
-// const userNameSpan = document.getElementById('telegram-user-name'); // Already declared in updateLanguage, ensure consistency
+const userGreeting = document.getElementById('user-greeting');
 const menuScreen = document.getElementById('menu-screen');
 const btnStartIntention = document.getElementById('btn-start-intention');
 const btnStartVision = document.getElementById('btn-start-vision');
@@ -378,6 +405,11 @@ const intentionStatsSpanSuccesses = document.getElementById('intention-stats-suc
 const intentionStatsSpanFailures = document.getElementById('intention-stats-failures');
 const intentionStatsSpanSuccessRate = document.getElementById('intention-stats-success-rate');
 const intentionStatsSpanAvgTime = document.getElementById('intention-stats-avg-time');
+const intentionLabelLastAttemptTime = document.getElementById('intention-label-last-attempt-time');
+const intentionStatsSpanLastAttemptTime = document.getElementById('intention-stats-last-attempt-time');
+const intentionLabelHistory = document.getElementById('intention-label-history');
+const intentionStatsSpanHistory = document.getElementById('intention-stats-history');
+
 const gameVision = document.getElementById('game-vision');
 const visionShuffleBtn = document.getElementById('vision-shuffle-btn');
 const visionDisplay = document.getElementById('vision-display');
@@ -393,6 +425,8 @@ const visionStatsSpanSuccesses = document.getElementById('stats-successes');
 const visionStatsSpanFailures = document.getElementById('stats-failures');
 const visionStatsSpanSuccessRate = document.getElementById('stats-success-rate');
 const visionStatsSpanAvgTime = document.getElementById('stats-avg-time');
+const visionStatsSpanLastAttemptTime = document.getElementById('vision-stats-last-attempt-time'); // New for Vision
+const visionStatsSpanHistory = document.getElementById('vision-stats-history'); // New for Vision
 const visionModeRadios = document.querySelectorAll('input[name="vision-mode"]');
 const visionAttemptsModeRadios = document.querySelectorAll('input[name="vision-attempts-mode"]');
 const backButtons = document.querySelectorAll('.back-btn');
@@ -402,8 +436,8 @@ const languageMenu = document.getElementById('language-menu');
 const languageOptions = document.querySelectorAll('.language-option');
 
 // Check critical DOM elements
-if (!appDiv || !menuScreen || !gameIntention || !gameVision || !languageToggleBtn || !languageMenu) {
-    console.error('Critical DOM elements are missing. Check HTML for ids: app, menu-screen, game-intention, game-vision, language-toggle-btn, language-menu');
+if (!appDiv || !menuScreen || !gameIntention || !gameVision || !languageToggleBtn || !languageMenu || !userGreeting) {
+    console.error('Critical DOM elements are missing. Check HTML for ids: app, menu-screen, game-intention, game-vision, language-toggle-btn, language-menu, user-greeting');
     throw new Error('Missing critical DOM elements');
 }
 
@@ -585,10 +619,22 @@ function showScreen(screenId) {
     const screens = document.querySelectorAll('.game-screen');
     screens.forEach(screen => screen.classList.add('hidden'));
 
+    // Manage user greeting visibility
+    if (userGreeting) {
+        if (screenId === 'game-intention' || screenId === 'game-vision') {
+            userGreeting.classList.add('hidden');
+        } else {
+            userGreeting.classList.remove('hidden');
+        }
+    }
+
     if (screenId !== 'game-intention') {
         stopIntentionGame();
     }
-    stopVisionGame();
+    if (screenId !== 'game-vision') { // Stop vision game if not showing vision screen
+      stopVisionGame();
+    }
+
 
     if (screenId === 'menu-screen') {
         sendSessionSummary();
@@ -812,7 +858,7 @@ function showIntentionResult() {
             if (intentionStats.attempts === 1 && intentionAttemptsModeDiv) {
                 intentionAttemptsModeDiv.classList.add('hidden');
             }
-            updateIntentionStatsDisplay();
+            // updateIntentionStatsDisplay() will be called after success/failure/timeout
 
             sendGtagEvent('show_result', {
                 event_category: 'Game',
@@ -868,7 +914,7 @@ function showIntentionResult() {
                 const timeToGuess = timeDiffMs ? Math.max(0.1, Number((timeDiffMs / 1000).toFixed(1))) : 0.1;
                 intentionAttempts.push({ time: timeToGuess, result: 0 });
                 saveAttempts('intention');
-                updateIntentionStatsDisplay();
+                updateIntentionStatsDisplay(); // Update stats after timeout
                 sendGtagEvent('intention_timeout', {
                     event_category: 'Game',
                     event_label: 'Intention Timeout',
@@ -893,7 +939,7 @@ function showIntentionResult() {
                 intentionGuessSequence.push(1);
                 intentionAttempts.push({ time: timeToGuess, result: 1 });
                 saveAttempts('intention');
-                updateIntentionStatsDisplay();
+                updateIntentionStatsDisplay(); // Update stats after success
                 sendGtagEvent('intention_guess', {
                     event_category: 'Game',
                     event_label: 'Intention Guess',
@@ -922,7 +968,7 @@ function showIntentionResult() {
                 intentionGuessSequence.push(0);
                 intentionAttempts.push({ time: timeToGuess, result: 0 });
                 saveAttempts('intention');
-                updateIntentionStatsDisplay();
+                updateIntentionStatsDisplay(); // Update stats after failure
                 sendGtagEvent('intention_guess', {
                     event_category: 'Game',
                     event_label: 'Intention Guess',
@@ -992,11 +1038,25 @@ function updateIntentionStatsDisplay() {
     if (intentionStatsSpanMaxAttempts) intentionStatsSpanMaxAttempts.textContent = intentionAttemptsMode === 'limited' ? intentionMaxAttempts : '∞';
     if (intentionStatsSpanSuccesses) intentionStatsSpanSuccesses.textContent = intentionStats.successes;
     if (intentionStatsSpanFailures) intentionStatsSpanFailures.textContent = intentionStats.failures;
+    
     const successRate = intentionStats.attempts > 0 ? Math.round((intentionStats.successes / intentionStats.attempts) * 100) : 0;
     if (intentionStatsSpanSuccessRate) intentionStatsSpanSuccessRate.textContent = `${successRate}%`;
+    
+    const lastAttemptTimeText = intentionAttempts.length > 0 
+        ? `${intentionAttempts[intentionAttempts.length - 1].time.toFixed(1)}s` 
+        : '0s';
+    if (intentionStatsSpanLastAttemptTime) intentionStatsSpanLastAttemptTime.textContent = lastAttemptTimeText;
+
+    const successChar = currentLanguage === 'alien' ? translations.alien.success : '✅';
+    const failureChar = currentLanguage === 'alien' ? translations.alien.failure : '❌';
+    const historyText = intentionAttempts.map(attempt => attempt.result === 1 ? successChar : failureChar).join(' | ');
+    if (intentionStatsSpanHistory) intentionStatsSpanHistory.textContent = historyText;
+    
     const avgTime = intentionAttempts.length ? (intentionAttempts.reduce((sum, a) => sum + a.time, 0) / intentionAttempts.length).toFixed(1) : 0;
     if (intentionStatsSpanAvgTime) intentionStatsSpanAvgTime.textContent = `${avgTime}s`;
+    updateVisionStatsDisplay(); // Обновить статистику и для "Видение"
 }
+
 
 function startVisionShuffle() {
     logDebug('Starting Vision shuffle');
@@ -1160,8 +1220,20 @@ function updateVisionStatsDisplay() {
     if (visionStatsSpanMaxAttempts) visionStatsSpanMaxAttempts.textContent = visionAttemptMode === 'limited' ? visionMaxAttempts : '∞';
     if (visionStatsSpanSuccesses) visionStatsSpanSuccesses.textContent = visionStats.successes;
     if (visionStatsSpanFailures) visionStatsSpanFailures.textContent = visionStats.failures;
+    
     const successRate = visionStats.attempts > 0 ? Math.round((visionStats.successes / visionStats.attempts) * 100) : 0;
     if (visionStatsSpanSuccessRate) visionStatsSpanSuccessRate.textContent = `${successRate}%`;
+
+    const lastAttemptTimeText = visionAttempts.length > 0 
+        ? `${visionAttempts[visionAttempts.length - 1].time.toFixed(1)}s` 
+        : '0s';
+    if (visionStatsSpanLastAttemptTime) visionStatsSpanLastAttemptTime.textContent = lastAttemptTimeText;
+
+    const successChar = currentLanguage === 'alien' ? translations.alien.success : '✅';
+    const failureChar = currentLanguage === 'alien' ? translations.alien.failure : '❌';
+    const historyText = visionAttempts.map(attempt => attempt.result === 1 ? successChar : failureChar).join(' | ');
+    if (visionStatsSpanHistory) visionStatsSpanHistory.textContent = historyText;
+    
     const avgTime = visionAttempts.length ? (visionAttempts.reduce((sum, a) => sum + a.time, 0) / visionAttempts.length).toFixed(1) : 0;
     if (visionStatsSpanAvgTime) visionStatsSpanAvgTime.textContent = `${avgTime}s`;
 }
@@ -1577,7 +1649,8 @@ function checkCriticalElements() {
         { id: 'language-text', element: languageTextEl },
         { id: 'menu-screen', element: menuScreen },
         { id: 'game-intention', element: gameIntention },
-        { id: 'game-vision', element: gameVision }
+        { id: 'game-vision', element: gameVision },
+        { id: 'user-greeting', element: userGreeting }
     ];
 
     criticalElements.forEach(({ id, element }) => {
