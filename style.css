@@ -154,6 +154,7 @@ button {
     cursor: pointer;
     transition: background-color 0.2s ease;
     min-height: 44px;
+    box-sizing: border-box; /* Added for predictable sizing */
 }
 
 body.alien-language button {
@@ -204,6 +205,8 @@ body.alien-language .small-btn {
     font-size: calc(var(--base-font-size) * 1.1); /* Увеличенный шрифт */
     min-height: 40px; /* Увеличенная высота */
     line-height: 1.2;
+    flex: 1; /* Added to make buttons share space equally */
+    text-align: center; /* Ensure text is centered */
 }
 
 body.alien-language .feedback-buttons .small-btn {
@@ -723,6 +726,7 @@ body.alien-language #intention-stats p span {
         padding: 20px 30px; /* Увеличенный отступ для мобильных */
         font-size: calc(var(--base-font-size) * 1); /* Увеличенный шрифт */
         min-height: 36px; /* Увеличенная высота */
+        /* flex: 1; will be inherited from the desktop rule, ensuring they remain identical */
     }
 
    
