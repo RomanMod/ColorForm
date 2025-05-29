@@ -66,7 +66,6 @@
 
         <div id="game-intention" class="game-screen hidden">
             <h2>Намір</h2>
-            <button id="intention-new-game-btn" class="new-game-btn hidden" aria-label="Нова гра Намір">Нова гра</button>
             <div class="controls">
                 <div class="mode-select">
                     <label for="intention-mode-color"><input type="radio" id="intention-mode-color" name="intention-mode" value="color" checked> Колір</label>
@@ -80,6 +79,7 @@
             <div class="display" id="intention-display">
                 <div class="result-display" id="intention-result"></div>
             </div>
+            <button id="intention-new-game-btn" class="new-game-btn hidden" aria-label="Нова гра Намір">Нова гра</button>
             <div class="action-btn">
                 <button id="intention-show-btn" class="small-btn" aria-label="Показати результат">Показати</button>
             </div>
@@ -89,7 +89,10 @@
                 <p><span data-translate-key="statsFailures">Невдачі</span>: <span id="intention-stats-failures">0</span></p>
                 <p><span data-translate-key="statsSuccessRate">Відсоток успіху</span>: <span id="intention-stats-success-rate">0%</span></p>
                 <p><span id="intention-label-last-attempt-time" data-translate-key="statsLastAttemptTimeLabel">Время на попытку</span>: <span id="intention-stats-last-attempt-time">0с</span></p>
-                <p><span id="intention-label-history" data-translate-key="statsHistoryLabel">История успеха</span>: <span id="intention-stats-history"></span></p>
+                <p>
+                    <span id="intention-label-history" data-translate-key="statsHistoryLabel"></span>
+                    <span id="intention-stats-history" class="stats-history-icons"></span>
+                </p>
                 <p class="hidden"><span data-translate-key="statsAvgTime">Середній час</span>: <span id="intention-stats-avg-time">0с</span></p>
             </div>
             <button class="back-btn" aria-label="Повернутися в меню">Наразі досить</button>
@@ -97,7 +100,6 @@
 
         <div id="game-vision" class="game-screen hidden">
             <h2>Бачення</h2>
-            <button id="vision-new-game-btn" class="new-game-btn hidden" aria-label="Нова гра Бачення">Нова гра</button>
             <div class="controls">
                 <div class="mode-select">
                     <label for="vision-mode-color"><input type="radio" id="vision-mode-color" name="vision-mode" value="color" checked> Колір</label>
@@ -111,6 +113,7 @@
             <div class="display" id="vision-display">
                 <div class="result-display" id="vision-result"></div>
             </div>
+            <button id="vision-new-game-btn" class="new-game-btn hidden" aria-label="Нова гра Бачення">Нова гра</button>
             <div class="action-btn">
                 <button id="vision-shuffle-btn" class="small-btn" aria-label="Перемішати об’єкти">Перемішати</button>
             </div>
@@ -134,7 +137,10 @@
                 <p><span data-translate-key="statsFailures">Невдачі</span>: <span id="stats-failures">0</span></p>
                 <p><span data-translate-key="statsSuccessRate">Відсоток успіху</span>: <span id="stats-success-rate">0%</span></p>
                 <p><span data-translate-key="statsLastAttemptTimeLabel">Время на попытку</span>: <span id="vision-stats-last-attempt-time">0с</span></p>
-                <p><span data-translate-key="statsHistoryLabel">История успеха</span>: <span id="vision-stats-history"></span></p>
+                <p>
+                    <span data-translate-key="statsHistoryLabel"></span>
+                    <span id="vision-stats-history" class="stats-history-icons"></span>
+                </p>
                 <p class="hidden"><span data-translate-key="statsAvgTime">Середній час</span>: <span id="stats-avg-time">0с</span></p>
             </div>
             <button class="back-btn" aria-label="Повернутися в меню">Наразі досить</button>
@@ -143,5 +149,4 @@
     <script src="script.js" defer></script>
 </body>
 </html><link rel="stylesheet" href="style.css">
-<script src="index.tsx" type="module"></script><link rel="stylesheet" href="style.css">
 <script src="index.tsx" type="module"></script>
