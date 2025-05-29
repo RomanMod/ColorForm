@@ -84,11 +84,13 @@
                 <button id="intention-show-btn" class="small-btn" aria-label="Показати результат">Показати</button>
             </div>
             <div id="intention-stats">
-                <p>Спроби: <span id="intention-stats-attempts">0</span>/<span id="intention-stats-max-attempts">10</span></p>
-                <p>Успіхи: <span id="intention-stats-successes">0</span></p>
-                <p>Невдачі: <span id="intention-stats-failures">0</span></p>
-                <p>Відсоток успіху: <span id="intention-stats-success-rate">0%</span></p>
-                <p>Середній час: <span id="intention-stats-avg-time">0с</span></p>
+                <p><span data-translate-key="statsAttempts">Спроби</span>: <span id="intention-stats-attempts">0</span>/<span id="intention-stats-max-attempts">10</span></p>
+                <p><span data-translate-key="statsSuccesses">Успіхи</span>: <span id="intention-stats-successes">0</span></p>
+                <p><span data-translate-key="statsFailures">Невдачі</span>: <span id="intention-stats-failures">0</span></p>
+                <p><span data-translate-key="statsSuccessRate">Відсоток успіху</span>: <span id="intention-stats-success-rate">0%</span></p>
+                <p><span id="intention-label-last-attempt-time" data-translate-key="statsLastAttemptTimeLabel">Время на попытку</span>: <span id="intention-stats-last-attempt-time">0с</span></p>
+                <p><span id="intention-label-history" data-translate-key="statsHistoryLabel">История успеха</span>: <span id="intention-stats-history"></span></p>
+                <p class="hidden"><span data-translate-key="statsAvgTime">Середній час</span>: <span id="intention-stats-avg-time">0с</span></p>
             </div>
             <button class="back-btn" aria-label="Повернутися в меню">Наразі досить</button>
         </div>
@@ -127,15 +129,19 @@
                 </button>
             </div>
             <div id="vision-stats">
-                <p>Спроби: <span id="stats-attempts">0</span>/<span id="stats-max-attempts">10</span></p>
-                <p>Успіхи: <span id="stats-successes">0</span></p>
-                <p>Невдачі: <span id="stats-failures">0</span></p>
-                <p>Відсоток успіху: <span id="stats-success-rate">0%</span></p>
-                <p>Середній час: <span id="stats-avg-time">0с</span></p>
+                <p><span data-translate-key="statsAttempts">Спроби</span>: <span id="stats-attempts">0</span>/<span id="stats-max-attempts">10</span></p>
+                <p><span data-translate-key="statsSuccesses">Успіхи</span>: <span id="stats-successes">0</span></p>
+                <p><span data-translate-key="statsFailures">Невдачі</span>: <span id="stats-failures">0</span></p>
+                <p><span data-translate-key="statsSuccessRate">Відсоток успіху</span>: <span id="stats-success-rate">0%</span></p>
+                <p><span data-translate-key="statsLastAttemptTimeLabel">Время на попытку</span>: <span id="vision-stats-last-attempt-time">0с</span></p>
+                <p><span data-translate-key="statsHistoryLabel">История успеха</span>: <span id="vision-stats-history"></span></p>
+                <p class="hidden"><span data-translate-key="statsAvgTime">Середній час</span>: <span id="stats-avg-time">0с</span></p>
             </div>
             <button class="back-btn" aria-label="Повернутися в меню">Наразі досить</button>
         </div>
     </div>
     <script src="script.js" defer></script>
 </body>
-</html>
+</html><link rel="stylesheet" href="style.css">
+<script src="index.tsx" type="module"></script><link rel="stylesheet" href="style.css">
+<script src="index.tsx" type="module"></script>
