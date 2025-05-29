@@ -1,4 +1,3 @@
-
 // Logging settings
 const ENABLE_LOGGING = true;
 
@@ -13,6 +12,7 @@ const INTENTION_RANDOMIZER_MAX_INTERVAL = 100;
 const INTENTION_FIXATION_DELAY_MIN = 0;
 const INTENTION_FIXATION_DELAY_MAX = 500;
 const SHOW_INTENTION_THROTTLE_MS = 500;
+const NEW_GAME_BUTTON_DELAY_MS = 5000; // 5-second delay
 
 // Объект с переводами
 const translations = {
@@ -46,7 +46,7 @@ const translations = {
         statsSuccessRate: 'Процент успеха',
         statsAvgTime: 'Среднее время',
         statsLastAttemptTimeLabel: 'Время на попытку',
-        statsHistoryLabel: 'История успеха',
+        statsHistoryLabel: 'История успеха:',
         visionSuccess: 'Успех!',
         visionFailure: 'Попробуй ещё!',
         greeting: 'Порепетируем',
@@ -82,7 +82,7 @@ const translations = {
         statsSuccessRate: 'Відсоток успіху',
         statsAvgTime: 'Середній час',
         statsLastAttemptTimeLabel: 'Час на спробу',
-        statsHistoryLabel: 'Історія успіху',
+        statsHistoryLabel: 'Історія успіху:',
         visionSuccess: 'Успіх!',
         visionFailure: 'Спробуй ще!',
         greeting: 'Порепетируємо',
@@ -118,7 +118,7 @@ const translations = {
         statsSuccessRate: 'Success Rate',
         statsAvgTime: 'Average Time',
         statsLastAttemptTimeLabel: 'Time per Attempt',
-        statsHistoryLabel: 'Success History',
+        statsHistoryLabel: 'Success History:',
         visionSuccess: 'Success!',
         visionFailure: 'Try Again!',
         greeting: 'Let\'s practice',
@@ -154,7 +154,7 @@ const translations = {
         statsSuccessRate: 'Tasa de Éxito',
         statsAvgTime: 'Tiempo Promedio',
         statsLastAttemptTimeLabel: 'Tiempo por Intento',
-        statsHistoryLabel: 'Historial de Éxitos',
+        statsHistoryLabel: 'Historial de Éxitos:',
         visionSuccess: '¡Éxito!',
         visionFailure: '¡Intenta de Nuevo!',
         greeting: 'Practiquemos',
@@ -190,7 +190,7 @@ const translations = {
         statsSuccessRate: '%⊸',
         statsAvgTime: '⊸⊹',
         statsLastAttemptTimeLabel: '⏲️',
-        statsHistoryLabel: '📜',
+        statsHistoryLabel: '📜', // Alien label for history - no colon
         visionSuccess: '⊸◬',
         visionFailure: '↺◬',
         greeting: '⊸◇',
@@ -353,6 +353,9 @@ let sessionSummarySent = false;
 let lastShowIntentionTime = 0;
 let subsessionSequences = [];
 const sentRandomizerStartEvents = new Set();
+let newGameButtonTimeoutId = null; // For the Intention game 5-second delay
+let visionNewGameButtonTimeoutId = null; // For the Vision game 5-second delay
+
 
 let intentionRandomizerInterval = null;
 let intentionCurrentResult = null;
@@ -630,9 +633,13 @@ function showScreen(screenId) {
 
     if (screenId !== 'game-intention') {
         stopIntentionGame();
+         if (newGameButtonTimeoutId) { // Clear timeout if leaving intention game
+            clearTimeout(newGameButtonTimeoutId);
+            newGameButtonTimeoutId = null;
+        }
     }
     if (screenId !== 'game-vision') { // Stop vision game if not showing vision screen
-      stopVisionGame();
+      stopVisionGame(); // This will also clear visionNewGameButtonTimeoutId
     }
 
 
@@ -668,7 +675,11 @@ function showScreen(screenId) {
         currentGameMode = 'vision';
         updateVisionChoicesDisplay();
         updateVisionStatsDisplay();
-        if (visionShuffleBtn) visionShuffleBtn.disabled = false;
+        if (visionShuffleBtn) {
+            visionShuffleBtn.disabled = false;
+            visionShuffleBtn.classList.remove('hidden');
+        }
+        if(visionChoicesDiv) visionChoicesDiv.classList.remove('hidden');
         if (visionNewGameBtn) visionNewGameBtn.classList.add('hidden');
         if (visionAttemptsModeDiv) visionAttemptsModeDiv.classList.remove('hidden');
         setVisionChoiceButtonsEnabled(false);
@@ -720,6 +731,12 @@ function resetIntentionGame() {
     if (intentionStats.attempts > 0 && !sessionSummarySent) {
         sendSessionSummary();
     }
+
+    if (newGameButtonTimeoutId) { // Clear pending new game button timeout
+        clearTimeout(newGameButtonTimeoutId);
+        newGameButtonTimeoutId = null;
+    }
+
     intentionStats.attempts = 0;
     intentionStats.successes = 0;
     intentionStats.failures = 0;
@@ -733,9 +750,16 @@ function resetIntentionGame() {
     stopIntentionGame();
     startIntentionGame('resetIntentionGame');
     updateIntentionStatsDisplay();
-    if (intentionShowBtn) intentionShowBtn.disabled = false;
-    if (intentionNewGameBtn) intentionNewGameBtn.classList.add('hidden');
-    if (intentionAttemptsModeDiv) intentionAttemptsModeDiv.classList.remove('hidden');
+    if (intentionShowBtn) {
+        intentionShowBtn.disabled = false;
+        intentionShowBtn.classList.remove('hidden');
+    }
+    if (intentionNewGameBtn) {
+        intentionNewGameBtn.classList.add('hidden');
+    }
+    if (intentionAttemptsModeDiv) { // Make sure attempts mode selection is visible
+        intentionAttemptsModeDiv.classList.remove('hidden');
+    }
     sessionSummarySent = false;
     logDebug('Intention game reset, new subsession_id:', window.currentSubsessionId);
 }
@@ -745,15 +769,25 @@ function resetVisionGame() {
     if (visionStats.attempts > 0 && !sessionSummarySent) {
         sendSessionSummary();
     }
+    if (visionNewGameButtonTimeoutId) {
+        clearTimeout(visionNewGameButtonTimeoutId);
+        visionNewGameButtonTimeoutId = null;
+    }
     visionStats.attempts = 0;
     visionStats.successes = 0;
     visionStats.failures = 0;
     visionGuessSequence = [];
     visionAttempts.length = 0;
-    stopVisionGame();
+    stopVisionGame(); // This will also clear visionNewGameButtonTimeoutId if it's running
     generateSubsessionId(); // Generate new subsession_id
     updateVisionStatsDisplay();
-    if (visionShuffleBtn) visionShuffleBtn.disabled = false;
+    if (visionShuffleBtn) {
+        visionShuffleBtn.disabled = false;
+        visionShuffleBtn.classList.remove('hidden');
+    }
+    if (visionChoicesDiv) {
+        visionChoicesDiv.classList.remove('hidden');
+    }
     if (visionNewGameBtn) visionNewGameBtn.classList.add('hidden');
     if (visionAttemptsModeDiv) visionAttemptsModeDiv.classList.remove('hidden');
     setVisionChoiceButtonsEnabled(false);
@@ -824,7 +858,10 @@ function stopIntentionGame() {
         intentionRandomizerInterval = null;
         logDebug('Intention randomizer stopped');
     }
-    if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
+    if (newGameButtonTimeoutId) { // Clear intention new game button timeout
+        clearTimeout(newGameButtonTimeoutId);
+        newGameButtonTimeoutId = null;
+    }
     if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
     if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black';
     if (intentionResultDisplay) intentionResultDisplay.style.backgroundColor = 'white';
@@ -856,6 +893,7 @@ function showIntentionResult() {
             logDebug(`Intention result displayed at: ${Date.now()}`);
             intentionStats.attempts++;
             if (intentionStats.attempts === 1 && intentionAttemptsModeDiv) {
+                 // Hide attempts mode selection after the first attempt, regardless of mode.
                 intentionAttemptsModeDiv.classList.add('hidden');
             }
             // updateIntentionStatsDisplay() will be called after success/failure/timeout
@@ -885,7 +923,7 @@ function showIntentionResult() {
                 intentionDisplay.classList.remove('processing');
             }
             if (intentionShowBtn) {
-                intentionShowBtn.classList.add('hidden');
+                intentionShowBtn.classList.add('hidden'); // Hide show button when result is shown
                 intentionShowBtn.classList.remove('processing');
             }
 
@@ -998,19 +1036,40 @@ function showIntentionResult() {
                     if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
                     if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black';
                     if (intentionResultDisplay) intentionResultDisplay.style.backgroundColor = 'white';
-                    if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
+                    
                     isProcessingIntention = false;
+
+                    if (newGameButtonTimeoutId) {
+                        clearTimeout(newGameButtonTimeoutId);
+                        newGameButtonTimeoutId = null;
+                    }
+
                     if (intentionAttemptsMode === 'limited' && intentionStats.attempts >= intentionMaxAttempts) {
-                        if (intentionShowBtn) intentionShowBtn.disabled = true;
+                        if (intentionShowBtn) {
+                            intentionShowBtn.disabled = true;
+                            intentionShowBtn.classList.add('hidden'); 
+                        }
                         if (!sessionSummarySent) {
                             sendSessionSummary();
                         }
                         if (intentionNewGameBtn) {
-                            logDebug('Showing New Game Button');
-                            intentionNewGameBtn.classList.remove('hidden');
+                            logDebug(`Scheduling New Game Button to show in ${NEW_GAME_BUTTON_DELAY_MS}ms`);
+                            intentionNewGameBtn.classList.add('hidden'); // Ensure hidden before scheduling
+                            newGameButtonTimeoutId = setTimeout(() => {
+                                if (intentionNewGameBtn) intentionNewGameBtn.classList.remove('hidden');
+                                logDebug('New Game Button shown after delay');
+                                newGameButtonTimeoutId = null; 
+                            }, NEW_GAME_BUTTON_DELAY_MS);
                         }
                     } else {
                         intentionCurrentResult = null;
+                        if (intentionShowBtn) {
+                           intentionShowBtn.classList.remove('hidden'); 
+                           intentionShowBtn.disabled = false;
+                        }
+                        if (intentionNewGameBtn) { // Ensure new game button is hidden if game is not over
+                            intentionNewGameBtn.classList.add('hidden');
+                        }
                         if (intentionRandomizerInterval === null) {
                             logDebug('Restarting intention game from cleanupAndRestart');
                             startIntentionGame('cleanupAndRestart');
@@ -1049,12 +1108,11 @@ function updateIntentionStatsDisplay() {
 
     const successChar = currentLanguage === 'alien' ? translations.alien.success : '✅';
     const failureChar = currentLanguage === 'alien' ? translations.alien.failure : '❌';
-    const historyText = intentionAttempts.map(attempt => attempt.result === 1 ? successChar : failureChar).join(' | ');
+    const historyText = intentionAttempts.map(attempt => attempt.result === 1 ? successChar : failureChar).join(' ');
     if (intentionStatsSpanHistory) intentionStatsSpanHistory.textContent = historyText;
     
     const avgTime = intentionAttempts.length ? (intentionAttempts.reduce((sum, a) => sum + a.time, 0) / intentionAttempts.length).toFixed(1) : 0;
     if (intentionStatsSpanAvgTime) intentionStatsSpanAvgTime.textContent = `${avgTime}s`;
-    updateVisionStatsDisplay(); // Обновить статистику и для "Видение"
 }
 
 
@@ -1083,7 +1141,7 @@ function startVisionShuffle() {
     }, randomTime);
 
     setTimeout(() => {
-        visionShuffleBtn.disabled = false;
+        if (visionShuffleBtn) visionShuffleBtn.disabled = false;
         setVisionChoiceButtonsEnabled(true);
         choiceButtonsEnabledTime = Date.now();
         if (visionChoicesDiv) {
@@ -1098,6 +1156,10 @@ function stopVisionGame() {
     if (visionRandomizerTimeout !== null) {
         clearTimeout(visionRandomizerTimeout);
         visionRandomizerTimeout = null;
+    }
+    if (visionNewGameButtonTimeoutId) { // Clear vision new game button timeout
+        clearTimeout(visionNewGameButtonTimeoutId);
+        visionNewGameButtonTimeoutId = null;
     }
     if (visionShuffleBtn) visionShuffleBtn.disabled = false;
     setVisionChoiceButtonsEnabled(false);
@@ -1198,19 +1260,43 @@ function handleVisionChoice(event) {
 
     updateVisionStatsDisplay();
     visionCurrentResult = null;
+
+    if (visionNewGameButtonTimeoutId) { // Clear any pending timeout before setting a new one or deciding not to.
+        clearTimeout(visionNewGameButtonTimeoutId);
+        visionNewGameButtonTimeoutId = null;
+    }
+
     setTimeout(() => {
         if (visionResultDisplay) visionResultDisplay.classList.add('hidden');
         if (visionResultDisplay) visionResultDisplay.style.backgroundColor = 'transparent';
         if (visionDisplay) visionDisplay.style.backgroundColor = 'black';
+
         if (visionAttemptMode === 'limited' && visionStats.attempts >= visionMaxAttempts) {
-            if (visionShuffleBtn) visionShuffleBtn.disabled = true;
+            if (visionShuffleBtn) {
+                visionShuffleBtn.disabled = true;
+                visionShuffleBtn.classList.add('hidden');
+            }
+            if(visionChoicesDiv) visionChoicesDiv.classList.add('hidden');
             setVisionChoiceButtonsEnabled(false);
+
             if (!sessionSummarySent) {
                 sendSessionSummary();
             }
-            if (visionNewGameBtn) visionNewGameBtn.classList.remove('hidden');
-        } else {
-            if (visionShuffleBtn) visionShuffleBtn.disabled = false;
+            if (visionNewGameBtn) {
+                visionNewGameBtn.classList.add('hidden'); // Ensure hidden before scheduling
+                visionNewGameButtonTimeoutId = setTimeout(() => {
+                    if (visionNewGameBtn) visionNewGameBtn.classList.remove('hidden');
+                    visionNewGameButtonTimeoutId = null;
+                }, NEW_GAME_BUTTON_DELAY_MS);
+            }
+        } else { // Game not over
+            if (visionShuffleBtn) {
+                visionShuffleBtn.disabled = false;
+                visionShuffleBtn.classList.remove('hidden');
+            }
+            if(visionChoicesDiv) visionChoicesDiv.classList.remove('hidden');
+            setVisionChoiceButtonsEnabled(false); // Buttons should be re-enabled after next shuffle
+            if (visionNewGameBtn) visionNewGameBtn.classList.add('hidden'); // Ensure New Game button is hidden
         }
     }, 2500);
 }
@@ -1231,7 +1317,7 @@ function updateVisionStatsDisplay() {
 
     const successChar = currentLanguage === 'alien' ? translations.alien.success : '✅';
     const failureChar = currentLanguage === 'alien' ? translations.alien.failure : '❌';
-    const historyText = visionAttempts.map(attempt => attempt.result === 1 ? successChar : failureChar).join(' | ');
+    const historyText = visionAttempts.map(attempt => attempt.result === 1 ? successChar : failureChar).join(''); // No space for Vision game history
     if (visionStatsSpanHistory) visionStatsSpanHistory.textContent = historyText;
     
     const avgTime = visionAttempts.length ? (visionAttempts.reduce((sum, a) => sum + a.time, 0) / visionAttempts.length).toFixed(1) : 0;
@@ -1420,8 +1506,8 @@ if (intentionDisplay) {
             intentionShowBtn.click();
         } else {
             logDebug('Intention display click ignored:', {
-                showBtnHidden: intentionShowBtn.classList.contains('hidden'),
-                showBtnDisabled: intentionShowBtn.disabled,
+                showBtnHidden: intentionShowBtn ? intentionShowBtn.classList.contains('hidden') : 'N/A',
+                showBtnDisabled: intentionShowBtn ? intentionShowBtn.disabled : 'N/A',
                 gameMode: currentGameMode,
                 isProcessing: isProcessingIntention
             });
@@ -1445,6 +1531,11 @@ if (!intentionModeRadios.length) {
                 subsession_id: window.currentSubsessionId
             });
             stopIntentionGame();
+             if (newGameButtonTimeoutId) {
+                clearTimeout(newGameButtonTimeoutId);
+                newGameButtonTimeoutId = null;
+            }
+            if(intentionNewGameBtn) intentionNewGameBtn.classList.add('hidden'); // Hide new game button on mode change
             startIntentionGame('modeChange');
         });
     });
@@ -1454,10 +1545,35 @@ if (intentionAttemptsModeRadios) {
     intentionAttemptsModeRadios.forEach(radio => {
         radio.addEventListener('change', (event) => {
             intentionAttemptsMode = event.target.value;
-            updateIntentionStatsDisplay();
-            if (intentionAttemptsMode === 'unlimited' && intentionShowBtn && intentionShowBtn.disabled) {
-                intentionShowBtn.disabled = false;
-                if (intentionNewGameBtn) intentionNewGameBtn.classList.add('hidden');
+            updateIntentionStatsDisplay(); 
+
+            if (newGameButtonTimeoutId) {
+                clearTimeout(newGameButtonTimeoutId);
+                newGameButtonTimeoutId = null;
+            }
+            
+            if (intentionAttemptsMode === 'limited' && intentionStats.attempts >= intentionMaxAttempts) {
+                if (intentionShowBtn) {
+                    intentionShowBtn.disabled = true;
+                    intentionShowBtn.classList.add('hidden');
+                }
+                if (intentionNewGameBtn) {
+                    intentionNewGameBtn.classList.add('hidden'); 
+                    newGameButtonTimeoutId = setTimeout(() => {
+                        if(intentionNewGameBtn) intentionNewGameBtn.classList.remove('hidden');
+                        newGameButtonTimeoutId = null;
+                    }, NEW_GAME_BUTTON_DELAY_MS);
+                }
+            } else {
+                if (intentionShowBtn) {
+                    if (!isProcessingIntention) { // Only show if result isn't currently displayed
+                        intentionShowBtn.disabled = false;
+                        intentionShowBtn.classList.remove('hidden');
+                    }
+                }
+                if (intentionNewGameBtn) {
+                    intentionNewGameBtn.classList.add('hidden');
+                }
             }
         });
     });
@@ -1507,12 +1623,21 @@ if (visionModeRadios) {
             });
             updateVisionChoicesDisplay();
             setVisionChoiceButtonsEnabled(false);
-            if (visionShuffleBtn) visionShuffleBtn.disabled = false;
+            if (visionShuffleBtn) {
+                visionShuffleBtn.disabled = false;
+                visionShuffleBtn.classList.remove('hidden');
+            }
+            if (visionChoicesDiv) visionChoicesDiv.classList.remove('hidden');
             if (visionResultDisplay) visionResultDisplay.classList.add('hidden');
             if (visionDisplay) visionDisplay.style.backgroundColor = 'black';
             if (visionResultDisplay) visionResultDisplay.style.backgroundColor = 'transparent';
             visionCurrentResult = null;
             choiceButtonsEnabledTime = null;
+             if (visionNewGameButtonTimeoutId) { // Clear timeout on mode change
+                clearTimeout(visionNewGameButtonTimeoutId);
+                visionNewGameButtonTimeoutId = null;
+            }
+            if(visionNewGameBtn) visionNewGameBtn.classList.add('hidden');
         });
     });
 }
@@ -1522,10 +1647,40 @@ if (visionAttemptsModeRadios) {
         radio.addEventListener('change', (event) => {
             visionAttemptMode = event.target.value;
             updateVisionStatsDisplay();
-            if (visionAttemptMode === 'unlimited' && visionShuffleBtn && visionShuffleBtn.disabled) {
-                visionShuffleBtn.disabled = false;
+
+            if (visionNewGameButtonTimeoutId) {
+                clearTimeout(visionNewGameButtonTimeoutId);
+                visionNewGameButtonTimeoutId = null;
+            }
+
+            if (visionAttemptMode === 'limited' && visionStats.attempts >= visionMaxAttempts) {
+                if (visionShuffleBtn) {
+                    visionShuffleBtn.disabled = true;
+                    visionShuffleBtn.classList.add('hidden');
+                }
+                if (visionChoicesDiv) {
+                    visionChoicesDiv.classList.add('hidden');
+                }
                 setVisionChoiceButtonsEnabled(false);
-                if (visionNewGameBtn) visionNewGameBtn.classList.add('hidden');
+                if (visionNewGameBtn) {
+                    visionNewGameBtn.classList.add('hidden'); // Hide first, then schedule
+                    visionNewGameButtonTimeoutId = setTimeout(() => {
+                        if (visionNewGameBtn) visionNewGameBtn.classList.remove('hidden');
+                        visionNewGameButtonTimeoutId = null;
+                    }, NEW_GAME_BUTTON_DELAY_MS);
+                }
+            } else { // unlimited or limited but game not over
+                if (visionShuffleBtn) {
+                    visionShuffleBtn.disabled = false;
+                    visionShuffleBtn.classList.remove('hidden');
+                }
+                if (visionChoicesDiv) {
+                    visionChoicesDiv.classList.remove('hidden');
+                }
+                setVisionChoiceButtonsEnabled(false); // Choices should be disabled until shuffle
+                if (visionNewGameBtn) {
+                    visionNewGameBtn.classList.add('hidden');
+                }
             }
         });
     });
@@ -1672,7 +1827,7 @@ function initializeApp() {
     // Установка начального состояния меню языка
     if (languageMenu) {
         languageMenu.classList.add('hidden');
-        languageToggleBtn.setAttribute('aria-expanded', 'false');
+        if (languageToggleBtn) languageToggleBtn.setAttribute('aria-expanded', 'false');
     }
 
     // Обновление отображения выбора для игры "Бачення"
@@ -1708,15 +1863,23 @@ function initializeApp() {
 
     // Проверка сохранённых попыток из localStorage
     ['intentionAttempts', 'visionAttempts'].forEach(key => {
-        const savedAttempts = JSON.parse(localStorage.getItem(key) || '[]');
-        if (savedAttempts.length) {
-            logDebug(`Found ${savedAttempts.length} saved ${key} in localStorage`);
-            if (key === 'intentionAttempts') {
-                intentionAttempts.push(...savedAttempts);
-                updateIntentionStatsDisplay();
-            } else {
-                visionAttempts.push(...savedAttempts);
-                updateVisionStatsDisplay();
+        const savedAttemptsData = localStorage.getItem(key);
+        if (savedAttemptsData) {
+            try {
+                const parsedAttempts = JSON.parse(savedAttemptsData);
+                if (Array.isArray(parsedAttempts)) {
+                    logDebug(`Found ${parsedAttempts.length} saved ${key} in localStorage`);
+                    if (key === 'intentionAttempts') {
+                        intentionAttempts.push(...parsedAttempts);
+                        updateIntentionStatsDisplay();
+                    } else {
+                        visionAttempts.push(...parsedAttempts);
+                        updateVisionStatsDisplay();
+                    }
+                }
+            } catch (e) {
+                console.error(`Error parsing ${key} from localStorage:`, e);
+                localStorage.removeItem(key); // Clear corrupted data
             }
         }
     });
