@@ -496,8 +496,8 @@ body.alien-language #read-more-area button {
 #vision-choices {
     display: flex;
     justify-content: center;
-    /* USER: Отступ между кнопками выбора в игре "Бачення" установлен на 50px */
-    gap: 50px; /* Увеличенный отступ между кнопками */
+    /* USER: Отступ между кнопками выбора в игре "Бачення" установлен на 20px */
+    gap: 20px; /* Уменьшенный отступ между кнопками */
     margin-top: 15px;
 }
 
@@ -682,8 +682,8 @@ body.alien-language #intention-stats p span {
     }
 
     #vision-choices {
-        /* USER: Отступ между кнопками выбора (маленькие экраны) установлен на 50px */
-        gap: 50px; /* Увеличенный отступ */
+        /* USER: Отступ между кнопками выбора (маленькие экраны) установлен на 20px */
+        gap: 20px; /* Уменьшенный отступ */
         flex-wrap: wrap;
     }
 
