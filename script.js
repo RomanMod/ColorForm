@@ -1,3 +1,6 @@
+
+
+
 // Logging settings
 const ENABLE_LOGGING = true;
 
@@ -13,6 +16,9 @@ const INTENTION_FIXATION_DELAY_MIN = 0;
 const INTENTION_FIXATION_DELAY_MAX = 500;
 const SHOW_INTENTION_THROTTLE_MS = 500;
 const NEW_GAME_BUTTON_DELAY_MS = 5000; // 5-second delay
+const SOUND_FILE = 'plsound.wav';
+// const SOUND_WAVE_IMAGE_FILE = 'wav.png'; // Removed
+
 
 // Объект с переводами
 const translations = {
@@ -38,6 +44,7 @@ const translations = {
         failure: 'Не угадал',
         color: 'Цвет',
         shape: 'Фигура',
+        soundMode: 'Звук',
         limited: '10 попыток',
         unlimited: 'Безлимит',
         statsAttempts: 'Попытки',
@@ -50,7 +57,11 @@ const translations = {
         visionSuccess: 'Успех!',
         visionFailure: 'Попробуй ещё!',
         greeting: 'Порепетируем',
-        defaultUserName: 'Игрок'
+        defaultUserName: 'Игрок',
+        altSoundWave: 'Звуковая волна',
+        altSilence: 'Тишина',
+        chooseSoundOn: 'Выбрать звук включен',
+        chooseSoundOff: 'Выбрать звук выключен'
     },
     uk: {
         title: 'Намір чи Бачення',
@@ -74,6 +85,7 @@ const translations = {
         failure: 'Не вгадав',
         color: 'Колір',
         shape: 'Фігура',
+        soundMode: 'Звук',
         limited: '10 спроб',
         unlimited: 'Безліміт',
         statsAttempts: 'Спроби',
@@ -86,7 +98,11 @@ const translations = {
         visionSuccess: 'Успіх!',
         visionFailure: 'Спробуй ще!',
         greeting: 'Порепетируємо',
-        defaultUserName: 'Гравець'
+        defaultUserName: 'Гравець',
+        altSoundWave: 'Звукова хвиля',
+        altSilence: 'Тиша',
+        chooseSoundOn: 'Обрати звук увімкнено',
+        chooseSoundOff: 'Обрати звук вимкнено'
     },
     en: {
         title: 'Intention or Vision',
@@ -110,6 +126,7 @@ const translations = {
         failure: 'Not Guessed',
         color: 'Color',
         shape: 'Shape',
+        soundMode: 'Sound',
         limited: '10 Attempts',
         unlimited: 'Unlimited',
         statsAttempts: 'Attempts',
@@ -122,7 +139,11 @@ const translations = {
         visionSuccess: 'Success!',
         visionFailure: 'Try Again!',
         greeting: 'Let\'s practice',
-        defaultUserName: 'Player'
+        defaultUserName: 'Player',
+        altSoundWave: 'Sound wave',
+        altSilence: 'Silence',
+        chooseSoundOn: 'Choose sound on',
+        chooseSoundOff: 'Choose sound off'
     },
     es: {
         title: 'Intención o Visión',
@@ -146,6 +167,7 @@ const translations = {
         failure: 'No Adivinado',
         color: 'Color',
         shape: 'Forma',
+        soundMode: 'Sonido',
         limited: '10 Intentos',
         unlimited: 'Ilimitado',
         statsAttempts: 'Intentos',
@@ -158,7 +180,11 @@ const translations = {
         visionSuccess: '¡Éxito!',
         visionFailure: '¡Intenta de Nuevo!',
         greeting: 'Practiquemos',
-        defaultUserName: 'Jugador'
+        defaultUserName: 'Jugador',
+        altSoundWave: 'Onda de sonido',
+        altSilence: 'Silencio',
+        chooseSoundOn: 'Elegir sonido activado',
+        chooseSoundOff: 'Elegir sonido desactivado'
     },
     alien: {
         title: '△◈▷',
@@ -182,6 +208,7 @@ const translations = {
         failure: '⊹',
         color: '◼|⊹',
         shape: '◻|⊹',
+        soundMode: '∮', // U+222E Contour Integral for Alien Sound
         limited: '⊸⊸|⊹',
         unlimited: '↺|⊹',
         statsAttempts: '↺|⊹',
@@ -194,7 +221,11 @@ const translations = {
         visionSuccess: '⊸◬',
         visionFailure: '↺◬',
         greeting: '⊸◇',
-        defaultUserName: '⊸Игрок⊹'
+        defaultUserName: '⊸Игрок⊹',
+        altSoundWave: '∮∼',
+        altSilence: '∮—',
+        chooseSoundOn: '∮∼⊕',
+        chooseSoundOff: '∮—⊖'
     }
 };
 
@@ -256,14 +287,17 @@ function updateLanguage() {
         }
     });
 
-    document.querySelector('label[for="intention-mode-color"]').childNodes[1].textContent = t.color;
-    document.querySelector('label[for="intention-mode-shape"]').childNodes[1].textContent = t.shape;
-    document.querySelector('label[for="vision-mode-color"]').childNodes[1].textContent = t.color;
-    document.querySelector('label[for="vision-mode-shape"]').childNodes[1].textContent = t.shape;
-    document.querySelector('label[for="intention-attempts-limited"]').childNodes[1].textContent = t.limited;
-    document.querySelector('label[for="intention-attempts-unlimited"]').childNodes[1].textContent = t.unlimited;
-    document.querySelector('label[for="vision-attempts-limited"]').childNodes[1].textContent = t.limited;
-    document.querySelector('label[for="vision-attempts-unlimited"]').childNodes[1].textContent = t.unlimited;
+    document.querySelector('label[for="intention-mode-color"]').childNodes[1].textContent = ` ${t.color}`;
+    document.querySelector('label[for="intention-mode-shape"]').childNodes[1].textContent = ` ${t.shape}`;
+    document.querySelector('label[for="intention-mode-sound"]').childNodes[1].textContent = ` ${t.soundMode}`;
+    document.querySelector('label[for="vision-mode-color"]').childNodes[1].textContent = ` ${t.color}`;
+    document.querySelector('label[for="vision-mode-shape"]').childNodes[1].textContent = ` ${t.shape}`;
+    document.querySelector('label[for="vision-mode-sound"]').childNodes[1].textContent = ` ${t.soundMode}`;
+    document.querySelector('label[for="intention-attempts-limited"]').childNodes[1].textContent = ` ${t.limited}`;
+    document.querySelector('label[for="intention-attempts-unlimited"]').childNodes[1].textContent = ` ${t.unlimited}`;
+    document.querySelector('label[for="vision-attempts-limited"]').childNodes[1].textContent = ` ${t.limited}`;
+    document.querySelector('label[for="vision-attempts-unlimited"]').childNodes[1].textContent = ` ${t.unlimited}`;
+
 
     // Обновление меток статистики Намерения
     const intentionStatsDiv = document.getElementById('intention-stats');
@@ -322,6 +356,9 @@ function updateLanguage() {
     document.querySelector('.color-btn[data-choice="blue"]').setAttribute('aria-label', `${t.color} Синій`);
     document.querySelector('.shape-btn[data-choice="circle"]').setAttribute('aria-label', `${t.shape} Коло`);
     document.querySelector('.shape-btn[data-choice="triangle"]').setAttribute('aria-label', `${t.shape} Трикутник`);
+    document.querySelector('.sound-btn[data-choice="sound_on"]').setAttribute('aria-label', t.chooseSoundOn);
+    document.querySelector('.sound-btn[data-choice="sound_off"]').setAttribute('aria-label', t.chooseSoundOff);
+
 
     // Управление классом alien-text и alien-language
     if (currentLanguage === 'alien') {
@@ -331,6 +368,15 @@ function updateLanguage() {
         readMoreArea.classList.remove('alien-text');
         document.body.classList.remove('alien-language'); // Удаляем класс для других языков
     }
+
+    // Update aria-labels for cached SVGs
+    if (cachedElements.svgOscilloscopeWave) {
+        cachedElements.svgOscilloscopeWave.setAttribute("aria-label", t.altSoundWave);
+    }
+    if (cachedElements.svgSilenceLine) {
+        cachedElements.svgSilenceLine.setAttribute("aria-label", t.altSilence);
+    }
+
     // Обновить статистику намерения, чтобы символы истории обновились при смене языка
     updateIntentionStatsDisplay();
     updateVisionStatsDisplay(); // Обновить статистику и для "Видение"
@@ -355,6 +401,11 @@ let subsessionSequences = [];
 const sentRandomizerStartEvents = new Set();
 let newGameButtonTimeoutId = null; // For the Intention game 5-second delay
 let visionNewGameButtonTimeoutId = null; // For the Vision game 5-second delay
+
+// Audio variables
+let audioContext = null;
+let soundBuffer = null;
+// let soundWaveImage = null; // Removed global variable for sound wave image
 
 
 let intentionRandomizerInterval = null;
@@ -422,6 +473,7 @@ const visionNewGameBtn = document.getElementById('vision-new-game-btn');
 const visionAttemptsModeDiv = document.getElementById('vision-attempts-mode');
 const visionColorChoiceBtns = document.querySelectorAll('#vision-choices .color-btn');
 const visionShapeChoiceBtns = document.querySelectorAll('#vision-choices .shape-btn');
+const visionSoundChoiceBtns = document.querySelectorAll('#vision-choices .sound-btn'); // New
 const visionStatsSpanAttempts = document.getElementById('stats-attempts');
 const visionStatsSpanMaxAttempts = document.getElementById('stats-max-attempts');
 const visionStatsSpanSuccesses = document.getElementById('stats-successes');
@@ -444,14 +496,108 @@ if (!appDiv || !menuScreen || !gameIntention || !gameVision || !languageToggleBt
     throw new Error('Missing critical DOM elements');
 }
 
+
+// SVG Creation Functions
+function createSvgShape(type) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "100");
+    svg.setAttribute("height", "100");
+    svg.setAttribute("viewBox", "0 0 100 100");
+    // Fill is set by CSS for .shape-btn svg, or dynamically if needed elsewhere
+
+    if (type === 'circle') {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", "50");
+        circle.setAttribute("cy", "50");
+        circle.setAttribute("r", "40");
+        svg.appendChild(circle);
+    } else if (type === 'triangle') {
+        const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        polygon.setAttribute("points", "50,10 90,90 10,90");
+        svg.appendChild(polygon);
+    }
+    return svg;
+}
+
+function createSilenceLineSvg() {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 100 50");
+    svg.setAttribute("aria-label", translations[currentLanguage].altSilence);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", "5");
+    line.setAttribute("y1", "25");
+    line.setAttribute("x2", "95");
+    line.setAttribute("y2", "25");
+    line.setAttribute("stroke", "currentColor"); // Use currentColor
+    line.setAttribute("stroke-width", "3");
+    line.setAttribute("stroke-linecap", "round"); // Added for rounded ends
+    svg.appendChild(line);
+    return svg;
+}
+
+function createOscilloscopeWaveSvg() {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 100 50"); // Width 100, Height 50
+    svg.setAttribute("aria-label", translations[currentLanguage].altSoundWave);
+
+    const numBars = 12;
+    const barWidth = 5;
+    const cornerRadius = 2; 
+    const maxBarHeight = 45; 
+    const minBarHeight = 5;
+    const relativeHeights = [0.3, 0.6, 0.9, 0.7, 0.4, 0.2, 0.5, 0.8, 1.0, 0.75, 0.5, 0.25];
+
+    const totalBarAreaWidth = numBars * barWidth;
+    // Calculate spacing to distribute bars evenly across the 100-unit width
+    // If numBars is 1, it will be centered. Otherwise, space them out.
+    const spacing = numBars > 1 ? (100 - totalBarAreaWidth) / (numBars -1) : 0;
+    
+    let currentX;
+    if (numBars === 1) {
+        currentX = (100 - barWidth) / 2; // Center a single bar
+    } else {
+        // For multiple bars, start so the entire group is centered.
+        const contentWidth = numBars * barWidth + (numBars - 1) * spacing;
+        currentX = (100 - contentWidth) / 2;
+    }
+
+    for (let i = 0; i < numBars; i++) {
+        const barHeight = minBarHeight + (relativeHeights[i % relativeHeights.length] * (maxBarHeight - minBarHeight));
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        
+        let xPos = currentX + i * (barWidth + spacing);
+        if (numBars === 1) xPos = currentX;
+
+        rect.setAttribute("x", String(xPos));
+        rect.setAttribute("y", String((50 - barHeight) / 2)); // Center vertically
+        rect.setAttribute("width", String(barWidth));
+        rect.setAttribute("height", String(barHeight));
+        rect.setAttribute("fill", "currentColor"); // Use currentColor
+        rect.setAttribute("rx", String(cornerRadius));
+        rect.setAttribute("ry", String(cornerRadius));
+        svg.appendChild(rect);
+    }
+    return svg;
+}
+
+
 // Cached DOM elements
 const cachedElements = {
     colorBlock: document.createElement('div'),
-    svgCircle: null,
-    svgTriangle: null
+    svgCircle: createSvgShape('circle'),
+    svgTriangle: createSvgShape('triangle'),
+    svgOscilloscopeWave: createOscilloscopeWaveSvg(),
+    svgSilenceLine: createSilenceLineSvg()
 };
 cachedElements.colorBlock.style.width = '100%';
 cachedElements.colorBlock.style.height = '100%';
+
+// Inject SVGs into Vision sound choice buttons
+if (visionSoundChoiceBtns.length === 2) {
+    visionSoundChoiceBtns[0].appendChild(cachedElements.svgOscilloscopeWave.cloneNode(true)); // sound_on
+    visionSoundChoiceBtns[1].appendChild(cachedElements.svgSilenceLine.cloneNode(true));    // sound_off
+}
+
 
 // Feedback buttons template
 const feedbackButtonsTemplate = document.createElement('div');
@@ -684,8 +830,8 @@ function showScreen(screenId) {
         if (visionAttemptsModeDiv) visionAttemptsModeDiv.classList.remove('hidden');
         setVisionChoiceButtonsEnabled(false);
         if (visionResultDisplay) visionResultDisplay.classList.add('hidden');
-        if (visionDisplay) visionDisplay.style.backgroundColor = 'black';
-        if (visionResultDisplay) visionResultDisplay.style.backgroundColor = 'transparent';
+        if (visionDisplay) visionDisplay.style.backgroundColor = 'black'; // Default screen behind result area
+        if (visionResultDisplay) visionResultDisplay.style.backgroundColor = 'transparent'; // Result area itself
         visionCurrentResult = null;
         choiceButtonsEnabledTime = null;
         generateSubsessionId(); // Generate new subsession_id for Vision
@@ -697,34 +843,81 @@ function getRandomResult(mode) {
     logDebug(`getRandomResult: mode=${mode}, randomValue=${randomValue}`);
     if (mode === 'color') {
         return randomValue > 0.5 ? 'red' : 'blue';
-    } else {
+    } else if (mode === 'shape') {
         return randomValue > 0.5 ? 'circle' : 'triangle';
+    } else if (mode === 'sound') {
+        return randomValue > 0.5 ? 'sound_on' : 'sound_off';
+    }
+    return null; // Default for unknown mode
+}
+
+
+async function loadSound(url) {
+    if (!audioContext) {
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.error("Web Audio API is not supported in this browser", e);
+            sendGtagEvent('error', { event_category: 'App', event_label: 'Audio Error', error_message: 'Web Audio API not supported', subsession_id: window.currentSubsessionId });
+            return;
+        }
+    }
+    if (!soundBuffer) { 
+        try {
+            logDebug('Attempting to load sound:', url);
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status} while fetching ${url}`);
+            }
+            const arrayBuffer = await response.arrayBuffer();
+            // Use a promise-based approach for decodeAudioData
+            soundBuffer = await new Promise((resolve, reject) => {
+                audioContext.decodeAudioData(arrayBuffer, resolve, reject);
+            });
+            logDebug('Sound loaded successfully:', url);
+        } catch (error) {
+            console.error('Error loading sound:', error);
+            sendGtagEvent('error', { event_category: 'App', event_label: 'Audio Load Error', error_message: `Failed to load ${url}: ${error.message}`, subsession_id: window.currentSubsessionId});
+            soundBuffer = null; 
+        }
     }
 }
 
-function createSvgShape(type) {
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("width", "100");
-    svg.setAttribute("height", "100");
-    svg.setAttribute("viewBox", "0 0 100 100");
-    svg.style.fill = 'black';
-
-    if (type === 'circle') {
-        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circle.setAttribute("cx", "50");
-        circle.setAttribute("cy", "50");
-        circle.setAttribute("r", "40");
-        svg.appendChild(circle);
-    } else if (type === 'triangle') {
-        const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-        polygon.setAttribute("points", "50,10 90,90 10,90");
-        svg.appendChild(polygon);
+function playSound() {
+    if (!soundBuffer) {
+        logDebug('Sound buffer not loaded, cannot play sound.');
+        // Attempt to load if not loaded, though ideally it's preloaded.
+        if ((intentionMode === 'sound' || visionMode === 'sound') && !soundBuffer) {
+            loadSound(SOUND_FILE).then(() => { // Try loading and playing again if successful
+                if (soundBuffer) playSoundInternal();
+            });
+        }
+        return;
     }
-    return svg;
+    playSoundInternal();
 }
 
-cachedElements.svgCircle = createSvgShape('circle');
-cachedElements.svgTriangle = createSvgShape('triangle');
+function playSoundInternal() {
+    if (!audioContext || !soundBuffer) return;
+
+    if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => {
+            logDebug('AudioContext resumed.');
+            actuallyPlaySound();
+        }).catch(e => console.error('Error resuming AudioContext:', e));
+    } else {
+        actuallyPlaySound();
+    }
+}
+
+function actuallyPlaySound() {
+    const source = audioContext.createBufferSource();
+    source.buffer = soundBuffer;
+    source.connect(audioContext.destination);
+    source.start(0);
+    logDebug('Playing sound');
+}
+
 
 function resetIntentionGame() {
     logDebug(`Resetting Intention game, current subsessionId: ${window.currentSubsessionId}`);
@@ -793,10 +986,11 @@ function resetVisionGame() {
     setVisionChoiceButtonsEnabled(false);
     if (visionResultDisplay) visionResultDisplay.classList.add('hidden');
     if (visionDisplay) visionDisplay.style.backgroundColor = 'black';
-    if (visionResultDisplay) visionResultDisplay.style.backgroundColor = 'transparent';
+    if (visionResultDisplay) visionResultDisplay.style.backgroundColor = 'transparent'; // BG is handled by #intention-result's CSS var
     visionCurrentResult = null;
     choiceButtonsEnabledTime = null;
     sessionSummarySent = false;
+    updateVisionChoicesDisplay(); // Ensure correct choice buttons are visible for the current mode
     logDebug('Vision game reset, new subsession_id:', window.currentSubsessionId);
 }
 
@@ -812,6 +1006,11 @@ function startIntentionGame(caller = 'unknown') {
     logDebug(`Starting intention game, mode: ${intentionMode} attempt_start_time: ${Date.now()} subsession_id: ${window.currentSubsessionId}`);
     intentionAttemptStartTime = Date.now();
     intentionRandomizerCount = 0;
+    
+    if (intentionMode === 'sound') {
+        if (!soundBuffer) loadSound(SOUND_FILE);
+    }
+
 
     const INACTIVITY_TIMEOUT = 5 * 60 * 1000;
     let inactivityTimer = null;
@@ -842,13 +1041,11 @@ function startIntentionGame(caller = 'unknown') {
     logDebug(`randomizer_start event sent for subsession_id: ${window.currentSubsessionId}`);
 
     if (intentionShowBtn) intentionShowBtn.classList.remove('hidden');
-    if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
-    if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black';
     if (intentionResultDisplay) {
-        intentionResultDisplay.style.backgroundColor = 'white';
-        intentionResultDisplay.style.display = 'flex';
-        intentionResultDisplay.style.zIndex = '10';
+         intentionResultDisplay.classList.add('hidden');
+         // CSS var --result-bg-color handles background, no need to set here
     }
+    if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black'; // Main display area behind result screen
 }
 
 function stopIntentionGame() {
@@ -862,9 +1059,11 @@ function stopIntentionGame() {
         clearTimeout(newGameButtonTimeoutId);
         newGameButtonTimeoutId = null;
     }
-    if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
+    if (intentionResultDisplay) {
+        intentionResultDisplay.classList.add('hidden');
+        // Background is controlled by CSS var --result-bg-color
+    }
     if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black';
-    if (intentionResultDisplay) intentionResultDisplay.style.backgroundColor = 'white';
     intentionAttemptStartTime = null;
     intentionCurrentResult = null;
 }
@@ -907,33 +1106,44 @@ function showIntentionResult() {
 
             clearTimeout(intentionRandomizerInterval);
             intentionRandomizerInterval = null;
-            if (intentionResultDisplay) {
-                intentionResultDisplay.innerHTML = '';
-                intentionResultDisplay.style.backgroundColor = 'white';
-                intentionResultDisplay.style.display = 'flex';
-            }
 
             if (intentionResultDisplay) {
-                intentionResultDisplay.style.flexDirection = intentionMode === 'color' ? 'row' : 'column';
-                intentionResultDisplay.style.gap = '0';
+                intentionResultDisplay.innerHTML = '';
+                // background-color is now handled by var(--result-bg-color) via CSS
+                intentionResultDisplay.style.display = 'flex'; // Ensure it's flex for alignment
                 intentionResultDisplay.classList.remove('hidden');
             }
-            if (intentionDisplay) {
-                intentionDisplay.style.backgroundColor = 'transparent';
+            
+            if (intentionDisplay) { // The main display area behind result-display
+                intentionDisplay.style.backgroundColor = 'transparent'; // Make it transparent to show result-display's bg
                 intentionDisplay.classList.remove('processing');
             }
+
             if (intentionShowBtn) {
                 intentionShowBtn.classList.add('hidden'); // Hide show button when result is shown
                 intentionShowBtn.classList.remove('processing');
             }
 
             if (intentionMode === 'color' && intentionResultDisplay) {
-                cachedElements.colorBlock.style.backgroundColor = intentionCurrentResult || 'gray';
+                cachedElements.colorBlock.style.backgroundColor = intentionCurrentResult || 'gray'; // Or use a fallback color
                 intentionResultDisplay.appendChild(cachedElements.colorBlock);
-            } else if (intentionResultDisplay) {
+            } else if (intentionMode === 'shape' && intentionResultDisplay) {
                 const svg = intentionCurrentResult === 'circle' ? cachedElements.svgCircle : cachedElements.svgTriangle;
-                intentionResultDisplay.appendChild(svg.cloneNode(true));
+                const clonedSvg = svg.cloneNode(true);
+                clonedSvg.querySelectorAll('circle, polygon').forEach(el => el.setAttribute('fill', 'currentColor'));
+                intentionResultDisplay.appendChild(clonedSvg);
+
+            } else if (intentionMode === 'sound' && intentionResultDisplay) {
+                if (intentionCurrentResult === 'sound_on') {
+                    playSound();
+                    const waveSvg = cachedElements.svgOscilloscopeWave.cloneNode(true);
+                    intentionResultDisplay.appendChild(waveSvg);
+                } else { // 'sound_off'
+                    const silenceSvg = cachedElements.svgSilenceLine.cloneNode(true);
+                    intentionResultDisplay.appendChild(silenceSvg);
+                }
             }
+
 
             const feedbackButtons = feedbackButtonsTemplate.cloneNode(true);
             const successBtn = feedbackButtons.querySelectorAll('button')[0];
@@ -1034,8 +1244,8 @@ function showIntentionResult() {
                         logDebug('Feedback buttons not found or already removed');
                     }
                     if (intentionResultDisplay) intentionResultDisplay.classList.add('hidden');
-                    if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black';
-                    if (intentionResultDisplay) intentionResultDisplay.style.backgroundColor = 'white';
+                    if (intentionDisplay) intentionDisplay.style.backgroundColor = 'black'; // Reset main display behind result area
+                    // intentionResultDisplay background is handled by CSS var
                     
                     isProcessingIntention = false;
 
@@ -1228,48 +1438,65 @@ function handleVisionChoice(event) {
     }
 
     if (visionResultDisplay) visionResultDisplay.classList.remove('hidden');
-    if (visionDisplay) visionDisplay.style.backgroundColor = 'transparent';
+    if (visionDisplay) visionDisplay.style.backgroundColor = 'transparent'; // To show result display's own background
+    
     if (visionResultDisplay) {
         visionResultDisplay.innerHTML = '';
-        visionResultDisplay.style.backgroundColor = 'transparent';
+        visionResultDisplay.style.backgroundColor = 'transparent'; 
     }
 
+
     if (visionMode === 'color' && visionResultDisplay) {
-        visionResultDisplay.style.backgroundColor = visionCurrentResult;
+        visionResultDisplay.style.backgroundColor = visionCurrentResult; 
         let messageText = document.createElement('p');
         messageText.textContent = isCorrect ? translations[currentLanguage].visionSuccess : translations[currentLanguage].visionFailure;
-        messageText.style.color = 'white';
+        const bgColor = visionCurrentResult; 
+        messageText.style.color = (bgColor === 'blue') ? 'white' : 'black'; 
         messageText.style.textShadow = '1px 1px 3px rgba(0,0,0,0.5)';
         visionResultDisplay.appendChild(messageText);
         visionResultDisplay.style.flexDirection = 'column';
         visionResultDisplay.style.gap = '0';
-    } else if (visionResultDisplay) {
+    } else if ((visionMode === 'shape' || visionMode === 'sound') && visionResultDisplay) { // Handle shape and sound
         const feedbackContent = document.createElement('div');
         feedbackContent.classList.add('vision-feedback-content');
-        feedbackContent.style.backgroundColor = 'white';
-        const svg = visionCurrentResult === 'circle' ? cachedElements.svgCircle : cachedElements.svgTriangle;
-        feedbackContent.appendChild(svg.cloneNode(true));
-        const messageText = document.createElement('p');
+        
+        let svgToDisplay;
+        if (visionMode === 'shape') {
+            svgToDisplay = visionCurrentResult === 'circle' ? cachedElements.svgCircle.cloneNode(true) : cachedElements.svgTriangle.cloneNode(true);
+        } else { // sound mode
+            if (visionCurrentResult === 'sound_on') {
+                playSound(); // Play sound if it was 'sound_on'
+                svgToDisplay = cachedElements.svgOscilloscopeWave.cloneNode(true);
+            } else {
+                svgToDisplay = cachedElements.svgSilenceLine.cloneNode(true);
+            }
+        }
+        
+        svgToDisplay.querySelectorAll('circle, polygon, rect, line').forEach(el => el.setAttribute(el.tagName === 'line' ? 'stroke' : 'fill', 'currentColor'));
+        feedbackContent.appendChild(svgToDisplay);
+
+        const messageText = document.createElement('p'); // Still hidden by CSS but part of the structure
         messageText.textContent = isCorrect ? translations[currentLanguage].visionSuccess : translations[currentLanguage].visionFailure;
-        messageText.style.color = 'black';
+        messageText.style.color = 'currentColor'; 
         feedbackContent.appendChild(messageText);
+        
         visionResultDisplay.appendChild(feedbackContent);
-        visionResultDisplay.style.flexDirection = 'row';
+        visionResultDisplay.style.flexDirection = 'row'; // Or column, depending on desired layout
         visionResultDisplay.style.gap = '0';
     }
 
     updateVisionStatsDisplay();
     visionCurrentResult = null;
 
-    if (visionNewGameButtonTimeoutId) { // Clear any pending timeout before setting a new one or deciding not to.
+    if (visionNewGameButtonTimeoutId) { 
         clearTimeout(visionNewGameButtonTimeoutId);
         visionNewGameButtonTimeoutId = null;
     }
 
     setTimeout(() => {
         if (visionResultDisplay) visionResultDisplay.classList.add('hidden');
-        if (visionResultDisplay) visionResultDisplay.style.backgroundColor = 'transparent';
-        if (visionDisplay) visionDisplay.style.backgroundColor = 'black';
+        if (visionResultDisplay) visionResultDisplay.style.backgroundColor = 'transparent'; 
+        if (visionDisplay) visionDisplay.style.backgroundColor = 'black'; 
 
         if (visionAttemptMode === 'limited' && visionStats.attempts >= visionMaxAttempts) {
             if (visionShuffleBtn) {
@@ -1283,20 +1510,20 @@ function handleVisionChoice(event) {
                 sendSessionSummary();
             }
             if (visionNewGameBtn) {
-                visionNewGameBtn.classList.add('hidden'); // Ensure hidden before scheduling
+                visionNewGameBtn.classList.add('hidden'); 
                 visionNewGameButtonTimeoutId = setTimeout(() => {
                     if (visionNewGameBtn) visionNewGameBtn.classList.remove('hidden');
                     visionNewGameButtonTimeoutId = null;
                 }, NEW_GAME_BUTTON_DELAY_MS);
             }
-        } else { // Game not over
+        } else { 
             if (visionShuffleBtn) {
                 visionShuffleBtn.disabled = false;
                 visionShuffleBtn.classList.remove('hidden');
             }
             if(visionChoicesDiv) visionChoicesDiv.classList.remove('hidden');
-            setVisionChoiceButtonsEnabled(false); // Buttons should be re-enabled after next shuffle
-            if (visionNewGameBtn) visionNewGameBtn.classList.add('hidden'); // Ensure New Game button is hidden
+            setVisionChoiceButtonsEnabled(false); 
+            if (visionNewGameBtn) visionNewGameBtn.classList.add('hidden'); 
         }
     }, 2500);
 }
@@ -1317,7 +1544,7 @@ function updateVisionStatsDisplay() {
 
     const successChar = currentLanguage === 'alien' ? translations.alien.success : '✅';
     const failureChar = currentLanguage === 'alien' ? translations.alien.failure : '❌';
-    const historyText = visionAttempts.map(attempt => attempt.result === 1 ? successChar : failureChar).join(''); // No space for Vision game history
+    const historyText = visionAttempts.map(attempt => attempt.result === 1 ? successChar : failureChar).join(''); 
     if (visionStatsSpanHistory) visionStatsSpanHistory.textContent = historyText;
     
     const avgTime = visionAttempts.length ? (visionAttempts.reduce((sum, a) => sum + a.time, 0) / visionAttempts.length).toFixed(1) : 0;
@@ -1327,12 +1554,15 @@ function updateVisionStatsDisplay() {
 function updateVisionChoicesDisplay() {
     if (visionColorChoiceBtns) visionColorChoiceBtns.forEach(btn => btn.classList.add('hidden'));
     if (visionShapeChoiceBtns) visionShapeChoiceBtns.forEach(btn => btn.classList.add('hidden'));
+    if (visionSoundChoiceBtns) visionSoundChoiceBtns.forEach(btn => btn.classList.add('hidden'));
     setVisionChoiceButtonsEnabled(false);
 
     if (visionMode === 'color') {
         if (visionColorChoiceBtns) visionColorChoiceBtns.forEach(btn => btn.classList.remove('hidden'));
-    } else {
+    } else if (visionMode === 'shape') {
         if (visionShapeChoiceBtns) visionShapeChoiceBtns.forEach(btn => btn.classList.remove('hidden'));
+    } else if (visionMode === 'sound') {
+        if (visionSoundChoiceBtns) visionSoundChoiceBtns.forEach(btn => btn.classList.remove('hidden'));
     }
 }
 
@@ -1524,6 +1754,9 @@ if (!intentionModeRadios.length) {
                 sendSessionSummary();
             }
             intentionMode = event.target.value;
+             if (intentionMode === 'sound') {
+                if (!soundBuffer) loadSound(SOUND_FILE);
+            }
             sendGtagEvent('mode_change', {
                 event_category: 'Game',
                 event_label: 'Intention Mode',
@@ -1614,6 +1847,9 @@ if (visionModeRadios) {
                 sendSessionSummary();
             }
             visionMode = event.target.value;
+            if (visionMode === 'sound' && !soundBuffer) { // Preload sound if switching to sound mode
+                loadSound(SOUND_FILE);
+            }
             generateSubsessionId(); // Generate new subsession_id for mode change
             sendGtagEvent('mode_change', {
                 event_category: 'Game',
@@ -1633,7 +1869,7 @@ if (visionModeRadios) {
             if (visionResultDisplay) visionResultDisplay.style.backgroundColor = 'transparent';
             visionCurrentResult = null;
             choiceButtonsEnabledTime = null;
-             if (visionNewGameButtonTimeoutId) { // Clear timeout on mode change
+             if (visionNewGameButtonTimeoutId) { 
                 clearTimeout(visionNewGameButtonTimeoutId);
                 visionNewGameButtonTimeoutId = null;
             }
@@ -1663,13 +1899,13 @@ if (visionAttemptsModeRadios) {
                 }
                 setVisionChoiceButtonsEnabled(false);
                 if (visionNewGameBtn) {
-                    visionNewGameBtn.classList.add('hidden'); // Hide first, then schedule
+                    visionNewGameBtn.classList.add('hidden'); 
                     visionNewGameButtonTimeoutId = setTimeout(() => {
                         if (visionNewGameBtn) visionNewGameBtn.classList.remove('hidden');
                         visionNewGameButtonTimeoutId = null;
                     }, NEW_GAME_BUTTON_DELAY_MS);
                 }
-            } else { // unlimited or limited but game not over
+            } else { 
                 if (visionShuffleBtn) {
                     visionShuffleBtn.disabled = false;
                     visionShuffleBtn.classList.remove('hidden');
@@ -1677,7 +1913,7 @@ if (visionAttemptsModeRadios) {
                 if (visionChoicesDiv) {
                     visionChoicesDiv.classList.remove('hidden');
                 }
-                setVisionChoiceButtonsEnabled(false); // Choices should be disabled until shuffle
+                setVisionChoiceButtonsEnabled(false); 
                 if (visionNewGameBtn) {
                     visionNewGameBtn.classList.add('hidden');
                 }
@@ -1850,7 +2086,7 @@ function initializeApp() {
     if (themeToggleBtnEl && themeToggleBtnEl.childNodes[2]) {
         themeToggleBtnEl.childNodes[2].textContent = themeText;
     }
-
+    
 
     // Отправка события инициализации приложения
     sendGtagEvent('app_initialized', {
