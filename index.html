@@ -25,6 +25,7 @@
         }
     </script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="/style.css">
 </head>
 <body>
     <div id="app">
@@ -70,6 +71,7 @@
                 <div class="mode-select">
                     <label for="intention-mode-color"><input type="radio" id="intention-mode-color" name="intention-mode" value="color" checked> Колір</label>
                     <label for="intention-mode-shape"><input type="radio" id="intention-mode-shape" name="intention-mode" value="shape"> Фігура</label>
+                    <label for="intention-mode-sound"><input type="radio" id="intention-mode-sound" name="intention-mode" value="sound"> Звук</label>
                 </div>
                 <div class="attempts-mode" id="intention-attempts-mode">
                     <label for="intention-attempts-limited"><input type="radio" id="intention-attempts-limited" name="intention-attempts-mode" value="limited" checked> 10 спроб</label>
@@ -104,6 +106,7 @@
                 <div class="mode-select">
                     <label for="vision-mode-color"><input type="radio" id="vision-mode-color" name="vision-mode" value="color" checked> Колір</label>
                     <label for="vision-mode-shape"><input type="radio" id="vision-mode-shape" name="vision-mode" value="shape"> Фігура</label>
+                    <label for="vision-mode-sound"><input type="radio" id="vision-mode-sound" name="vision-mode" value="sound"> Звук</label>
                 </div>
                 <div class="attempts-mode" id="vision-attempts-mode">
                     <label for="vision-attempts-limited"><input type="radio" id="vision-attempts-limited" name="vision-attempts-mode" value="limited" checked> 10 спроб</label>
@@ -130,6 +133,12 @@
                         <polygon points="50,10 90,90 10,90"></polygon>
                     </svg>
                 </button>
+                <button class="choice-btn sound-btn hidden" data-choice="sound_on" aria-label="Обрати звук увімкнено">
+                    <!-- SVG for sound_on will be injected by JS -->
+                </button>
+                <button class="choice-btn sound-btn hidden" data-choice="sound_off" aria-label="Обрати звук вимкнено">
+                    <!-- SVG for sound_off will be injected by JS -->
+                </button>
             </div>
             <div id="vision-stats">
                 <p><span data-translate-key="statsAttempts">Спроби</span>: <span id="stats-attempts">0</span>/<span id="stats-max-attempts">10</span></p>
@@ -147,6 +156,6 @@
         </div>
     </div>
     <script src="script.js" defer></script>
+<script type="module" src="/index.tsx"></script>
 </body>
-</html><link rel="stylesheet" href="style.css">
-<script src="index.tsx" type="module"></script>
+</html>
