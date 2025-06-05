@@ -1,0 +1,905 @@
+
+
+/* Импорт шрифта */
+@import url('https://fonts.googleapis.com/css2?family=OCR-A&display=swap');
+
+:root {
+    --base-font-size: 22px; /* Базовый размер шрифта для всех языков, кроме alien */
+    --alien-font-size: 30px; /* Отдельный размер шрифта для инопланетного языка */
+    --bg-color: #2c2c2e;
+    --text-color: #ffffff;
+    --button-bg-color: #5a5a5c;
+    --button-hover-bg-color: #6a6a6c;
+    --button-text-color: #ffffff;
+    --border-color: #48484a;
+    --display-bg-color: #000000;
+    --result-bg-color: #000000; /* Updated for dark theme sound wave background */
+    --result-text-color: #ffffff; /* Updated for dark theme sound wave foreground */
+    --choice-btn-bg-light: #d3d3d3;
+    --red-color: #ff3b30;
+    --blue-color: #007aff;
+    --card-bg-color: #3a3a3c;
+    --vision-feedback-bg-color: #000000; /* Dark theme background for Vision feedback content (shape/sound) */
+    --vision-feedback-text-color: #ffffff; /* Dark theme text/SVG color for Vision feedback content */
+}
+
+body.light-theme {
+    --base-font-size: 23px; /* Увеличенный шрифт для светлой темы */
+    --alien-font-size: 30px; /* Увеличенный шрифт для инопланетного языка в светлой теме */
+    --bg-color: #f5f5f5;
+    --text-color: #000000;
+    --button-bg-color: #007aff;
+    --button-hover-bg-color: #005bb5;
+    --button-text-color: #ffffff;
+    --border-color: #cccccc;
+    --display-bg-color: #000000;
+    --result-bg-color: #ffffff;
+    --result-text-color: #000000;
+    --choice-btn-bg-light: #e0e0e0;
+    --card-bg-color: #ffffff;
+    --vision-feedback-bg-color: #ffffff; /* Light theme background for Vision feedback content (shape/sound) */
+    --vision-feedback-text-color: #000000; /* Light theme text/SVG color for Vision feedback content */
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-size: var(--base-font-size);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* Применяем --alien-font-size ко всем текстовым элементам, когда язык alien */
+body.alien-language {
+    font-size: var(--alien-font-size);
+}
+
+/* Стили для текста на "Инопланетном" языке */
+.alien-text {
+    font-family: 'OCR-A', 'Futura', 'Courier New', monospace;
+    font-size: var(--alien-font-size);
+    animation: flicker 0.5s infinite alternate;
+}
+
+@keyframes flicker {
+    0% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+#read-more-area.alien-text p {
+    font-family: 'OCR-A', 'Futura', 'Courier New', monospace;
+    font-size: var(--alien-font-size);
+}
+
+#app {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 3px;
+    background-color: var(--bg-color);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-sizing: border-box;
+}
+
+#user-greeting {
+    font-size: calc(var(--base-font-size) * 1.2);
+    margin-bottom: 10px; /* Стандартный небольшой отступ */
+}
+
+body.alien-language #user-greeting {
+    font-size: calc(var(--alien-font-size) * 1.2);
+}
+
+h1 {
+    font-size: calc(var(--base-font-size) * 1.5);
+    color: var(--text-color);
+    margin-top: 0;
+}
+
+body.alien-language h1 {
+    font-size: calc(var(--alien-font-size) * 1.5);
+}
+
+#menu-screen {
+    margin-top: 10px; /* Создает общее пространство в 500px с учетом gap и margin-bottom приветствия */
+}
+
+#menu-screen h1 {
+    display: none;
+}
+
+h2 {
+    font-size: calc(var(--base-font-size) * 1.3);
+    margin-bottom: 0px;
+    color: var(--text-color);
+}
+
+body.alien-language h2 {
+    font-size: calc(var(--alien-font-size) * 1.3);
+}
+
+h3 {
+    font-size: calc(var(--base-font-size) * 1.1);
+    color: var(--text-color);
+    margin-bottom: 10px;
+}
+
+body.alien-language h3 {
+    font-size: calc(var(--alien-font-size) * 1.1);
+}
+
+.game-screen {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+button {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: var(--base-font-size);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    min-height: 44px;
+    box-sizing: border-box; /* Added for predictable sizing */
+}
+
+body.alien-language button {
+    font-size: var(--alien-font-size);
+}
+
+body.alien-language #intention-show-btn {
+    font-size: calc(var(--alien-font-size) * 1.2); /* Увеличенный шрифт для alien */
+}
+
+button:hover:not(:disabled) {
+    background-color: var(--button-hover-bg-color);
+}
+
+button:disabled {
+    background-color: #48484a;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+button:focus-visible {
+    outline: 2px solid var(--blue-color);
+    outline-offset: 1px;
+}
+
+.large-btn {
+    padding: 15px 25px;
+    font-size: calc(var(--base-font-size) * 1.2);
+    min-height: 48px;
+}
+
+body.alien-language .large-btn {
+    font-size: calc(var(--alien-font-size) * 1.2);
+}
+
+.small-btn {
+    padding: 8px 15px;
+    font-size: calc(var(--base-font-size) * 0.9);
+    min-height: auto;
+}
+
+body.alien-language .small-btn {
+    font-size: calc(var(--alien-font-size) * 0.9);
+}
+
+.feedback-buttons .small-btn {
+    padding: 42px 80px; /* Увеличенный отступ для большей площади */
+    font-size: calc(var(--base-font-size) * 1.1); /* Увеличенный шрифт */
+    min-height: 40px; /* Увеличенная высота */
+    line-height: 1.2;
+    flex: 1; /* Added to make buttons share space equally */
+    text-align: center; /* Ensure text is centered */
+}
+
+body.alien-language .feedback-buttons .small-btn {
+    font-size: calc(var(--alien-font-size) * 0.9);
+}
+
+.display {
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: var(--display-bg-color);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.result-display {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    color: var(--result-text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+}
+
+#intention-result {
+    background-color: var(--result-bg-color);
+    padding: 0;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: visible;
+    /* color property is inherited from .result-display or set by its own --result-text-color indirectly */
+}
+
+#intention-result svg,
+#intention-result img {
+    max-width: 100%;
+    max-height: 100%;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+    margin-top: 0px;
+}
+
+.action-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+}
+
+#intention-show-btn {
+    padding: 12px 75px; /* Увеличенный отступ для большей площади */
+    font-size: calc(var(--base-font-size) * 1.2); /* Увеличенный шрифт */
+    min-height: 48px; /* Увеличенная высота */
+}
+
+
+.mode-select, .attempts-mode {
+    display: flex;
+    gap: 10px; /* Reduced gap for mode select to fit more options */
+    align-items: center;
+    flex-wrap: wrap; /* Allow wrapping for mode select */
+}
+
+.mode-select label, .attempts-mode label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: var(--base-font-size);
+    white-space: nowrap; /* Prevent labels from breaking lines internally */
+}
+
+body.alien-language .mode-select label,
+body.alien-language .attempts-mode label {
+    font-size: var(--alien-font-size);
+}
+
+.mode-select input[type="radio"], .attempts-mode input[type="radio"] {
+    margin-right: 5px;
+    accent-color: var(--button-bg-color);
+}
+
+.back-btn {
+    background-color: #3C3F41;
+    padding: 10px 15px;
+    font-size: calc(var(--base-font-size) * 0.9);
+    margin: 10px 0;
+}
+
+body.alien-language .back-btn {
+    font-size: calc(var(--alien-font-size) * 0.9);
+}
+
+.new-game-btn {
+    background-color: #3C3F41;
+    padding: 12px 20px;
+    font-size: calc(var(--base-font-size) * 1.1);
+    text-transform: uppercase;
+    margin: 10px 0;
+}
+
+body.alien-language .new-game-btn {
+    font-size: calc(var(--alien-font-size) * 1.1);
+}
+
+#intention-new-game-btn, #vision-new-game-btn {
+    padding: 12px 20px;
+    font-size: calc(var(--base-font-size) * 1.1);
+    text-transform: uppercase;
+}
+
+body.alien-language #intention-new-game-btn,
+body.alien-language #vision-new-game-btn {
+    font-size: calc(var(--alien-font-size) * 1.1);
+}
+
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.menu-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.menu-btn {
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 15px;
+    font-size: calc(var(--base-font-size) * 0.9);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    min-height: 36px;
+    width: 120px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+body.alien-language .menu-btn {
+    font-size: calc(var(--alien-font-size) * 0.9);
+}
+
+.menu-btn:hover:not(:disabled) {
+    background-color: var(--button-hover-bg-color);
+}
+
+.menu-btn:focus-visible {
+    outline: 2px solid var(--blue-color);
+    outline-offset: 1px;
+}
+
+.menu-btn:disabled {
+    background-color: #48484a;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.language-toggle-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+#language-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 120px;
+    justify-content: center;
+}
+
+.language-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 100;
+    min-width: 120px;
+    margin: 4px 0 0;
+    padding: 8px 0;
+    background-color: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    list-style: none;
+}
+
+.language-menu.hidden {
+    display: none;
+}
+
+.language-option {
+    padding: 8px 15px;
+    font-size: calc(var(--base-font-size) * 0.9);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    text-align: center;
+}
+
+body.alien-language .language-option {
+    font-size: calc(var(--alien-font-size) * 0.9);
+}
+
+.language-option:hover,
+.language-option.active {
+    background-color: var(--button-hover-bg-color);
+}
+
+.language-option.active {
+    font-weight: bold;
+}
+
+#theme-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#read-more-area {
+    background-color: var(--card-bg-color);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: left;
+    margin-top: 20px;
+    color: var(--text-color);
+    box-sizing: border-box;
+}
+
+#read-more-area p {
+    font-size: var(--base-font-size);
+    margin-bottom: 8px;
+}
+
+body.alien-language #read-more-area p {
+    font-size: var(--alien-font-size);
+}
+
+#read-more-area button {
+    margin-top: 15px;
+    display: block;
+    margin-left: auto;
+    padding: 8px 15px;
+    font-size: calc(var(--base-font-size) * 0.9);
+    min-height: 32px;
+    line-height: 1.2;
+}
+
+body.alien-language #read-more-area button {
+    font-size: calc(var(--alien-font-size) * 0.9);
+}
+
+
+
+
+#vision-choices {
+    display: flex;
+    justify-content: center;
+    /* USER: Отступ между кнопками выбора в игре "Бачення" установлен на 20px */
+    gap: 20px; /* Уменьшенный отступ между кнопками */
+    margin-top: 15px;
+}
+
+.choice-btn {
+    width: 180px; /* Увеличенная ширина */
+    height: 180px; /* Увеличенная высота */
+    border-radius: 10px; /* Слегка увеличенный радиус для пропорций */
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid var(--border-color);
+    box-sizing: border-box;
+}
+
+
+
+
+
+.choice-btn:focus-visible {
+    outline: 2px solid var(--blue-color);
+    outline-offset: 1px;
+}
+
+.color-btn[data-choice="red"] {
+    background-color: var(--red-color);
+}
+
+.color-btn[data-choice="blue"] {
+    background-color: var(--blue-color);
+}
+
+.shape-btn, .sound-btn { /* Apply same base style to sound-btn */
+    background-color: var(--choice-btn-bg-light);
+    border-radius: 8px;
+}
+
+.shape-btn svg, .sound-btn svg { /* Apply same SVG styling to sound-btn */
+    width: 95%; /* Увеличенный размер SVG */
+    height: 95%;
+    fill: var(--result-text-color); /* For shapes/sounds inside buttons, use result text color for theme adaptability */
+}
+
+
+
+#vision-stats, #intention-stats {
+    margin-top: 15px;
+    font-size: var(--base-font-size);
+    text-align: center;
+    color: var(--text-color);
+}
+
+body.alien-language #vision-stats,
+body.alien-language #intention-stats {
+    font-size: var(--alien-font-size);
+}
+
+#vision-stats p, #intention-stats p {
+    margin: 5px 0;
+}
+
+#vision-stats p span, #intention-stats p span {
+    font-size: var(--base-font-size);
+}
+
+body.alien-language #vision-stats p span,
+body.alien-language #intention-stats p span {
+    font-size: var(--alien-font-size);
+}
+
+#intention-stats p:has(#intention-stats-avg-time),
+#vision-stats p:has(#stats-avg-time) {
+    display: none;
+}
+
+/* Global styles for stats history icons */
+.stats-history-icons {
+    display: block; /* Forces it to a new line */
+    margin-top: 4px; /* Add a small space between the label and the icons */
+    word-wrap: break-word; /* For older browsers */
+    overflow-wrap: break-word; /* Standard property for breaking long strings */
+    line-height: 1.3; /* Default line height for icons */
+    text-align: center; /* Center the icons if they wrap to multiple lines */
+}
+
+
+.vision-feedback-content {
+    width: 100%;
+    height: 100%;
+    background-color: var(--vision-feedback-bg-color); /* Adapted for theme */
+    color: var(--vision-feedback-text-color); /* Adapted for theme (for SVG currentColor) */
+    border-radius: 8px;
+    padding: 0;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: visible;
+}
+
+.vision-feedback-content svg {
+    max-width: 100%;
+    max-height: 100%;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 0;
+    box-sizing: border-box;
+    fill: currentColor; /* Will inherit from .vision-feedback-content's color property */
+}
+
+.vision-feedback-content p {
+    display: none; /* This seems intentional based on current styling */
+}
+
+#vision-result {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent; /* This parent is transparent, actual bg set by child or specific result styling */
+}
+
+.feedback-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 15px;
+}
+
+/* Для старых WebKit */
+@supports not (display: flex) {
+    #app {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .display {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+/* Адаптивность для маленьких экранов */
+@media screen and (max-width: 480px) {
+    :root {
+        --base-font-size: 22px; /* Для всех языков, кроме alien */
+        --alien-font-size: 28px; /* Уменьшенный шрифт для инопланетного языка */
+    }
+
+    body.light-theme {
+        --base-font-size: 23px; /* Для светлой темы */
+        --alien-font-size: 28px; /* Увеличенный шрифт для alien в светлой теме */
+    }
+
+    body {
+        padding: 5px;
+        margin: 0;
+    }
+
+    #app {
+        padding: 5px;
+        gap: 10px;
+        margin: 0 auto;
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    #user-greeting {
+        margin-bottom: 20px; /* Уменьшенный отступ для мобильных устройств */
+    }
+
+    #menu-screen {
+        margin-top: 0; /* Убираем большой отступ на мобильных */
+    }
+
+
+    .display {
+        aspect-ratio: 4 / 3;
+        max-height: 200px;
+        margin: 0 auto;
+    }
+
+    #vision-choices {
+        /* USER: Отступ между кнопками выбора (маленькие экраны) установлен на 20px */
+        gap: 10px; /* Adjusted gap for smaller screens to fit more buttons */
+        flex-wrap: wrap;
+    }
+
+    .choice-btn {
+        width: 120px; /* Adjusted width for smaller screens */
+        height: 100px; /* Adjusted height for smaller screens */
+    }
+
+    .shape-btn svg, .sound-btn svg { /* Apply to sound-btn SVGs on mobile */
+        width: 90%; /* Увеличенный размер SVG для мобильных */
+        height: 90%;
+    }
+
+    button {
+        padding: 10px 15px;
+        font-size: var(--base-font-size);
+        min-height: 36px;
+    }
+
+    body.alien-language button {
+        font-size: var(--alien-font-size);
+    }
+    
+    
+    body.alien-language #intention-show-btn {
+        font-size: calc(var(--alien-font-size) * 1.2); /* Увеличенный шрифт для alien */
+    }
+
+    .large-btn {
+        padding: 12px 20px;
+        font-size: calc(var(--base-font-size) * 1.1);
+        min-height: 40px;
+    }
+
+    body.alien-language .large-btn {
+        font-size: calc(var(--alien-font-size) * 1.1);
+    }
+
+    .small-btn {
+        padding: 6px 12px;
+        font-size: calc(var(--base-font-size) * 0.9);
+        min-height: 28px;
+    }
+
+    body.alien-language .small-btn {
+        font-size: calc(var(--alien-font-size) * 0.9);
+    }
+
+    
+    .feedback-buttons .small-btn {
+        padding: 20px 30px; /* Увеличенный отступ для мобильных */
+        font-size: calc(var(--base-font-size) * 1); /* Увеличенный шрифт */
+        min-height: 36px; /* Увеличенная высота */
+        /* flex: 1; will be inherited from the desktop rule, ensuring they remain identical */
+    }
+
+   
+    body.alien-language .feedback-buttons .small-btn {
+    font-size: calc(var(--alien-font-size) * 1.1); /* Увеличенный шрифт для alien */
+}
+
+    .menu-buttons {
+        gap: 10px;
+    }
+
+    .menu-controls {
+        flex-direction: row;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .menu-btn {
+        padding: 6px 12px;
+        font-size: calc(var(--base-font-size) * 0.9);
+        min-height: 28px;
+        width: auto;
+        min-width: 80px;
+    }
+
+    body.alien-language .menu-btn {
+        font-size: calc(var(--alien-font-size) * 0.9);
+    }
+
+    .language-toggle-wrapper {
+        width: auto;
+        min-width: 80px;
+    }
+
+    #language-toggle-btn {
+        width: auto;
+        min-width: 80px;
+        font-size: calc(var(--base-font-size) * 0.9);
+        padding: 6px 12px;
+        min-height: 28px;
+    }
+
+    body.alien-language #language-toggle-btn {
+        font-size: calc(var(--alien-font-size) * 0.9);
+    }
+
+    .language-menu {
+        min-width: 80px;
+        max-width: 120px;
+    }
+
+    .language-option {
+        padding: 6px 12px;
+        font-size: calc(var(--base-font-size) * 0.9);
+    }
+
+    body.alien-language .language-option {
+        font-size: calc(var(--alien-font-size) * 0.9);
+    }
+
+    #read-more-area button {
+        padding: 6px 12px;
+        font-size: calc(var(--base-font-size) * 0.9);
+        min-height: 28px;
+    }
+
+    body.alien-language #read-more-area button {
+        font-size: calc(var(--alien-font-size) * 0.9);
+    }
+
+    .new-game-btn {
+        padding: 10px 15px;
+        font-size: calc(var(--base-font-size) * 1);
+    }
+
+    body.alien-language .new-game-btn {
+        font-size: calc(var(--alien-font-size) * 1);
+    }
+
+    .back-btn {
+        padding: 8px 12px;
+        font-size: calc(var(--base-font-size) * 0.9);
+    }
+
+    body.alien-language .back-btn {
+        font-size: calc(var(--alien-font-size) * 0.9);
+    }
+
+    .controls {
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+
+    .mode-select, .attempts-mode {
+        gap: 8px; /* Adjusted for smaller screens */
+    }
+    
+    .mode-select label, .attempts-mode label {
+        font-size: calc(var(--base-font-size) * 0.9);
+    }
+
+    body.alien-language .mode-select label,
+    body.alien-language .attempts-mode label {
+        font-size: calc(var(--alien-font-size) * 0.9);
+    }
+
+    #read-more-area {
+        padding: 10px;
+        margin-top: 15px;
+    }
+
+    #read-more-area p {
+        font-size: var(--base-font-size);
+        margin-bottom: 6px;
+    }
+
+    body.alien-language #read-more-area p {
+        font-size: var(--alien-font-size);
+    }
+
+    body.alien-language #user-greeting { /* This duplicates the one inside the #app media query */
+        font-size: calc(var(--alien-font-size) * 1);
+    }
+
+
+    #menu-screen .btn-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    #theme-toggle-btn, #language-toggle-btn, #btn-read-more {
+        width: auto;
+        min-width: 80px;
+    }
+
+    body.alien-language #theme-toggle-btn,
+    body.alien-language #btn-read-more {
+        font-size: calc(var(--alien-font-size) * 0.9);
+    }
+
+    /* Responsive styles for stats history icons */
+    .stats-history-icons {
+        font-size: calc(var(--base-font-size) * 0.70); /* Reduced font size for mobile */
+        line-height: 1.2; /* Adjusted line height for smaller font */
+    }
+
+    body.alien-language .stats-history-icons {
+        font-size: calc(var(--alien-font-size) * 0.65); /* Further reduced for alien icons on mobile */
+    }
+}
